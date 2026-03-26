@@ -4,6 +4,7 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import android.view.Gravity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,15 +30,18 @@ import androidx.savedstate.compose.LocalSavedStateRegistryOwner
 import androidx.savedstate.SavedStateRegistryOwner
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 
 private const val MAP_VIEW_STATE_KEY = "map_renderer_view_state"
+private const val MAP_COMPASS_MARGIN_PX = 32
 
 @Composable
 actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
+    onCameraIdle: (MapCameraSnapshot) -> Unit,
 ) {
     val context = LocalContext.current
     val isInPreview = LocalInspectionMode.current
@@ -61,6 +65,13 @@ actual fun MapRenderer(
     ApplyMapRenderModel(
         holder = mapViewHolder,
         model = model,
+    )
+
+    ConfigureMapUiSettings(holder = mapViewHolder)
+
+    BindCameraObservation(
+        holder = mapViewHolder,
+        onCameraIdle = onCameraIdle,
     )
 
     AndroidView(
@@ -138,12 +149,40 @@ private fun ApplyMapRenderModel(
     }
 }
 
-private class MapViewHolder(
+@Composable
+private fun ConfigureMapUiSettings(holder: MapViewHolder) {
+    LaunchedEffect(holder) {
+        holder.configureUiSettings()
+    }
+}
+
+@Composable
+private fun BindCameraObservation(
+    holder: MapViewHolder,
+    onCameraIdle: (MapCameraSnapshot) -> Unit,
+) {
+    val cameraAdapter = remember(onCameraIdle) {
+        MapLibreCameraAdapter(onCameraIdle = onCameraIdle)
+    }
+
+    LaunchedEffect(holder, cameraAdapter) {
+        cameraAdapter.attach(holder.awaitMap())
+    }
+
+    DisposableEffect(holder, cameraAdapter) {
+        onDispose {
+            cameraAdapter.detach()
+        }
+    }
+}
+
+internal class MapViewHolder(
     val mapView: MapView,
 ) {
     private var mapLibreMap: MapLibreMap? = null
     private var pendingMap: CompletableDeferred<MapLibreMap>? = null
     private var lastAppliedStyle: RenderMapStyle? = null
+    private var areUiSettingsConfigured: Boolean = false
     var isDestroyed: Boolean = false
         private set
 
@@ -183,10 +222,20 @@ private class MapViewHolder(
         pendingMap = null
         mapLibreMap = null
         lastAppliedStyle = null
+        areUiSettingsConfigured = false
         mapView.onDestroy()
     }
 
-    private suspend fun awaitMap(): MapLibreMap {
+    suspend fun configureUiSettings() {
+        if (isDestroyed || areUiSettingsConfigured) {
+            return
+        }
+
+        awaitMap().configureUiSettings()
+        areUiSettingsConfigured = true
+    }
+
+    suspend fun awaitMap(): MapLibreMap {
         mapLibreMap?.let { return it }
         pendingMap?.let { return it.await() }
 
@@ -270,6 +319,18 @@ private fun rememberMapViewHolder(
     }
 
     return holder
+}
+
+private fun MapLibreMap.configureUiSettings() {
+    uiSettings.apply {
+        compassGravity = Gravity.TOP or Gravity.END
+        setCompassMargins(
+            MAP_COMPASS_MARGIN_PX,
+            MAP_COMPASS_MARGIN_PX,
+            MAP_COMPASS_MARGIN_PX,
+            MAP_COMPASS_MARGIN_PX,
+        )
+    }
 }
 
 private fun RenderMapStyle.styleUrl(): String =

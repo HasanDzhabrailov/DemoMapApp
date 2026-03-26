@@ -1,16 +1,20 @@
 package ru.tech.demomapapp.feature.map.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
@@ -21,9 +25,10 @@ fun MapScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val model by component.model.subscribeAsState()
+    val debugModel by component.debugModel.subscribeAsState()
     val renderModel = model.mapState.toRenderModel()
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
@@ -31,8 +36,16 @@ fun MapScreenContent(
         MapRenderer(
             model = renderModel,
             modifier = Modifier.fillMaxSize(),
+            onCameraIdle = component::onCameraIdle,
         )
 
+        MapDebugPanel(
+            model = debugModel,
+            onToggle = component::onDebugPanelToggle,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp),
+        )
     }
 }
 
@@ -47,4 +60,21 @@ private fun MapScreenContentPreview() {
 private class PreviewMapScreenComponent : MapScreenComponent {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(MapScreenComponent.Model())
+
+    override val debugModel: Value<MapScreenComponent.DebugModel> =
+        MutableValue(
+            MapScreenComponent.DebugModel(
+                isExpanded = true,
+                lastCameraSnapshot = MapCameraSnapshot(
+                    latitude = 55.75124,
+                    longitude = 37.61842,
+                    zoom = 12.34567,
+                    bearing = 18.2,
+                ),
+            ),
+        )
+
+    override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+
+    override fun onDebugPanelToggle() = Unit
 }

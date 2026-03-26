@@ -1,7 +1,9 @@
 package ru.tech.demomapapp
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.defaultComponentContext
@@ -14,7 +16,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var rootComponent: RootComponent
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.BLACK),
+            navigationBarStyle = SystemBarStyle.dark(Color.BLACK),
+        )
         super.onCreate(savedInstanceState)
 
         MapLibre.getInstance(applicationContext)
