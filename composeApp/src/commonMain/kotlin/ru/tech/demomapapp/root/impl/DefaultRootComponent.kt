@@ -7,7 +7,6 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import kotlinx.serialization.Serializable
 import ru.tech.demomapapp.feature.map.impl.DefaultMapScreenComponent
-import ru.tech.demomapapp.feature.map.impl.DefaultMapScreenComponent.Output
 import ru.tech.demomapapp.root.api.RootComponent
 
 class DefaultRootComponent(
@@ -32,16 +31,10 @@ class DefaultRootComponent(
         when (config) {
             Config.MapScreen -> RootComponent.Child.MapScreen(
                 instance = DefaultMapScreenComponent(
-                    onOutput = ::onMapScreenOutput,
+                    componentContext = componentContext,
                 ),
             )
         }
-
-    private fun onMapScreenOutput(output: Output) {
-        when (output) {
-            Output.PrimaryActionClicked -> Unit
-        }
-    }
 
     @Serializable
     private sealed interface Config {

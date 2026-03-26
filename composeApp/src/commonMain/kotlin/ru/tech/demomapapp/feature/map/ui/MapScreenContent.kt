@@ -49,6 +49,4 @@ private fun MapScreenContentPreview() {
 private class PreviewMapScreenComponent : MapScreenComponent {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(MapScreenComponent.Model())
-
-    override fun onPrimaryActionClick() = Unit
 }
