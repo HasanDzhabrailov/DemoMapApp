@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.api
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -12,8 +12,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.maps.MapView
 
 @Composable
-actual fun MapScreen(
-    styleUrl: String,
+actual fun MapRenderer(
+    model: MapRenderModel,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
@@ -62,10 +62,14 @@ actual fun MapScreen(
         factory = {
             mapView.apply {
                 getMapAsync { mapLibreMap ->
-                    mapLibreMap.setStyle(styleUrl)
+                    mapLibreMap.setStyle(model.styleUrl)
                 }
             }
         },
-        update = {},
+        update = {
+            it.getMapAsync { mapLibreMap ->
+                mapLibreMap.setStyle(model.styleUrl)
+            }
+        },
     )
 }

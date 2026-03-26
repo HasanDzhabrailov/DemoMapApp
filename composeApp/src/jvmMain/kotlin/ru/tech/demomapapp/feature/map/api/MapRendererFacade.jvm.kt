@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.api
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,8 +13,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 @Composable
-actual fun MapScreen(
-    styleUrl: String,
+actual fun MapRenderer(
+    model: MapRenderModel,
     modifier: Modifier,
 ) {
     Box(
@@ -25,7 +25,7 @@ actual fun MapScreen(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "MapLibre rendering is available on Android only.\n$styleUrl",
+            text = "Map rendering is available on Android only.\n${model.styleUrl}",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
         )

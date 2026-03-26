@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.impl
 
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 class DefaultMapScreenComponent(
@@ -20,10 +21,8 @@ class DefaultMapScreenComponent(
 
     private fun defaultModel(): MapScreenComponent.Model =
         MapScreenComponent.Model(
-            kicker = "DemoMapApp",
-            title = "Map screen",
-            description = "The shared screen owns layout only while the Android source set hosts the MapLibre view integration.",
-            status = "The map layer renders tiles only and stays separate from business decisions.",
-            primaryActionTitle = "Continue",
+            mapState = MapState(
+                styleUrl = "https://demotiles.maplibre.org/style.json",
+            ),
         )
 }
