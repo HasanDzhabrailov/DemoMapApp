@@ -52,6 +52,13 @@ fun MapScreenContent(
                 .align(Alignment.BottomStart)
                 .padding(16.dp),
         )
+
+        if (model.isCenterMarkerMenuVisible) {
+            CenterMarkerMenuOverlay(
+                onDismiss = component::onCenterMarkerMenuDismiss,
+                onCreatePointClick = component::onCreatePointClick,
+            )
+        }
     }
 }
 
@@ -86,6 +93,10 @@ private class PreviewMapScreenComponent : MapScreenComponent {
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
 
     override fun onCenterMarkerClick() = Unit
+
+    override fun onCenterMarkerMenuDismiss() = Unit
+
+    override fun onCreatePointClick() = Unit
 
     override fun onDebugPanelToggle() = Unit
 }

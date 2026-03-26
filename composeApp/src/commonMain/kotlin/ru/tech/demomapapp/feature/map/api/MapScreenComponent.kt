@@ -8,12 +8,15 @@ interface MapScreenComponent {
 
     fun onCameraIdle(snapshot: MapCameraSnapshot)
     fun onCenterMarkerClick()
+    fun onCenterMarkerMenuDismiss()
+    fun onCreatePointClick()
 
     fun onDebugPanelToggle()
 
     data class Model(
         val mapState: MapState = MapState(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
+        val isCenterMarkerMenuVisible: Boolean = false,
     )
 
     data class DebugModel(

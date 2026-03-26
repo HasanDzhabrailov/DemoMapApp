@@ -8,6 +8,7 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 class DefaultMapScreenComponent(
     componentContext: ComponentContext,
+    private val onCreatePointRequested: (MapCameraSnapshot) -> Unit = {},
 ) : MapScreenComponent, ComponentContext by componentContext {
 
     private val mutableModel = MutableValue(defaultModel())
@@ -22,7 +23,25 @@ class DefaultMapScreenComponent(
         )
     }
 
-    override fun onCenterMarkerClick() = Unit
+    override fun onCenterMarkerClick() {
+        mutableModel.value = mutableModel.value.copy(
+            isCenterMarkerMenuVisible = true,
+        )
+    }
+
+    override fun onCenterMarkerMenuDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            isCenterMarkerMenuVisible = false,
+        )
+    }
+
+    override fun onCreatePointClick() {
+        val model = mutableModel.value
+        mutableModel.value = model.copy(
+            isCenterMarkerMenuVisible = false,
+        )
+        model.lastCameraSnapshot?.let(onCreatePointRequested)
+    }
 
     override fun onDebugPanelToggle() {
         val debugModel = mutableDebugModel.value
