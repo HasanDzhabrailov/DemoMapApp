@@ -59,15 +59,17 @@ import org.maplibre.android.maps.Style
 private const val MAP_VIEW_STATE_KEY = "map_renderer_view_state"
 private const val MAP_COMPASS_MARGIN_PX = 32
 private const val MAP_POINTS_SOURCE_ID = "map-renderer-points-source"
-private const val MAP_POINTS_LAYER_ID = "map-renderer-points-layer"
+internal const val MAP_POINTS_LAYER_ID = "map-renderer-points-layer"
 private const val MAP_POINT_LABELS_LAYER_ID = "map-renderer-point-labels-layer"
 private const val MAP_POINT_LABEL_PROPERTY = "label"
+internal const val MAP_POINT_KEY_PROPERTY = "pointKey"
 
 @Composable
 actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
     onCameraIdle: (MapCameraSnapshot) -> Unit,
+    onPointClick: (RenderPointClick) -> Unit,
 ) {
     val context = LocalContext.current
     val isInPreview = LocalInspectionMode.current
@@ -98,6 +100,11 @@ actual fun MapRenderer(
     BindCameraObservation(
         holder = mapViewHolder,
         onCameraIdle = onCameraIdle,
+    )
+
+    BindPointClickObservation(
+        holder = mapViewHolder,
+        onPointClick = onPointClick,
     )
 
     AndroidView(
@@ -198,6 +205,26 @@ private fun BindCameraObservation(
     DisposableEffect(holder, cameraAdapter) {
         onDispose {
             cameraAdapter.detach()
+        }
+    }
+}
+
+@Composable
+private fun BindPointClickObservation(
+    holder: MapViewHolder,
+    onPointClick: (RenderPointClick) -> Unit,
+) {
+    val pointClickAdapter = remember(onPointClick) {
+        MapLibrePointClickAdapter(onPointClick = onPointClick)
+    }
+
+    LaunchedEffect(holder, pointClickAdapter) {
+        pointClickAdapter.attach(holder.awaitMap())
+    }
+
+    DisposableEffect(holder, pointClickAdapter) {
+        onDispose {
+            pointClickAdapter.detach()
         }
     }
 }
@@ -380,6 +407,7 @@ private fun Style.applyPoints(points: List<RenderMapPoint>) {
             Feature.fromGeometry(
                 Point.fromLngLat(point.longitude, point.latitude),
             ).apply {
+                addStringProperty(MAP_POINT_KEY_PROPERTY, point.key)
                 addStringProperty(MAP_POINT_LABEL_PROPERTY, point.label)
             }
         },

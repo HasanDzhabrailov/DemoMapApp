@@ -7,6 +7,7 @@ internal fun interface CreateMapPointUseCase {
 }
 
 internal data class CreateMapPointInput(
+    val id: String,
     val latitudeInput: String,
     val longitudeInput: String,
     val titleInput: String,
@@ -19,6 +20,7 @@ internal class DefaultCreateMapPointUseCase : CreateMapPointUseCase {
         val longitude = input.longitudeInput.toDoubleOrNull() ?: return null
 
         return MapPoint(
+            id = input.id,
             latitude = latitude,
             longitude = longitude,
             title = input.titleInput.trim(),

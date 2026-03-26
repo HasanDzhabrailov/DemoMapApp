@@ -10,6 +10,9 @@ internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     private val createMapPointUseCase: CreateMapPointUseCase = DefaultCreateMapPointUseCase(),
     private val timeProvider: TimeProvider = SystemTimeProvider(),
+    private val pointIdProvider: PointIdProvider = UuidPointIdProvider(),
+    private val pointSelectionResolver: MapPointSelectionResolver = DefaultMapPointSelectionResolver(),
+    private val pointInfoWindowStateMapper: MapPointInfoWindowStateMapper = DefaultMapPointInfoWindowStateMapper(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mutableModel = MutableValue(defaultModel())
     private val mutableDebugModel = MutableValue(defaultDebugModel())
@@ -20,12 +23,14 @@ internal class DefaultMapScreenComponent(
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         mutableModel.value = mutableModel.value.copy(
             lastCameraSnapshot = snapshot,
+            selectedPointInfoWindow = null,
         )
     }
 
     override fun onCenterMarkerClick() {
         mutableModel.value = mutableModel.value.copy(
             isCenterMarkerMenuVisible = true,
+            selectedPointInfoWindow = null,
         )
     }
 
@@ -41,6 +46,7 @@ internal class DefaultMapScreenComponent(
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = model.lastCameraSnapshot != null,
             createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
+            selectedPointInfoWindow = null,
         )
     }
 
@@ -61,6 +67,7 @@ internal class DefaultMapScreenComponent(
         val draft = model.createPointDraft ?: return
         val point = createMapPointUseCase.create(
             CreateMapPointInput(
+                id = pointIdProvider.nextId(),
                 latitudeInput = draft.latitudeInput,
                 longitudeInput = draft.longitudeInput,
                 titleInput = draft.titleInput,
@@ -81,6 +88,24 @@ internal class DefaultMapScreenComponent(
         mutableModel.value = mutableModel.value.copy(
             isCreatePointSheetVisible = false,
             createPointDraft = null,
+        )
+    }
+
+    override fun onPointClick(
+        pointKey: String,
+        anchor: MapScreenComponent.PointInfoWindowAnchor,
+    ) {
+        val model = mutableModel.value
+        val point = pointSelectionResolver.resolve(model.mapState.points, pointKey) ?: return
+        mutableModel.value = model.copy(
+            isCenterMarkerMenuVisible = false,
+            selectedPointInfoWindow = pointInfoWindowStateMapper.map(point, anchor),
+        )
+    }
+
+    override fun onPointInfoWindowDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            selectedPointInfoWindow = null,
         )
     }
 
@@ -120,4 +145,12 @@ internal fun interface TimeProvider {
 
 internal class SystemTimeProvider : TimeProvider {
     override fun currentTimeMillis(): Long = platformCurrentTimeMillis()
+}
+
+internal fun interface PointIdProvider {
+    fun nextId(): String
+}
+
+internal class UuidPointIdProvider : PointIdProvider {
+    override fun nextId(): String = generateMapPointId()
 }

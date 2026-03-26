@@ -18,6 +18,7 @@ actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
     onCameraIdle: (MapCameraSnapshot) -> Unit,
+    onPointClick: (RenderPointClick) -> Unit,
 ) {
     Box(
         modifier = modifier

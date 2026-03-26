@@ -18,6 +18,7 @@ import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
+import ru.tech.demomapapp.feature.map.render.RenderPointClick
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -39,6 +40,7 @@ fun MapScreenContent(
             model = renderModel,
             modifier = Modifier.fillMaxSize(),
             onCameraIdle = component::onCameraIdle,
+            onPointClick = { click -> component.onPointClick(click.pointKey, click.toPointInfoWindowAnchor()) },
         )
 
         CenterMarker(
@@ -73,6 +75,14 @@ fun MapScreenContent(
                     onDismiss = component::onCreatePointSheetDismiss,
                 )
             }
+        }
+
+        model.selectedPointInfoWindow?.let { infoWindow ->
+            PointInfoWindowOverlay(
+                state = infoWindow,
+                onDismiss = component::onPointInfoWindowDismiss,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
@@ -123,5 +133,18 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onCreatePointSheetDismiss() = Unit
 
+    override fun onPointClick(
+        pointKey: String,
+        anchor: MapScreenComponent.PointInfoWindowAnchor,
+    ) = Unit
+
+    override fun onPointInfoWindowDismiss() = Unit
+
     override fun onDebugPanelToggle() = Unit
 }
+
+private fun RenderPointClick.toPointInfoWindowAnchor(): MapScreenComponent.PointInfoWindowAnchor =
+    MapScreenComponent.PointInfoWindowAnchor(
+        screenX = anchor.screenX,
+        screenY = anchor.screenY,
+    )

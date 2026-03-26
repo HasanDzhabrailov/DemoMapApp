@@ -15,6 +15,8 @@ interface MapScreenComponent {
     fun onCreatePointTitleChange(value: String)
     fun onCreatePointConfirm()
     fun onCreatePointSheetDismiss()
+    fun onPointClick(pointKey: String, anchor: PointInfoWindowAnchor)
+    fun onPointInfoWindowDismiss()
 
     fun onDebugPanelToggle()
 
@@ -24,12 +26,24 @@ interface MapScreenComponent {
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
+        val selectedPointInfoWindow: PointInfoWindow? = null,
     )
 
     data class CreatePointDraft(
         val latitudeInput: String,
         val longitudeInput: String,
         val titleInput: String = "",
+    )
+
+    data class PointInfoWindow(
+        val title: String,
+        val createdAtText: String,
+        val anchor: PointInfoWindowAnchor,
+    )
+
+    data class PointInfoWindowAnchor(
+        val screenX: Int,
+        val screenY: Int,
     )
 
     data class DebugModel(

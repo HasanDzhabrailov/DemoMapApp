@@ -11,6 +11,7 @@ fun MapState.toRenderModel(): MapRenderModel =
         style = style.toRenderStyle(),
         points = points.map { point ->
             RenderMapPoint(
+                key = point.id,
                 latitude = point.latitude,
                 longitude = point.longitude,
                 label = point.title,
