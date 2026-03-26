@@ -1,5 +1,5 @@
 package ru.tech.demomapapp.feature.map.api
 
 data class MapState(
-    val styleUrl: String,
+    val style: MapStyle = MapStyle.DEMO,
 )

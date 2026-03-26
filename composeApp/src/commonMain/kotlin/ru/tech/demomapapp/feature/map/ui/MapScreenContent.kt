@@ -6,24 +6,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import ru.tech.demomapapp.feature.map.api.MapRenderer
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.impl.DefaultMapStateAdapter
-import ru.tech.demomapapp.root.api.RootComponent
+import ru.tech.demomapapp.feature.map.render.MapRenderer
 
 @Composable
 fun MapScreenContent(
-    component: RootComponent.Child.MapScreen,
+    component: MapScreenComponent,
     modifier: Modifier = Modifier,
 ) {
-    val model by component.instance.model.subscribeAsState()
-    val mapStateAdapter = remember { DefaultMapStateAdapter() }
+    val model by component.model.subscribeAsState()
 
     Column(
         modifier = modifier
@@ -31,7 +27,7 @@ fun MapScreenContent(
             .background(MaterialTheme.colorScheme.surface)
     ) {
         MapRenderer(
-            model = mapStateAdapter.adapt(model.mapState),
+            state = model.mapState,
             modifier = Modifier.fillMaxSize(),
         )
 
@@ -42,7 +38,7 @@ fun MapScreenContent(
 @Composable
 private fun MapScreenContentPreview() {
     MaterialTheme {
-        MapScreenContent(component = RootComponent.Child.MapScreen(instance = PreviewMapScreenComponent()))
+        MapScreenContent(component = PreviewMapScreenComponent())
     }
 }
 

@@ -18,7 +18,7 @@ fun RootContent(
         val child = component.instance
 
         when (child) {
-            is RootComponent.Child.MapScreen -> MapScreenContent(component = child)
+            is RootComponent.Child.MapScreen -> MapScreenContent(component = child.instance)
         }
     }
 }

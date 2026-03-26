@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.api
+package ru.tech.demomapapp.feature.map.render
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -10,10 +10,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.maps.MapView
+import ru.tech.demomapapp.feature.map.api.MapState
+import ru.tech.demomapapp.feature.map.api.MapStyle
 
 @Composable
 actual fun MapRenderer(
-    model: MapRenderModel,
+    state: MapState,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
@@ -62,14 +64,19 @@ actual fun MapRenderer(
         factory = {
             mapView.apply {
                 getMapAsync { mapLibreMap ->
-                    mapLibreMap.setStyle(model.styleUrl)
+                    mapLibreMap.setStyle(state.style.styleUrl())
                 }
             }
         },
         update = {
             it.getMapAsync { mapLibreMap ->
-                mapLibreMap.setStyle(model.styleUrl)
+                mapLibreMap.setStyle(state.style.styleUrl())
             }
         },
     )
 }
+
+private fun MapStyle.styleUrl(): String =
+    when (this) {
+        MapStyle.DEMO -> "https://demotiles.maplibre.org/style.json"
+    }

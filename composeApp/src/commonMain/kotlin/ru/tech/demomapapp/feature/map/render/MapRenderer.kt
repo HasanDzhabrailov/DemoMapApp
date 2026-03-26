@@ -1,14 +1,11 @@
-package ru.tech.demomapapp.feature.map.api
+package ru.tech.demomapapp.feature.map.render
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-
-data class MapRenderModel(
-    val styleUrl: String,
-)
+import ru.tech.demomapapp.feature.map.api.MapState
 
 @Composable
 expect fun MapRenderer(
-    model: MapRenderModel,
+    state: MapState,
     modifier: Modifier = Modifier,
 )

@@ -6,8 +6,6 @@ interface MapScreenComponent {
     val model: Value<Model>
 
     data class Model(
-        val mapState: MapState = MapState(
-            styleUrl = "https://demotiles.maplibre.org/style.json",
-        ),
+        val mapState: MapState = MapState(),
     )
 }
