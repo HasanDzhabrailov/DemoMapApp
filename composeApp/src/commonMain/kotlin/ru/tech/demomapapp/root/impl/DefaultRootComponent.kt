@@ -32,7 +32,6 @@ class DefaultRootComponent(
             Config.MapScreen -> RootComponent.Child.MapScreen(
                 instance = DefaultMapScreenComponent(
                     componentContext = componentContext,
-                    onCreatePointRequested = {},
                 ),
             )
         }

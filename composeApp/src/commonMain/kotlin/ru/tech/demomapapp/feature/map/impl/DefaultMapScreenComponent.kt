@@ -6,11 +6,11 @@ import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
-class DefaultMapScreenComponent(
+internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
-    private val onCreatePointRequested: (MapCameraSnapshot) -> Unit = {},
+    private val createMapPointUseCase: CreateMapPointUseCase = DefaultCreateMapPointUseCase(),
+    private val timeProvider: TimeProvider = SystemTimeProvider(),
 ) : MapScreenComponent, ComponentContext by componentContext {
-
     private val mutableModel = MutableValue(defaultModel())
     private val mutableDebugModel = MutableValue(defaultDebugModel())
 
@@ -39,8 +39,49 @@ class DefaultMapScreenComponent(
         val model = mutableModel.value
         mutableModel.value = model.copy(
             isCenterMarkerMenuVisible = false,
+            isCreatePointSheetVisible = model.lastCameraSnapshot != null,
+            createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
         )
-        model.lastCameraSnapshot?.let(onCreatePointRequested)
+    }
+
+    override fun onCreatePointLatitudeChange(value: String) {
+        updateCreatePointDraft { copy(latitudeInput = value) }
+    }
+
+    override fun onCreatePointLongitudeChange(value: String) {
+        updateCreatePointDraft { copy(longitudeInput = value) }
+    }
+
+    override fun onCreatePointTitleChange(value: String) {
+        updateCreatePointDraft { copy(titleInput = value) }
+    }
+
+    override fun onCreatePointConfirm() {
+        val model = mutableModel.value
+        val draft = model.createPointDraft ?: return
+        val point = createMapPointUseCase.create(
+            CreateMapPointInput(
+                latitudeInput = draft.latitudeInput,
+                longitudeInput = draft.longitudeInput,
+                titleInput = draft.titleInput,
+                createdAtEpochMillis = timeProvider.currentTimeMillis(),
+            ),
+        ) ?: return
+
+        mutableModel.value = model.copy(
+            mapState = model.mapState.copy(
+                points = model.mapState.points + point,
+            ),
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+        )
+    }
+
+    override fun onCreatePointSheetDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+        )
     }
 
     override fun onDebugPanelToggle() {
@@ -55,4 +96,28 @@ class DefaultMapScreenComponent(
 
     private fun defaultDebugModel(): MapScreenComponent.DebugModel =
         MapScreenComponent.DebugModel()
+
+    private fun updateCreatePointDraft(
+        transform: MapScreenComponent.CreatePointDraft.() -> MapScreenComponent.CreatePointDraft,
+    ) {
+        val model = mutableModel.value
+        val draft = model.createPointDraft ?: return
+        mutableModel.value = model.copy(
+            createPointDraft = draft.transform(),
+        )
+    }
+
+    private fun MapCameraSnapshot.toCreatePointDraft(): MapScreenComponent.CreatePointDraft =
+        MapScreenComponent.CreatePointDraft(
+            latitudeInput = latitude.toString(),
+            longitudeInput = longitude.toString(),
+        )
+}
+
+internal fun interface TimeProvider {
+    fun currentTimeMillis(): Long
+}
+
+internal class SystemTimeProvider : TimeProvider {
+    override fun currentTimeMillis(): Long = platformCurrentTimeMillis()
 }

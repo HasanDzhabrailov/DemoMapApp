@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreenContent(
     component: MapScreenComponent,
@@ -59,6 +61,19 @@ fun MapScreenContent(
                 onCreatePointClick = component::onCreatePointClick,
             )
         }
+
+        if (model.isCreatePointSheetVisible) {
+            model.createPointDraft?.let { draft ->
+                CreatePointBottomSheet(
+                    draft = draft,
+                    onLatitudeChange = component::onCreatePointLatitudeChange,
+                    onLongitudeChange = component::onCreatePointLongitudeChange,
+                    onTitleChange = component::onCreatePointTitleChange,
+                    onConfirm = component::onCreatePointConfirm,
+                    onDismiss = component::onCreatePointSheetDismiss,
+                )
+            }
+        }
     }
 }
 
@@ -97,6 +112,16 @@ private class PreviewMapScreenComponent : MapScreenComponent {
     override fun onCenterMarkerMenuDismiss() = Unit
 
     override fun onCreatePointClick() = Unit
+
+    override fun onCreatePointLatitudeChange(value: String) = Unit
+
+    override fun onCreatePointLongitudeChange(value: String) = Unit
+
+    override fun onCreatePointTitleChange(value: String) = Unit
+
+    override fun onCreatePointConfirm() = Unit
+
+    override fun onCreatePointSheetDismiss() = Unit
 
     override fun onDebugPanelToggle() = Unit
 }

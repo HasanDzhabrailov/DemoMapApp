@@ -30,12 +30,38 @@ import androidx.savedstate.compose.LocalSavedStateRegistryOwner
 import androidx.savedstate.SavedStateRegistryOwner
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import kotlin.coroutines.resume
+import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
+import org.maplibre.android.style.layers.PropertyFactory.textAnchor
+import org.maplibre.android.style.layers.PropertyFactory.textColor
+import org.maplibre.android.style.layers.PropertyFactory.textField
+import org.maplibre.android.style.layers.PropertyFactory.textHaloColor
+import org.maplibre.android.style.layers.PropertyFactory.textHaloWidth
+import org.maplibre.android.style.layers.PropertyFactory.textOffset
+import org.maplibre.android.style.layers.PropertyFactory.textSize
+import org.maplibre.android.style.layers.PropertyFactory.circleColor
+import org.maplibre.android.style.layers.PropertyFactory.circleOpacity
+import org.maplibre.android.style.layers.PropertyFactory.circleRadius
+import org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor
+import org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth
+import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.sources.GeoJsonSource
+import org.maplibre.geojson.Feature
+import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.Point
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 
 private const val MAP_VIEW_STATE_KEY = "map_renderer_view_state"
 private const val MAP_COMPASS_MARGIN_PX = 32
+private const val MAP_POINTS_SOURCE_ID = "map-renderer-points-source"
+private const val MAP_POINTS_LAYER_ID = "map-renderer-points-layer"
+private const val MAP_POINT_LABELS_LAYER_ID = "map-renderer-point-labels-layer"
+private const val MAP_POINT_LABEL_PROPERTY = "label"
 
 @Composable
 actual fun MapRenderer(
@@ -144,8 +170,8 @@ private fun ApplyMapRenderModel(
     holder: MapViewHolder,
     model: MapRenderModel,
 ) {
-    LaunchedEffect(holder, model.style) {
-        holder.applyStyle(model.style)
+    LaunchedEffect(holder, model) {
+        holder.applyRenderModel(model)
     }
 }
 
@@ -186,18 +212,15 @@ internal class MapViewHolder(
     var isDestroyed: Boolean = false
         private set
 
-    suspend fun applyStyle(style: RenderMapStyle) {
+    suspend fun applyRenderModel(model: MapRenderModel) {
         if (isDestroyed) {
             return
         }
 
         val map = awaitMap()
-        if (lastAppliedStyle == style) {
-            return
-        }
-
-        map.setStyle(style.styleUrl())
-        lastAppliedStyle = style
+        val style = map.loadStyle(model.style, lastAppliedStyle)
+        lastAppliedStyle = model.style
+        style.applyPoints(model.points)
     }
 
     fun onLowMemory() {
@@ -329,6 +352,67 @@ private fun MapLibreMap.configureUiSettings() {
             MAP_COMPASS_MARGIN_PX,
             MAP_COMPASS_MARGIN_PX,
             MAP_COMPASS_MARGIN_PX,
+        )
+    }
+}
+
+private suspend fun MapLibreMap.loadStyle(
+    style: RenderMapStyle,
+    lastAppliedStyle: RenderMapStyle?,
+): Style {
+    val currentStyle = this.style
+    if (lastAppliedStyle == style && currentStyle != null) {
+        return currentStyle
+    }
+
+    return suspendCancellableCoroutine { continuation ->
+        setStyle(style.styleUrl()) { loadedStyle ->
+            if (continuation.isActive) {
+                continuation.resume(loadedStyle)
+            }
+        }
+    }
+}
+
+private fun Style.applyPoints(points: List<RenderMapPoint>) {
+    val featureCollection = FeatureCollection.fromFeatures(
+        points.map { point ->
+            Feature.fromGeometry(
+                Point.fromLngLat(point.longitude, point.latitude),
+            ).apply {
+                addStringProperty(MAP_POINT_LABEL_PROPERTY, point.label)
+            }
+        },
+    )
+
+    val source = getSourceAs<GeoJsonSource>(MAP_POINTS_SOURCE_ID)
+        ?: GeoJsonSource(MAP_POINTS_SOURCE_ID, featureCollection).also(::addSource)
+    source.setGeoJson(featureCollection)
+
+    if (getLayer(MAP_POINTS_LAYER_ID) == null) {
+        addLayer(
+            CircleLayer(MAP_POINTS_LAYER_ID, MAP_POINTS_SOURCE_ID).withProperties(
+                circleColor("#D95D39"),
+                circleRadius(7f),
+                circleOpacity(0.95f),
+                circleStrokeColor("#FFF7F0"),
+                circleStrokeWidth(2f),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_POINT_LABELS_LAYER_ID) == null) {
+        addLayer(
+            SymbolLayer(MAP_POINT_LABELS_LAYER_ID, MAP_POINTS_SOURCE_ID).withProperties(
+                textField("{$MAP_POINT_LABEL_PROPERTY}"),
+                textSize(12f),
+                textColor("#2B211D"),
+                textHaloColor("#FFF7F0"),
+                textHaloWidth(1.5f),
+                textOffset(arrayOf(0f, 1.4f)),
+                textAnchor("top"),
+                textAllowOverlap(false),
+            ),
         )
     }
 }
