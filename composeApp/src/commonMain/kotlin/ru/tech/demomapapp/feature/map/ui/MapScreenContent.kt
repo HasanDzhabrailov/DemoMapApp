@@ -12,6 +12,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 
 @Composable
@@ -20,6 +21,7 @@ fun MapScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val model by component.model.subscribeAsState()
+    val renderModel = model.mapState.toRenderModel()
 
     Column(
         modifier = modifier
@@ -27,7 +29,7 @@ fun MapScreenContent(
             .background(MaterialTheme.colorScheme.surface)
     ) {
         MapRenderer(
-            state = model.mapState,
+            model = renderModel,
             modifier = Modifier.fillMaxSize(),
         )
 

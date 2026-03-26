@@ -11,11 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import ru.tech.demomapapp.feature.map.api.MapState
 
 @Composable
 actual fun MapRenderer(
-    state: MapState,
+    model: MapRenderModel,
     modifier: Modifier,
 ) {
     Box(
@@ -26,7 +25,7 @@ actual fun MapRenderer(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Map rendering is available on Android only.\n${state.style}",
+            text = "Map rendering is available on Android only.\n${model.style}",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
         )
