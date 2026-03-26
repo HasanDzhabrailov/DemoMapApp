@@ -24,6 +24,7 @@ kotlin {
             implementation(libs.decompose)
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.maplibre.android)
         }
         commonMain.dependencies {
             implementation(libs.decompose)

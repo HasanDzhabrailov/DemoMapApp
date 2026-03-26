@@ -1,11 +1,11 @@
-package ru.tech.demomapapp.feature.first.ui
+package ru.tech.demomapapp.feature.map.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -24,22 +24,37 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
-import ru.tech.demomapapp.feature.first.api.FirstScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.root.api.RootComponent
 
 @Composable
-fun FirstScreenContent(
-    component: FirstScreenComponent,
+fun MapScreenContent(
+    component: RootComponent.Child.MapScreen,
     modifier: Modifier = Modifier,
 ) {
-    val model by component.model.subscribeAsState()
+    val model by component.instance.model.subscribeAsState()
 
-    Box(
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
             .padding(24.dp),
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 280.dp),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+            ),
+        ) {
+            MapScreen(
+                styleUrl = model.mapStyleUrl,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
         Card(
             shape = RoundedCornerShape(28.dp),
             colors = CardDefaults.cardColors(
@@ -74,7 +89,7 @@ fun FirstScreenContent(
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Start,
                 )
-                Button(onClick = component::onPrimaryActionClick) {
+                Button(onClick = component.instance::onPrimaryActionClick) {
                     Text(model.primaryActionTitle)
                 }
             }
@@ -84,15 +99,15 @@ fun FirstScreenContent(
 
 @Preview
 @Composable
-private fun FirstScreenContentPreview() {
+private fun MapScreenContentPreview() {
     MaterialTheme {
-        FirstScreenContent(component = PreviewFirstScreenComponent())
+        MapScreenContent(component = RootComponent.Child.MapScreen(instance = PreviewMapScreenComponent()))
     }
 }
 
-private class PreviewFirstScreenComponent : FirstScreenComponent {
-    override val model: Value<FirstScreenComponent.Model> =
-        MutableValue(FirstScreenComponent.Model())
+private class PreviewMapScreenComponent : MapScreenComponent {
+    override val model: Value<MapScreenComponent.Model> =
+        MutableValue(MapScreenComponent.Model())
 
     override fun onPrimaryActionClick() = Unit
 }

@@ -6,8 +6,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import kotlinx.serialization.Serializable
-import ru.tech.demomapapp.feature.first.impl.DefaultFirstScreenComponent
-import ru.tech.demomapapp.feature.first.impl.DefaultFirstScreenComponent.Output
+import ru.tech.demomapapp.feature.map.impl.DefaultMapScreenComponent
+import ru.tech.demomapapp.feature.map.impl.DefaultMapScreenComponent.Output
 import ru.tech.demomapapp.root.api.RootComponent
 
 class DefaultRootComponent(
@@ -20,7 +20,7 @@ class DefaultRootComponent(
         childStack(
             source = navigation,
             serializer = Config.serializer(),
-            initialConfiguration = Config.FirstScreen,
+            initialConfiguration = Config.MapScreen,
             handleBackButton = true,
             childFactory = ::child,
         )
@@ -30,14 +30,14 @@ class DefaultRootComponent(
         componentContext: ComponentContext,
     ): RootComponent.Child =
         when (config) {
-            Config.FirstScreen -> RootComponent.Child.FirstScreen(
-                component = DefaultFirstScreenComponent(
-                    onOutput = ::onFirstScreenOutput,
+            Config.MapScreen -> RootComponent.Child.MapScreen(
+                instance = DefaultMapScreenComponent(
+                    onOutput = ::onMapScreenOutput,
                 ),
             )
         }
 
-    private fun onFirstScreenOutput(output: Output) {
+    private fun onMapScreenOutput(output: Output) {
         when (output) {
             Output.PrimaryActionClicked -> Unit
         }
@@ -46,6 +46,6 @@ class DefaultRootComponent(
     @Serializable
     private sealed interface Config {
         @Serializable
-        data object FirstScreen : Config
+        data object MapScreen : Config
     }
 }

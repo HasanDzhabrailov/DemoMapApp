@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.arkivanov.decompose.defaultComponentContext
+import org.maplibre.android.MapLibre
 import ru.tech.demomapapp.app.App
 import ru.tech.demomapapp.root.api.RootComponent
 import ru.tech.demomapapp.root.impl.createRootComponent
@@ -15,6 +16,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+
+        MapLibre.getInstance(applicationContext)
 
         rootComponent = createRootComponent(
             componentContext = defaultComponentContext(),
