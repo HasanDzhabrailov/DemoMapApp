@@ -23,6 +23,7 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 @Composable
 internal fun MapDebugPanel(
     model: MapScreenComponent.DebugModel,
+    snapshot: MapCameraSnapshot?,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -49,7 +50,7 @@ internal fun MapDebugPanel(
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = model.headerText(),
+                        text = model.headerText(snapshot = snapshot),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -69,7 +70,7 @@ internal fun MapDebugPanel(
 
             if (model.isExpanded) {
                 MapDebugPanelBody(
-                    snapshot = model.lastCameraSnapshot,
+                    snapshot = snapshot,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
@@ -126,12 +127,12 @@ private fun MapDebugValueRow(
     }
 }
 
-private fun MapScreenComponent.DebugModel.headerText(): String {
+private fun MapScreenComponent.DebugModel.headerText(snapshot: MapCameraSnapshot?): String {
     if (isExpanded) {
         return "Tap to hide"
     }
 
-    val snapshot = lastCameraSnapshot ?: return "Tap to show"
+    snapshot ?: return "Tap to show"
     return "lat ${snapshot.latitude.formatDebug()} lon ${snapshot.longitude.formatDebug()} z ${snapshot.zoom.formatDebug()}"
 }
 

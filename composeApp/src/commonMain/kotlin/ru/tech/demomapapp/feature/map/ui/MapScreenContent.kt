@@ -39,8 +39,14 @@ fun MapScreenContent(
             onCameraIdle = component::onCameraIdle,
         )
 
+        CenterMarker(
+            onClick = component::onCenterMarkerClick,
+            modifier = Modifier.align(Alignment.Center),
+        )
+
         MapDebugPanel(
             model = debugModel,
+            snapshot = model.lastCameraSnapshot,
             onToggle = component::onDebugPanelToggle,
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -59,12 +65,8 @@ private fun MapScreenContentPreview() {
 
 private class PreviewMapScreenComponent : MapScreenComponent {
     override val model: Value<MapScreenComponent.Model> =
-        MutableValue(MapScreenComponent.Model())
-
-    override val debugModel: Value<MapScreenComponent.DebugModel> =
         MutableValue(
-            MapScreenComponent.DebugModel(
-                isExpanded = true,
+            MapScreenComponent.Model(
                 lastCameraSnapshot = MapCameraSnapshot(
                     latitude = 55.75124,
                     longitude = 37.61842,
@@ -74,7 +76,16 @@ private class PreviewMapScreenComponent : MapScreenComponent {
             ),
         )
 
+    override val debugModel: Value<MapScreenComponent.DebugModel> =
+        MutableValue(
+            MapScreenComponent.DebugModel(
+                isExpanded = true,
+            ),
+        )
+
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+
+    override fun onCenterMarkerClick() = Unit
 
     override fun onDebugPanelToggle() = Unit
 }

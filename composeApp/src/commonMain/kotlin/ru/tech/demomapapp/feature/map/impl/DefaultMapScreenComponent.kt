@@ -17,10 +17,12 @@ class DefaultMapScreenComponent(
     override val debugModel: Value<MapScreenComponent.DebugModel> = mutableDebugModel
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
-        mutableDebugModel.value = mutableDebugModel.value.copy(
+        mutableModel.value = mutableModel.value.copy(
             lastCameraSnapshot = snapshot,
         )
     }
+
+    override fun onCenterMarkerClick() = Unit
 
     override fun onDebugPanelToggle() {
         val debugModel = mutableDebugModel.value

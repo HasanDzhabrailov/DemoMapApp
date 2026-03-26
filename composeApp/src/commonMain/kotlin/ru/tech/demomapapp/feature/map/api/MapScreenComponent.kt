@@ -7,15 +7,16 @@ interface MapScreenComponent {
     val debugModel: Value<DebugModel>
 
     fun onCameraIdle(snapshot: MapCameraSnapshot)
+    fun onCenterMarkerClick()
 
     fun onDebugPanelToggle()
 
     data class Model(
         val mapState: MapState = MapState(),
+        val lastCameraSnapshot: MapCameraSnapshot? = null,
     )
 
     data class DebugModel(
         val isExpanded: Boolean = true,
-        val lastCameraSnapshot: MapCameraSnapshot? = null,
     )
 }
