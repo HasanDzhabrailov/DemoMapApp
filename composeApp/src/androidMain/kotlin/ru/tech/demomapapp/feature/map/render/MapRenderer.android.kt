@@ -4,6 +4,12 @@ import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Bundle
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -11,7 +17,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -32,6 +41,11 @@ actual fun MapRenderer(
 ) {
     val context = LocalContext.current
     val isInPreview = LocalInspectionMode.current
+    if (isInPreview) {
+        PreviewMapRenderer(modifier = modifier)
+        return
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     val savedStateOwner = LocalSavedStateRegistryOwner.current
     val mapViewHolder = rememberMapViewHolder(
@@ -40,9 +54,8 @@ actual fun MapRenderer(
     )
 
     BindMapViewLifecycle(
-        mapView = mapViewHolder.mapView,
+        holder = mapViewHolder,
         lifecycleOwner = lifecycleOwner,
-        enabled = !isInPreview,
     )
 
     ApplyMapRenderModel(
@@ -57,14 +70,30 @@ actual fun MapRenderer(
 }
 
 @Composable
-private fun BindMapViewLifecycle(
-    mapView: MapView,
-    lifecycleOwner: LifecycleOwner,
-    enabled: Boolean,
-) {
-    if (!enabled) return
+private fun PreviewMapRenderer(modifier: Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = "Map preview is unavailable in inspection mode.",
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
 
-    DisposableEffect(lifecycleOwner, mapView) {
+@Composable
+private fun BindMapViewLifecycle(
+    holder: MapViewHolder,
+    lifecycleOwner: LifecycleOwner,
+) {
+    val mapView = holder.mapView
+
+    DisposableEffect(lifecycleOwner, holder) {
         val lifecycle = lifecycleOwner.lifecycle
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -72,20 +101,28 @@ private fun BindMapViewLifecycle(
                 Lifecycle.Event.ON_RESUME -> mapView.onResume()
                 Lifecycle.Event.ON_PAUSE -> mapView.onPause()
                 Lifecycle.Event.ON_STOP -> mapView.onStop()
+                Lifecycle.Event.ON_DESTROY -> holder.destroy()
                 else -> Unit
             }
         }
 
         lifecycle.addObserver(observer)
-        mapView.syncWith(lifecycle)
+
+        when {
+            lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) -> {
+                mapView.onStart()
+                mapView.onResume()
+            }
+
+            lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) -> {
+                mapView.onStart()
+            }
+        }
 
         onDispose {
             lifecycle.removeObserver(observer)
-            if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-                mapView.onPause()
-            }
-            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-                mapView.onStop()
+            if (!holder.isDestroyed) {
+                holder.destroy()
             }
         }
     }
@@ -107,7 +144,8 @@ private class MapViewHolder(
     private var mapLibreMap: MapLibreMap? = null
     private var pendingMap: CompletableDeferred<MapLibreMap>? = null
     private var lastAppliedStyle: RenderMapStyle? = null
-    private var isDestroyed: Boolean = false
+    var isDestroyed: Boolean = false
+        private set
 
     suspend fun applyStyle(style: RenderMapStyle) {
         if (isDestroyed) {
@@ -157,13 +195,17 @@ private class MapViewHolder(
 
         mapView.getMapAsync { readyMap ->
             if (isDestroyed) {
-                pendingMap?.cancel(CancellationException("MapViewHolder destroyed before map callback"))
-                pendingMap = null
+                deferred.cancel(CancellationException("MapViewHolder destroyed before map callback"))
+                if (pendingMap === deferred) {
+                    pendingMap = null
+                }
                 return@getMapAsync
             }
 
             mapLibreMap = readyMap
-            pendingMap = null
+            if (pendingMap === deferred) {
+                pendingMap = null
+            }
             deferred.complete(readyMap)
         }
 
@@ -224,24 +266,10 @@ private fun rememberMapViewHolder(
         onDispose {
             savedStateOwner.savedStateRegistry.unregisterSavedStateProvider(MAP_VIEW_STATE_KEY)
             appContext.unregisterComponentCallbacks(callbacks)
-            holder.destroy()
         }
     }
 
     return holder
-}
-
-private fun MapView.syncWith(lifecycle: Lifecycle) {
-    when {
-        lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) -> {
-            onStart()
-            onResume()
-        }
-
-        lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) -> {
-            onStart()
-        }
-    }
 }
 
 private fun RenderMapStyle.styleUrl(): String =
