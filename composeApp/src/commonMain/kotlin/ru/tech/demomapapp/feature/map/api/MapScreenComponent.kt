@@ -4,7 +4,6 @@ import com.arkivanov.decompose.value.Value
 
 interface MapScreenComponent {
     val model: Value<Model>
-    val debugModel: Value<DebugModel>
 
     fun onCameraIdle(snapshot: MapCameraSnapshot)
     fun onCenterMarkerClick()
@@ -30,8 +29,6 @@ interface MapScreenComponent {
         anchor: FeatureInfoWindowAnchor,
     )
     fun onFeatureInfoWindowDismiss()
-
-    fun onDebugPanelToggle()
 
     data class Model(
         val mapState: MapState = MapState(),
@@ -77,9 +74,5 @@ interface MapScreenComponent {
     data class FeatureInfoWindowAnchor(
         val screenX: Int,
         val screenY: Int,
-    )
-
-    data class DebugModel(
-        val isExpanded: Boolean = true,
     )
 }

@@ -18,10 +18,8 @@ internal class DefaultMapScreenComponent(
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mutableModel = MutableValue(defaultModel())
-    private val mutableDebugModel = MutableValue(defaultDebugModel())
 
     override val model: Value<MapScreenComponent.Model> = mutableModel
-    override val debugModel: Value<MapScreenComponent.DebugModel> = mutableDebugModel
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         mutableModel.value = mutableModel.value.copy(
@@ -219,13 +217,6 @@ internal class DefaultMapScreenComponent(
         )
     }
 
-    override fun onDebugPanelToggle() {
-        val debugModel = mutableDebugModel.value
-        mutableDebugModel.value = debugModel.copy(
-            isExpanded = !debugModel.isExpanded,
-        )
-    }
-
     private fun startDrawing(mode: MapScreenComponent.DrawingMode) {
         val model = mutableModel.value
         mutableModel.value = model.copy(
@@ -241,9 +232,6 @@ internal class DefaultMapScreenComponent(
 
     private fun defaultModel(): MapScreenComponent.Model =
         MapScreenComponent.Model()
-
-    private fun defaultDebugModel(): MapScreenComponent.DebugModel =
-        MapScreenComponent.DebugModel()
 
     private fun updateCreatePointDraft(
         transform: MapScreenComponent.CreatePointDraft.() -> MapScreenComponent.CreatePointDraft,

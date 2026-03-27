@@ -3,7 +3,6 @@ package ru.tech.demomapapp.feature.map.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -11,7 +10,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
@@ -28,7 +26,6 @@ fun MapScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val model by component.model.subscribeAsState()
-    val debugModel by component.debugModel.subscribeAsState()
     val renderModel = model.mapState.toRenderModel(
         shapeDrawingDraft = model.shapeDrawingDraft,
         currentSnapshot = model.lastCameraSnapshot,
@@ -55,15 +52,6 @@ fun MapScreenContent(
         CenterMarker(
             onClick = component::onCenterMarkerClick,
             modifier = Modifier.align(Alignment.Center),
-        )
-
-        MapDebugPanel(
-            model = debugModel,
-            snapshot = model.lastCameraSnapshot,
-            onToggle = component::onDebugPanelToggle,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp),
         )
 
         if (model.isCenterMarkerMenuVisible) {
@@ -142,13 +130,6 @@ private class PreviewMapScreenComponent : MapScreenComponent {
             ),
         )
 
-    override val debugModel: Value<MapScreenComponent.DebugModel> =
-        MutableValue(
-            MapScreenComponent.DebugModel(
-                isExpanded = true,
-            ),
-        )
-
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
 
     override fun onCenterMarkerClick() = Unit
@@ -192,8 +173,6 @@ private class PreviewMapScreenComponent : MapScreenComponent {
     ) = Unit
 
     override fun onFeatureInfoWindowDismiss() = Unit
-
-    override fun onDebugPanelToggle() = Unit
 }
 
 private fun RenderFeatureClick.toFeatureInfoWindowAnchor(): MapScreenComponent.FeatureInfoWindowAnchor =
