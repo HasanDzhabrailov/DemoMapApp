@@ -6,6 +6,7 @@ data class MapRenderModel(
     val lines: List<RenderMapLine> = emptyList(),
     val polygons: List<RenderMapPolygon> = emptyList(),
     val currentLocationMarker: RenderCurrentLocationMarker? = null,
+    val rulerMeasurement: RenderRulerMeasurement? = null,
     val drawingPreview: RenderDrawingPreview? = null,
 )
 
@@ -13,6 +14,21 @@ data class RenderCurrentLocationMarker(
     val latitude: Double,
     val longitude: Double,
     val isPlaceholder: Boolean,
+)
+
+data class RenderRulerMeasurement(
+    val startLatitude: Double,
+    val startLongitude: Double,
+    val endLatitude: Double,
+    val endLongitude: Double,
+    val arrowSegments: List<RenderRulerArrowSegment> = emptyList(),
+)
+
+data class RenderRulerArrowSegment(
+    val startLatitude: Double,
+    val startLongitude: Double,
+    val endLatitude: Double,
+    val endLongitude: Double,
 )
 
 data class RenderMapPoint(

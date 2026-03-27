@@ -3,12 +3,14 @@ package ru.tech.demomapapp.feature.map.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
@@ -18,6 +20,7 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 import ru.tech.demomapapp.feature.map.render.RenderFeatureClick
@@ -33,6 +36,7 @@ fun MapScreenContent(
         shapeDrawingDraft = model.shapeDrawingDraft,
         currentSnapshot = model.lastCameraSnapshot,
         currentLocationMarker = model.currentLocationMarker,
+        rulerMeasurement = model.rulerMeasurement,
     )
 
     Box(
@@ -85,6 +89,15 @@ fun MapScreenContent(
                 onMapsOnScreenClick = component::onMapsOnScreenClick,
                 onGpsToggle = component::onGpsToggle,
                 onRulerToggle = component::onRulerToggle,
+            )
+        }
+
+        model.rulerInfoWindow?.let { infoWindow ->
+            RulerInfoWindowOverlay(
+                state = infoWindow,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(y = (-72).dp),
             )
         }
 
@@ -165,6 +178,10 @@ private class PreviewMapScreenComponent : MapScreenComponent {
                     longitude = 37.61842,
                     zoom = 12.34567,
                     bearing = 18.2,
+                ),
+                rulerInfoWindow = RulerInfoWindowState(
+                    distanceText = "12,9 км",
+                    trueAzimuthText = "A = 97° 33' 29\"",
                 ),
             ),
         )

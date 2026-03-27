@@ -51,6 +51,8 @@ interface MapScreenComponent {
         val currentLocationMarker: MapLocationMarker? = null,
         val pendingLocationRequest: MapLocationRequest? = null,
         val isRulerEnabled: Boolean = false,
+        val rulerMeasurement: RulerMeasurement? = null,
+        val rulerInfoWindow: RulerInfoWindowState? = null,
         val pendingViewportCommand: MapViewportCommand? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,

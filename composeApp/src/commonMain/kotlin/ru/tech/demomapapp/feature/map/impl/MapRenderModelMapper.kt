@@ -5,6 +5,7 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
+import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
@@ -17,12 +18,15 @@ import ru.tech.demomapapp.feature.map.render.RenderMapPoint
 import ru.tech.demomapapp.feature.map.render.RenderMapPolygon
 import ru.tech.demomapapp.feature.map.render.RenderMapStyle
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
+import ru.tech.demomapapp.feature.map.render.RenderRulerMeasurement
 
 internal fun MapState.toRenderModel(
     shapeDrawingDraft: MapScreenComponent.ShapeDrawingDraft? = null,
     currentSnapshot: MapCameraSnapshot? = null,
     currentLocationMarker: MapLocationMarker? = null,
+    rulerMeasurement: RulerMeasurement? = null,
     shapeDrawingPreviewMapper: ShapeDrawingPreviewMapper = DefaultShapeDrawingPreviewMapper,
+    rulerArrowGeometryCalculator: RulerArrowGeometryCalculator = DefaultRulerArrowGeometryCalculator,
 ): MapRenderModel =
     MapRenderModel(
         style = style.toRenderStyle(),
@@ -30,6 +34,7 @@ internal fun MapState.toRenderModel(
         lines = lines.map(MapLine::toRenderLine),
         polygons = polygons.map(MapPolygon::toRenderPolygon),
         currentLocationMarker = currentLocationMarker?.toRenderCurrentLocationMarker(),
+        rulerMeasurement = rulerMeasurement?.toRenderRulerMeasurement(rulerArrowGeometryCalculator),
         drawingPreview = shapeDrawingPreviewMapper.map(
             draft = shapeDrawingDraft,
             currentSnapshot = currentSnapshot,
@@ -54,6 +59,17 @@ private fun MapLocationMarker.toRenderCurrentLocationMarker(): RenderCurrentLoca
         latitude = latitude,
         longitude = longitude,
         isPlaceholder = isPlaceholder,
+    )
+
+private fun RulerMeasurement.toRenderRulerMeasurement(
+    rulerArrowGeometryCalculator: RulerArrowGeometryCalculator,
+): RenderRulerMeasurement =
+    RenderRulerMeasurement(
+        startLatitude = startLatitude,
+        startLongitude = startLongitude,
+        endLatitude = endLatitude,
+        endLongitude = endLongitude,
+        arrowSegments = rulerArrowGeometryCalculator.calculate(this),
     )
 
 private fun MapLine.toRenderLine(): RenderMapLine {

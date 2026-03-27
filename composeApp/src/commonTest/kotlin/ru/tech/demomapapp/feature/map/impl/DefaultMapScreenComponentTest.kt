@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
@@ -259,6 +260,127 @@ class DefaultMapScreenComponentTest {
 
         assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
         assertFalse(component.model.value.currentLocationMarker?.isPlaceholder ?: true)
+    }
+
+    @Test
+    fun `ruler enable uses gps marker when available`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onViewportCommandConsumed()
+        component.onRulerToggle()
+
+        val rulerMeasurement = assertNotNull(component.model.value.rulerMeasurement)
+        assertTrue(component.model.value.isRulerEnabled)
+        assertEquals(55.7, rulerMeasurement.startLatitude)
+        assertEquals(37.6, rulerMeasurement.startLongitude)
+        assertEquals(59.0, rulerMeasurement.endLatitude)
+        assertEquals(30.0, rulerMeasurement.endLongitude)
+        assertTrue(component.model.value.rulerInfoWindow?.trueAzimuthText?.startsWith("A = ") == true)
+    }
+
+    @Test
+    fun `ruler enable uses existing manual marker when available`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onMyLocationClick()
+        component.onCameraIdle(defaultSnapshot(latitude = 59.1, longitude = 30.1))
+        component.onRulerToggle()
+
+        val rulerMeasurement = assertNotNull(component.model.value.rulerMeasurement)
+        assertEquals(59.0, rulerMeasurement.startLatitude)
+        assertEquals(30.0, rulerMeasurement.startLongitude)
+        assertEquals(59.1, rulerMeasurement.endLatitude)
+        assertEquals(30.1, rulerMeasurement.endLongitude)
+    }
+
+    @Test
+    fun `ruler enable creates fallback manual marker from current snapshot`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onRulerToggle()
+
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
+        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(30.0, component.model.value.currentLocationMarker?.longitude)
+        assertTrue(component.model.value.currentLocationMarker?.isPlaceholder == true)
+        assertEquals("0 м", component.model.value.rulerInfoWindow?.distanceText)
+    }
+
+    @Test
+    fun `ruler waits for first snapshot before creating fallback manual marker`() {
+        val component = createComponent()
+
+        component.onRulerToggle()
+
+        assertTrue(component.model.value.isRulerEnabled)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.rulerMeasurement)
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
+        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
+        assertNotNull(component.model.value.rulerMeasurement)
+    }
+
+    @Test
+    fun `ruler recalculates on camera updates while active`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onMyLocationClick()
+        component.onRulerToggle()
+        component.onCameraIdle(defaultSnapshot(latitude = 59.2, longitude = 30.2))
+
+        val rulerMeasurement = assertNotNull(component.model.value.rulerMeasurement)
+        assertEquals(59.0, rulerMeasurement.startLatitude)
+        assertEquals(30.0, rulerMeasurement.startLongitude)
+        assertEquals(59.2, rulerMeasurement.endLatitude)
+        assertEquals(30.2, rulerMeasurement.endLongitude)
+    }
+
+    @Test
+    fun `successful gps result updates active ruler origin`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onRulerToggle()
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+
+        val rulerMeasurement = assertNotNull(component.model.value.rulerMeasurement)
+        assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
+        assertFalse(component.model.value.currentLocationMarker?.isPlaceholder ?: true)
+        assertEquals(55.7, rulerMeasurement.startLatitude)
+        assertEquals(37.6, rulerMeasurement.startLongitude)
+        assertEquals(59.0, rulerMeasurement.endLatitude)
+        assertEquals(30.0, rulerMeasurement.endLongitude)
+    }
+
+    @Test
+    fun `ruler disable clears measurement state`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onRulerToggle()
+        component.onRulerToggle()
+
+        assertFalse(component.model.value.isRulerEnabled)
+        assertNull(component.model.value.rulerMeasurement)
+        assertNull(component.model.value.rulerInfoWindow)
+    }
+
+    @Test
+    fun `ruler measurement is not stored as user created line`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onRulerToggle()
+
+        assertTrue(component.model.value.mapState.lines.isEmpty())
     }
 
     @Test

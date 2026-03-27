@@ -21,15 +21,19 @@ internal class DefaultMapScreenComponent(
     private val featureIdProvider: FeatureIdProvider = UuidFeatureIdProvider(),
     private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+    private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
+    private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mutableModel = MutableValue(defaultModel())
 
     override val model: Value<MapScreenComponent.Model> = mutableModel
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
-        mutableModel.value = mutableModel.value.copy(
-            lastCameraSnapshot = snapshot,
-            selectedFeatureInfoWindow = null,
+        mutableModel.value = recalculateRulerState(
+            mutableModel.value.copy(
+                lastCameraSnapshot = snapshot,
+                selectedFeatureInfoWindow = null,
+            ),
         )
     }
 
@@ -84,15 +88,18 @@ internal class DefaultMapScreenComponent(
     override fun onGpsToggle() {
         val model = mutableModel.value
         if (model.pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
-            mutableModel.value = model.copy(
-                myLocationMode = MyLocationMode.OFF,
-                currentLocationMarker = null,
-                pendingLocationRequest = null,
+            mutableModel.value = recalculateRulerState(
+                model.copy(
+                    myLocationMode = MyLocationMode.OFF,
+                    currentLocationMarker = null,
+                    pendingLocationRequest = null,
+                ),
             )
             return
         }
 
-        mutableModel.value = when (model.myLocationMode) {
+        mutableModel.value = recalculateRulerState(
+            when (model.myLocationMode) {
             MyLocationMode.GPS -> model.copy(
                 myLocationMode = MyLocationMode.OFF,
                 currentLocationMarker = null,
@@ -106,12 +113,14 @@ internal class DefaultMapScreenComponent(
                 currentLocationMarker = null,
                 pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
             )
-        }
+            },
+        )
     }
 
     override fun onMyLocationClick() {
         val model = mutableModel.value
-        mutableModel.value = when (model.myLocationMode) {
+        mutableModel.value = recalculateRulerState(
+            when (model.myLocationMode) {
             MyLocationMode.GPS -> model
 
             MyLocationMode.OFF,
@@ -128,7 +137,8 @@ internal class DefaultMapScreenComponent(
                     pendingLocationRequest = null,
                 )
             }
-        }
+            },
+        )
     }
 
     override fun onCurrentLocationFocusClick() {
@@ -163,7 +173,8 @@ internal class DefaultMapScreenComponent(
     override fun onLocationResult(result: LocationRequestResult) {
         val model = mutableModel.value
         val request = model.pendingLocationRequest
-        mutableModel.value = when (result) {
+        mutableModel.value = recalculateRulerState(
+            when (result) {
             LocationRequestResult.PermissionDenied -> {
                 model.copy(
                     myLocationMode = MyLocationMode.OFF,
@@ -199,14 +210,21 @@ internal class DefaultMapScreenComponent(
                     longitude = result.longitude,
                 ),
             )
-        }
+            },
+        )
     }
 
     override fun onRulerToggle() {
         val model = mutableModel.value
-        mutableModel.value = model.copy(
-            isRulerEnabled = !model.isRulerEnabled,
-        )
+        mutableModel.value = if (model.isRulerEnabled) {
+            clearRulerState(
+                model.copy(isRulerEnabled = false),
+            )
+        } else {
+            recalculateRulerState(
+                model.copy(isRulerEnabled = true),
+            )
+        }
     }
 
     override fun onViewportCommandConsumed() {
@@ -424,6 +442,41 @@ internal class DefaultMapScreenComponent(
     private fun defaultModel(): MapScreenComponent.Model =
         MapScreenComponent.Model()
 
+    private fun recalculateRulerState(model: MapScreenComponent.Model): MapScreenComponent.Model {
+        if (!model.isRulerEnabled) {
+            return clearRulerState(model)
+        }
+
+        val snapshot = model.lastCameraSnapshot
+        val updatedModel = if (model.currentLocationMarker == null && snapshot != null) {
+            model.copy(
+                myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
+                currentLocationMarker = snapshot.toPlaceholderLocationMarker(),
+            )
+        } else {
+            model
+        }
+
+        val marker = updatedModel.currentLocationMarker ?: return clearRulerState(updatedModel)
+        val endSnapshot = updatedModel.lastCameraSnapshot ?: return clearRulerState(updatedModel)
+        val measurement = rulerMeasurementCalculator.calculate(
+            startLatitude = marker.latitude,
+            startLongitude = marker.longitude,
+            endLatitude = endSnapshot.latitude,
+            endLongitude = endSnapshot.longitude,
+        )
+        return updatedModel.copy(
+            rulerMeasurement = measurement,
+            rulerInfoWindow = rulerInfoWindowStateFormatter.format(measurement),
+        )
+    }
+
+    private fun clearRulerState(model: MapScreenComponent.Model): MapScreenComponent.Model =
+        model.copy(
+            rulerMeasurement = null,
+            rulerInfoWindow = null,
+        )
+
     private fun updateCreatePointDraft(
         transform: MapScreenComponent.CreatePointDraft.() -> MapScreenComponent.CreatePointDraft,
     ) {
@@ -438,6 +491,13 @@ internal class DefaultMapScreenComponent(
         MapScreenComponent.CreatePointDraft(
             latitudeInput = latitude.toString(),
             longitudeInput = longitude.toString(),
+        )
+
+    private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker =
+        MapLocationMarker(
+            latitude = latitude,
+            longitude = longitude,
+            isPlaceholder = true,
         )
 
     private fun MapScreenComponent.ShapeDrawingDraft.canOpenDetails(): Boolean =

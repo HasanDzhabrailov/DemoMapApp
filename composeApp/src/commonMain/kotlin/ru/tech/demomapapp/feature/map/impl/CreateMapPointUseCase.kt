@@ -16,15 +16,20 @@ internal data class CreateMapPointInput(
 
 internal class DefaultCreateMapPointUseCase : CreateMapPointUseCase {
     override fun create(input: CreateMapPointInput): MapPoint? {
-        val latitude = input.latitudeInput.toDoubleOrNull() ?: return null
-        val longitude = input.longitudeInput.toDoubleOrNull() ?: return null
+        val latitude = input.latitudeInput.toCoordinateOrNull() ?: return null
+        val longitude = input.longitudeInput.toCoordinateOrNull() ?: return null
 
         return MapPoint(
             id = input.id,
             latitude = latitude,
             longitude = longitude,
-            title = input.titleInput.trim(),
+            title = input.titleInput.trim().ifBlank { "Точка" },
             createdAtEpochMillis = input.createdAtEpochMillis,
         )
     }
 }
+
+private fun String.toCoordinateOrNull(): Double? =
+    trim()
+        .replace(',', '.')
+        .toDoubleOrNull()
