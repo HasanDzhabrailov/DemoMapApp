@@ -65,6 +65,7 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 import org.maplibre.geojson.Polygon
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -86,6 +87,8 @@ private const val MAP_POLYGON_LABELS_SOURCE_ID = "map-renderer-polygon-labels-so
 private const val MAP_POLYGON_LABELS_LAYER_ID = "map-renderer-polygon-labels-layer"
 private const val MAP_PREVIEW_LINE_SOURCE_ID = "map-renderer-preview-line-source"
 private const val MAP_PREVIEW_LINE_LAYER_ID = "map-renderer-preview-line-layer"
+private const val MAP_CURRENT_LOCATION_SOURCE_ID = "map-renderer-current-location-source"
+private const val MAP_CURRENT_LOCATION_LAYER_ID = "map-renderer-current-location-layer"
 private const val MAP_FIXED_LINE_SOURCE_ID = "map-renderer-fixed-line-source"
 private const val MAP_FIXED_LINE_LAYER_ID = "map-renderer-fixed-line-layer"
 private const val MAP_PREVIEW_POLYGON_SOURCE_ID = "map-renderer-preview-polygon-source"
@@ -302,6 +305,7 @@ internal class MapViewHolder(
         val style = map.loadStyle(model.style, lastAppliedStyle)
         lastAppliedStyle = model.style
         style.applyPoints(model.points)
+        style.applyCurrentLocationMarker(model.currentLocationMarker)
         style.applyLines(model.lines)
         style.applyPolygons(model.polygons)
         style.applyDrawingPreview(model.drawingPreview)
@@ -349,8 +353,15 @@ internal class MapViewHolder(
 
         val map = awaitMap()
         when (command) {
-            MapViewportCommand.ZOOM_IN -> map.animateCamera(CameraUpdateFactory.zoomIn())
-            MapViewportCommand.ZOOM_OUT -> map.animateCamera(CameraUpdateFactory.zoomOut())
+            MapViewportCommand.ZoomIn -> map.animateCamera(CameraUpdateFactory.zoomIn())
+            MapViewportCommand.ZoomOut -> map.animateCamera(CameraUpdateFactory.zoomOut())
+            is MapViewportCommand.MoveTo -> {
+                map.animateCamera(
+                    CameraUpdateFactory.newLatLng(
+                        LatLng(command.latitude, command.longitude),
+                    ),
+                )
+            }
         }
     }
 
@@ -513,6 +524,35 @@ private fun Style.applyPoints(points: List<RenderMapPoint>) {
             ),
         )
     }
+}
+
+private fun Style.applyCurrentLocationMarker(marker: RenderCurrentLocationMarker?) {
+    val featureCollection = FeatureCollection.fromFeatures(
+        buildList {
+            if (marker != null) {
+                add(
+                    Feature.fromGeometry(
+                        Point.fromLngLat(marker.longitude, marker.latitude),
+                    ),
+                )
+            }
+        },
+    )
+
+    val source = getSourceAs<GeoJsonSource>(MAP_CURRENT_LOCATION_SOURCE_ID)
+        ?: GeoJsonSource(MAP_CURRENT_LOCATION_SOURCE_ID, featureCollection).also(::addSource)
+    source.setGeoJson(featureCollection)
+
+    getLayer(MAP_CURRENT_LOCATION_LAYER_ID)?.let(::removeLayer)
+    addLayer(
+        CircleLayer(MAP_CURRENT_LOCATION_LAYER_ID, MAP_CURRENT_LOCATION_SOURCE_ID).withProperties(
+            circleColor(if (marker?.isPlaceholder == true) "#FFD166" else "#2E86DE"),
+            circleRadius(if (marker?.isPlaceholder == true) 8f else 9f),
+            circleOpacity(0.95f),
+            circleStrokeColor("#FFFFFF"),
+            circleStrokeWidth(3f),
+        ),
+    )
 }
 
 private fun Style.applyLines(lines: List<RenderMapLine>) {

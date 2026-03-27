@@ -3,7 +3,11 @@ package ru.tech.demomapapp.feature.map.impl
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapLocationRequest
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
@@ -55,13 +59,13 @@ internal class DefaultMapScreenComponent(
 
     override fun onZoomInClick() {
         mutableModel.value = mutableModel.value.copy(
-            pendingViewportCommand = MapViewportCommand.ZOOM_IN,
+            pendingViewportCommand = MapViewportCommand.ZoomIn,
         )
     }
 
     override fun onZoomOutClick() {
         mutableModel.value = mutableModel.value.copy(
-            pendingViewportCommand = MapViewportCommand.ZOOM_OUT,
+            pendingViewportCommand = MapViewportCommand.ZoomOut,
         )
     }
 
@@ -79,9 +83,123 @@ internal class DefaultMapScreenComponent(
 
     override fun onGpsToggle() {
         val model = mutableModel.value
-        mutableModel.value = model.copy(
-            isGpsEnabled = !model.isGpsEnabled,
+        if (model.pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
+            mutableModel.value = model.copy(
+                myLocationMode = MyLocationMode.OFF,
+                currentLocationMarker = null,
+                pendingLocationRequest = null,
+            )
+            return
+        }
+
+        mutableModel.value = when (model.myLocationMode) {
+            MyLocationMode.GPS -> model.copy(
+                myLocationMode = MyLocationMode.OFF,
+                currentLocationMarker = null,
+                pendingLocationRequest = null,
+            )
+
+            MyLocationMode.OFF,
+            MyLocationMode.MANUAL_PLACEHOLDER,
+            -> model.copy(
+                myLocationMode = MyLocationMode.OFF,
+                currentLocationMarker = null,
+                pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
+            )
+        }
+    }
+
+    override fun onMyLocationClick() {
+        val model = mutableModel.value
+        mutableModel.value = when (model.myLocationMode) {
+            MyLocationMode.GPS -> model
+
+            MyLocationMode.OFF,
+            MyLocationMode.MANUAL_PLACEHOLDER,
+            -> {
+                val snapshot = model.lastCameraSnapshot ?: return
+                model.copy(
+                    myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
+                    currentLocationMarker = MapLocationMarker(
+                        latitude = snapshot.latitude,
+                        longitude = snapshot.longitude,
+                        isPlaceholder = true,
+                    ),
+                    pendingLocationRequest = null,
+                )
+            }
+        }
+    }
+
+    override fun onCurrentLocationFocusClick() {
+        val model = mutableModel.value
+        val marker = model.currentLocationMarker
+        mutableModel.value = when {
+            marker != null -> {
+                model.copy(
+                    pendingViewportCommand = MapViewportCommand.MoveTo(
+                        latitude = marker.latitude,
+                        longitude = marker.longitude,
+                    ),
+                )
+            }
+
+            model.myLocationMode == MyLocationMode.GPS -> {
+                model.copy(
+                    pendingLocationRequest = MapLocationRequest.RecenterToGpsLocationRequest,
+                )
+            }
+
+            else -> model
+        }
+    }
+
+    override fun onLocationRequestConsumed() {
+        mutableModel.value = mutableModel.value.copy(
+            pendingLocationRequest = null,
         )
+    }
+
+    override fun onLocationResult(result: LocationRequestResult) {
+        val model = mutableModel.value
+        val request = model.pendingLocationRequest
+        mutableModel.value = when (result) {
+            LocationRequestResult.PermissionDenied -> {
+                model.copy(
+                    myLocationMode = MyLocationMode.OFF,
+                    currentLocationMarker = null,
+                    pendingLocationRequest = null,
+                )
+            }
+
+            LocationRequestResult.LocationUnavailable -> {
+                if (model.myLocationMode == MyLocationMode.GPS && request != MapLocationRequest.EnableGpsLocationRequest) {
+                    model.copy(
+                        pendingLocationRequest = null,
+                    )
+                } else {
+                    model.copy(
+                        myLocationMode = MyLocationMode.OFF,
+                        currentLocationMarker = null,
+                        pendingLocationRequest = null,
+                    )
+                }
+            }
+
+            is LocationRequestResult.LocationResolved -> model.copy(
+                myLocationMode = MyLocationMode.GPS,
+                currentLocationMarker = MapLocationMarker(
+                    latitude = result.latitude,
+                    longitude = result.longitude,
+                    isPlaceholder = false,
+                ),
+                pendingLocationRequest = null,
+                pendingViewportCommand = MapViewportCommand.MoveTo(
+                    latitude = result.latitude,
+                    longitude = result.longitude,
+                ),
+            )
+        }
     }
 
     override fun onRulerToggle() {

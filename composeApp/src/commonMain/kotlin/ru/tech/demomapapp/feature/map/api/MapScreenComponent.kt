@@ -13,6 +13,10 @@ interface MapScreenComponent {
     fun onAvailableMapsClick()
     fun onMapsOnScreenClick()
     fun onGpsToggle()
+    fun onMyLocationClick()
+    fun onCurrentLocationFocusClick()
+    fun onLocationRequestConsumed()
+    fun onLocationResult(result: LocationRequestResult)
     fun onRulerToggle()
     fun onViewportCommandConsumed()
     fun onCenterMarkerClick()
@@ -43,7 +47,9 @@ interface MapScreenComponent {
         val mapState: MapState = MapState(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
         val isMapToolsMenuVisible: Boolean = false,
-        val isGpsEnabled: Boolean = false,
+        val myLocationMode: MyLocationMode = MyLocationMode.OFF,
+        val currentLocationMarker: MapLocationMarker? = null,
+        val pendingLocationRequest: MapLocationRequest? = null,
         val isRulerEnabled: Boolean = false,
         val pendingViewportCommand: MapViewportCommand? = null,
         val isCenterMarkerMenuVisible: Boolean = false,

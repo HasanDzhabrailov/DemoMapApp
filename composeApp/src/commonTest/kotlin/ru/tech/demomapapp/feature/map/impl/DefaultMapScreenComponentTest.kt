@@ -7,9 +7,12 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
 
 class DefaultMapScreenComponentTest {
 
@@ -58,18 +61,213 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
-    fun `map tools toggles keep menu open and do not trigger viewport command`() {
+    fun `gps enable emits one shot request and keeps menu open`() {
         val component = createComponent()
 
         component.onMapToolsClick()
         component.onGpsToggle()
-        component.onRulerToggle()
 
         assertTrue(component.model.value.isMapToolsMenuVisible)
-        assertTrue(component.model.value.isGpsEnabled)
-        assertTrue(component.model.value.isRulerEnabled)
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertEquals(MapLocationRequest.EnableGpsLocationRequest, component.model.value.pendingLocationRequest)
         assertNull(component.model.value.pendingViewportCommand)
-        assertNull(component.model.value.lastCameraSnapshot)
+    }
+
+    @Test
+    fun `second gps toggle tap cancels pending enable request`() {
+        val component = createComponent()
+
+        component.onGpsToggle()
+        component.onGpsToggle()
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `gps denied result keeps mode off and clears marker`() {
+        val component = createComponent()
+
+        component.onGpsToggle()
+        component.onLocationRequestConsumed()
+        component.onLocationResult(LocationRequestResult.PermissionDenied)
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `gps unavailable result keeps mode off and clears marker`() {
+        val component = createComponent()
+
+        component.onGpsToggle()
+        component.onLocationRequestConsumed()
+        component.onLocationResult(LocationRequestResult.LocationUnavailable)
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `successful gps result sets gps mode marker and move command`() {
+        val component = createComponent()
+
+        component.onGpsToggle()
+        component.onLocationRequestConsumed()
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+
+        assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
+        assertEquals(55.7, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(37.6, component.model.value.currentLocationMarker?.longitude)
+        assertFalse(component.model.value.currentLocationMarker?.isPlaceholder ?: true)
+        assertEquals(
+            MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6),
+            component.model.value.pendingViewportCommand,
+        )
+    }
+
+    @Test
+    fun `gps toggle off clears gps marker and request`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onGpsToggle()
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `recenter failure keeps gps mode and current marker`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onViewportCommandConsumed()
+        component.onCurrentLocationFocusClick()
+        component.onLocationResult(LocationRequestResult.LocationUnavailable)
+
+        assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
+        assertEquals(55.7, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(37.6, component.model.value.currentLocationMarker?.longitude)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `permission denied after active gps turns gps off and clears marker`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onViewportCommandConsumed()
+        component.onCurrentLocationFocusClick()
+        component.onLocationResult(LocationRequestResult.PermissionDenied)
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `my location click while gps active does not replace gps marker with placeholder`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onMyLocationClick()
+
+        assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
+        assertEquals(55.7, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(37.6, component.model.value.currentLocationMarker?.longitude)
+        assertFalse(component.model.value.currentLocationMarker?.isPlaceholder ?: true)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `current location focus click while gps active moves camera to current marker`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+        component.onViewportCommandConsumed()
+        component.onCurrentLocationFocusClick()
+
+        assertEquals(
+            MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6),
+            component.model.value.pendingViewportCommand,
+        )
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `current location focus click while gps inactive does nothing without marker`() {
+        val component = createComponent()
+
+        component.onCurrentLocationFocusClick()
+
+        assertNull(component.model.value.pendingLocationRequest)
+        assertNull(component.model.value.pendingViewportCommand)
+    }
+
+    @Test
+    fun `current location focus click moves camera to manual placeholder marker`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onMyLocationClick()
+        component.onCurrentLocationFocusClick()
+
+        assertEquals(
+            MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
+            component.model.value.pendingViewportCommand,
+        )
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `my location click while gps inactive creates manual placeholder from camera center`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onMyLocationClick()
+
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
+        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(30.0, component.model.value.currentLocationMarker?.longitude)
+        assertTrue(component.model.value.currentLocationMarker?.isPlaceholder == true)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `my location click while gps inactive does nothing without camera snapshot`() {
+        val component = createComponent()
+
+        component.onMyLocationClick()
+
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
+    fun `successful gps result clears manual placeholder mode`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onMyLocationClick()
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+
+        assertEquals(MyLocationMode.GPS, component.model.value.myLocationMode)
+        assertFalse(component.model.value.currentLocationMarker?.isPlaceholder ?: true)
+    }
+
+    @Test
+    fun `current location marker is not stored as user created point`() {
+        val component = createComponent()
+
+        component.onLocationResult(LocationRequestResult.LocationResolved(latitude = 55.7, longitude = 37.6))
+
+        assertTrue(component.model.value.mapState.points.isEmpty())
     }
 
     @Test
@@ -90,13 +288,13 @@ class DefaultMapScreenComponentTest {
         val component = createComponent()
 
         component.onZoomInClick()
-        assertEquals(MapViewportCommand.ZOOM_IN, component.model.value.pendingViewportCommand)
+        assertEquals(MapViewportCommand.ZoomIn, component.model.value.pendingViewportCommand)
 
         component.onViewportCommandConsumed()
         assertNull(component.model.value.pendingViewportCommand)
 
         component.onZoomOutClick()
-        assertEquals(MapViewportCommand.ZOOM_OUT, component.model.value.pendingViewportCommand)
+        assertEquals(MapViewportCommand.ZoomOut, component.model.value.pendingViewportCommand)
     }
 
     @Test

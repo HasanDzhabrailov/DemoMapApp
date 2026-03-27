@@ -13,8 +13,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 import ru.tech.demomapapp.feature.map.render.RenderFeatureClick
@@ -29,6 +32,7 @@ fun MapScreenContent(
     val renderModel = model.mapState.toRenderModel(
         shapeDrawingDraft = model.shapeDrawingDraft,
         currentSnapshot = model.lastCameraSnapshot,
+        currentLocationMarker = model.currentLocationMarker,
     )
 
     Box(
@@ -51,8 +55,18 @@ fun MapScreenContent(
             },
         )
 
-        MapToolsButton(
-            onClick = component::onMapToolsClick,
+        MapLocationEffectBinder(
+            request = model.pendingLocationRequest,
+            onRequestConsumed = component::onLocationRequestConsumed,
+            onLocationResult = component::onLocationResult,
+        )
+
+        MapLeftControlsOverlay(
+            onMyLocationClick = component::onMyLocationClick,
+            isMyLocationEnabled = model.isManualLocationEnabled(),
+            onCurrentLocationFocusClick = component::onCurrentLocationFocusClick,
+            isCurrentLocationFocusEnabled = model.isCurrentLocationFocusEnabled(),
+            onMapToolsClick = component::onMapToolsClick,
             modifier = Modifier.align(Alignment.BottomStart),
         )
 
@@ -64,7 +78,7 @@ fun MapScreenContent(
 
         if (model.isMapToolsMenuVisible) {
             MapToolsMenuOverlay(
-                isGpsEnabled = model.isGpsEnabled,
+                isGpsEnabled = model.isGpsToggleChecked(),
                 isRulerEnabled = model.isRulerEnabled,
                 onDismiss = component::onMapToolsDismiss,
                 onAvailableMapsClick = component::onAvailableMapsClick,
@@ -171,6 +185,14 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onGpsToggle() = Unit
 
+    override fun onMyLocationClick() = Unit
+
+    override fun onCurrentLocationFocusClick() = Unit
+
+    override fun onLocationRequestConsumed() = Unit
+
+    override fun onLocationResult(result: LocationRequestResult) = Unit
+
     override fun onRulerToggle() = Unit
 
     override fun onViewportCommandConsumed() = Unit
@@ -217,6 +239,16 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onFeatureInfoWindowDismiss() = Unit
 }
+
+private fun MapScreenComponent.Model.isGpsToggleChecked(): Boolean =
+    myLocationMode == MyLocationMode.GPS ||
+        pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest
+
+private fun MapScreenComponent.Model.isCurrentLocationFocusEnabled(): Boolean =
+    currentLocationMarker != null || myLocationMode == MyLocationMode.GPS
+
+private fun MapScreenComponent.Model.isManualLocationEnabled(): Boolean =
+    myLocationMode != MyLocationMode.GPS
 
 private fun RenderFeatureClick.toFeatureInfoWindowAnchor(): MapScreenComponent.FeatureInfoWindowAnchor =
     MapScreenComponent.FeatureInfoWindowAnchor(

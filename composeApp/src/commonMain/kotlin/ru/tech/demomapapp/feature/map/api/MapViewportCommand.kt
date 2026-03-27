@@ -1,6 +1,12 @@
 package ru.tech.demomapapp.feature.map.api
 
-enum class MapViewportCommand {
-    ZOOM_IN,
-    ZOOM_OUT,
+sealed interface MapViewportCommand {
+    data object ZoomIn : MapViewportCommand
+
+    data object ZoomOut : MapViewportCommand
+
+    data class MoveTo(
+        val latitude: Double,
+        val longitude: Double,
+    ) : MapViewportCommand
 }

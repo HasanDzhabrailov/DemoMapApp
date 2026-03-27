@@ -5,7 +5,14 @@ data class MapRenderModel(
     val points: List<RenderMapPoint> = emptyList(),
     val lines: List<RenderMapLine> = emptyList(),
     val polygons: List<RenderMapPolygon> = emptyList(),
+    val currentLocationMarker: RenderCurrentLocationMarker? = null,
     val drawingPreview: RenderDrawingPreview? = null,
+)
+
+data class RenderCurrentLocationMarker(
+    val latitude: Double,
+    val longitude: Double,
+    val isPlaceholder: Boolean,
 )
 
 data class RenderMapPoint(
