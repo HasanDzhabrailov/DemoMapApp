@@ -9,10 +9,13 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     private val createMapPointUseCase: CreateMapPointUseCase = DefaultCreateMapPointUseCase(),
+    private val createMapLineUseCase: CreateMapLineUseCase = DefaultCreateMapLineUseCase(),
+    private val createMapPolygonUseCase: CreateMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
+    private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
     private val timeProvider: TimeProvider = SystemTimeProvider(),
-    private val pointIdProvider: PointIdProvider = UuidPointIdProvider(),
-    private val pointSelectionResolver: MapPointSelectionResolver = DefaultMapPointSelectionResolver(),
-    private val pointInfoWindowStateMapper: MapPointInfoWindowStateMapper = DefaultMapPointInfoWindowStateMapper(),
+    private val featureIdProvider: FeatureIdProvider = UuidFeatureIdProvider(),
+    private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mutableModel = MutableValue(defaultModel())
     private val mutableDebugModel = MutableValue(defaultDebugModel())
@@ -23,14 +26,18 @@ internal class DefaultMapScreenComponent(
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         mutableModel.value = mutableModel.value.copy(
             lastCameraSnapshot = snapshot,
-            selectedPointInfoWindow = null,
+            selectedFeatureInfoWindow = null,
         )
     }
 
     override fun onCenterMarkerClick() {
-        mutableModel.value = mutableModel.value.copy(
+        val model = mutableModel.value
+        if (model.drawingMode != null) {
+            return
+        }
+        mutableModel.value = model.copy(
             isCenterMarkerMenuVisible = true,
-            selectedPointInfoWindow = null,
+            selectedFeatureInfoWindow = null,
         )
     }
 
@@ -46,8 +53,16 @@ internal class DefaultMapScreenComponent(
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = model.lastCameraSnapshot != null,
             createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
-            selectedPointInfoWindow = null,
+            selectedFeatureInfoWindow = null,
         )
+    }
+
+    override fun onCreateLineClick() {
+        startDrawing(MapScreenComponent.DrawingMode.LINE)
+    }
+
+    override fun onCreatePolygonClick() {
+        startDrawing(MapScreenComponent.DrawingMode.POLYGON)
     }
 
     override fun onCreatePointLatitudeChange(value: String) {
@@ -67,7 +82,7 @@ internal class DefaultMapScreenComponent(
         val draft = model.createPointDraft ?: return
         val point = createMapPointUseCase.create(
             CreateMapPointInput(
-                id = pointIdProvider.nextId(),
+                id = featureIdProvider.nextId(),
                 latitudeInput = draft.latitudeInput,
                 longitudeInput = draft.longitudeInput,
                 titleInput = draft.titleInput,
@@ -91,21 +106,116 @@ internal class DefaultMapScreenComponent(
         )
     }
 
-    override fun onPointClick(
-        pointKey: String,
-        anchor: MapScreenComponent.PointInfoWindowAnchor,
-    ) {
+    override fun onDrawingAddPositionClick() {
         val model = mutableModel.value
-        val point = pointSelectionResolver.resolve(model.mapState.points, pointKey) ?: return
+        val draft = model.shapeDrawingDraft ?: return
+        val snapshot = model.lastCameraSnapshot ?: return
         mutableModel.value = model.copy(
-            isCenterMarkerMenuVisible = false,
-            selectedPointInfoWindow = pointInfoWindowStateMapper.map(point, anchor),
+            shapeDrawingDraft = shapeDrawingDraftUpdater.addVertex(draft, snapshot),
+            selectedFeatureInfoWindow = null,
         )
     }
 
-    override fun onPointInfoWindowDismiss() {
+    override fun onDrawingRemoveLastPositionClick() {
+        val model = mutableModel.value
+        val draft = model.shapeDrawingDraft ?: return
+        mutableModel.value = model.copy(
+            shapeDrawingDraft = shapeDrawingDraftUpdater.removeLastVertex(draft),
+        )
+    }
+
+    override fun onDrawingDetailsClick() {
+        val model = mutableModel.value
+        val draft = model.shapeDrawingDraft ?: return
+        if (!draft.canOpenDetails()) {
+            return
+        }
+        mutableModel.value = model.copy(
+            isCreateShapeSheetVisible = true,
+        )
+    }
+
+    override fun onDrawingDismiss() {
         mutableModel.value = mutableModel.value.copy(
-            selectedPointInfoWindow = null,
+            drawingMode = null,
+            shapeDrawingDraft = null,
+            isCreateShapeSheetVisible = false,
+        )
+    }
+
+    override fun onCreateShapeTitleChange(value: String) {
+        val model = mutableModel.value
+        val draft = model.shapeDrawingDraft ?: return
+        mutableModel.value = model.copy(
+            shapeDrawingDraft = draft.copy(titleInput = value),
+        )
+    }
+
+    override fun onCreateShapeConfirm() {
+        val model = mutableModel.value
+        val draft = model.shapeDrawingDraft ?: return
+        val createdAt = timeProvider.currentTimeMillis()
+        val id = featureIdProvider.nextId()
+
+        when (draft.mode) {
+            MapScreenComponent.DrawingMode.LINE -> {
+                val line = createMapLineUseCase.create(
+                    CreateMapLineInput(
+                        id = id,
+                        vertices = draft.fixedVertices,
+                        titleInput = draft.titleInput,
+                        createdAtEpochMillis = createdAt,
+                    ),
+                ) ?: return
+                mutableModel.value = model.copy(
+                    mapState = model.mapState.copy(lines = model.mapState.lines + line),
+                    drawingMode = null,
+                    shapeDrawingDraft = null,
+                    isCreateShapeSheetVisible = false,
+                )
+            }
+
+            MapScreenComponent.DrawingMode.POLYGON -> {
+                val polygon = createMapPolygonUseCase.create(
+                    CreateMapPolygonInput(
+                        id = id,
+                        vertices = draft.fixedVertices,
+                        titleInput = draft.titleInput,
+                        createdAtEpochMillis = createdAt,
+                    ),
+                ) ?: return
+                mutableModel.value = model.copy(
+                    mapState = model.mapState.copy(polygons = model.mapState.polygons + polygon),
+                    drawingMode = null,
+                    shapeDrawingDraft = null,
+                    isCreateShapeSheetVisible = false,
+                )
+            }
+        }
+    }
+
+    override fun onCreateShapeSheetDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            isCreateShapeSheetVisible = false,
+        )
+    }
+
+    override fun onFeatureClick(
+        featureKey: String,
+        featureType: MapScreenComponent.FeatureType,
+        anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+    ) {
+        val model = mutableModel.value
+        val feature = featureSelectionResolver.resolve(model.mapState, featureKey, featureType) ?: return
+        mutableModel.value = model.copy(
+            isCenterMarkerMenuVisible = false,
+            selectedFeatureInfoWindow = featureInfoWindowStateMapper.map(feature, anchor),
+        )
+    }
+
+    override fun onFeatureInfoWindowDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            selectedFeatureInfoWindow = null,
         )
     }
 
@@ -113,6 +223,19 @@ internal class DefaultMapScreenComponent(
         val debugModel = mutableDebugModel.value
         mutableDebugModel.value = debugModel.copy(
             isExpanded = !debugModel.isExpanded,
+        )
+    }
+
+    private fun startDrawing(mode: MapScreenComponent.DrawingMode) {
+        val model = mutableModel.value
+        mutableModel.value = model.copy(
+            isCenterMarkerMenuVisible = false,
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+            drawingMode = mode,
+            shapeDrawingDraft = MapScreenComponent.ShapeDrawingDraft(mode = mode),
+            isCreateShapeSheetVisible = false,
+            selectedFeatureInfoWindow = null,
         )
     }
 
@@ -137,6 +260,15 @@ internal class DefaultMapScreenComponent(
             latitudeInput = latitude.toString(),
             longitudeInput = longitude.toString(),
         )
+
+    private fun MapScreenComponent.ShapeDrawingDraft.canOpenDetails(): Boolean =
+        fixedVertices.size >= minimumVertexCount()
+
+    private fun MapScreenComponent.ShapeDrawingDraft.minimumVertexCount(): Int =
+        when (mode) {
+            MapScreenComponent.DrawingMode.LINE -> 2
+            MapScreenComponent.DrawingMode.POLYGON -> 3
+        }
 }
 
 internal fun interface TimeProvider {
@@ -147,10 +279,10 @@ internal class SystemTimeProvider : TimeProvider {
     override fun currentTimeMillis(): Long = platformCurrentTimeMillis()
 }
 
-internal fun interface PointIdProvider {
+internal fun interface FeatureIdProvider {
     fun nextId(): String
 }
 
-internal class UuidPointIdProvider : PointIdProvider {
+internal class UuidFeatureIdProvider : FeatureIdProvider {
     override fun nextId(): String = generateMapPointId()
 }

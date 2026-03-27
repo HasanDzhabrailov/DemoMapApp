@@ -9,5 +9,5 @@ expect fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier = Modifier,
     onCameraIdle: (MapCameraSnapshot) -> Unit = {},
-    onPointClick: (RenderPointClick) -> Unit = {},
+    onFeatureClick: (RenderFeatureClick) -> Unit = {},
 )

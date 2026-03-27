@@ -25,6 +25,8 @@ import androidx.compose.ui.window.PopupProperties
 internal fun CenterMarkerMenuOverlay(
     onDismiss: () -> Unit,
     onCreatePointClick: () -> Unit,
+    onCreateLineClick: () -> Unit,
+    onCreatePolygonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val overlayInteractionSource = remember { MutableInteractionSource() }
@@ -58,14 +60,26 @@ internal fun CenterMarkerMenuOverlay(
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
                 shadowElevation = 8.dp,
             ) {
-                Text(
-                    text = "Создать точку",
-                    modifier = Modifier
-                        .clickable(onClick = onCreatePointClick)
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                )
+                androidx.compose.foundation.layout.Column {
+                    MenuAction(text = "Создать точку", onClick = onCreatePointClick)
+                    MenuAction(text = "Создать линию", onClick = onCreateLineClick)
+                    MenuAction(text = "Создать полигон", onClick = onCreatePolygonClick)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun MenuAction(
+    text: String,
+    onClick: () -> Unit,
+) {
+    Text(
+        text = text,
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        style = MaterialTheme.typography.titleSmall,
+    )
 }

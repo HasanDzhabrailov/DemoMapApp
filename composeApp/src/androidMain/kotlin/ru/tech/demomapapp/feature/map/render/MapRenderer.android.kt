@@ -34,6 +34,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import kotlin.coroutines.resume
 import org.maplibre.android.style.layers.CircleLayer
+import org.maplibre.android.style.layers.FillLayer
+import org.maplibre.android.style.layers.LineLayer
 import org.maplibre.android.style.layers.PropertyFactory.textAllowOverlap
 import org.maplibre.android.style.layers.PropertyFactory.textAnchor
 import org.maplibre.android.style.layers.PropertyFactory.textColor
@@ -47,11 +49,20 @@ import org.maplibre.android.style.layers.PropertyFactory.circleOpacity
 import org.maplibre.android.style.layers.PropertyFactory.circleRadius
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeColor
 import org.maplibre.android.style.layers.PropertyFactory.circleStrokeWidth
+import org.maplibre.android.style.layers.PropertyFactory.fillColor
+import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
+import org.maplibre.android.style.layers.PropertyFactory.lineColor
+import org.maplibre.android.style.layers.PropertyFactory.lineCap
+import org.maplibre.android.style.layers.PropertyFactory.lineJoin
+import org.maplibre.android.style.layers.PropertyFactory.lineOpacity
+import org.maplibre.android.style.layers.PropertyFactory.lineWidth
 import org.maplibre.android.style.layers.SymbolLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
+import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
+import org.maplibre.geojson.Polygon
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -61,15 +72,34 @@ private const val MAP_COMPASS_MARGIN_PX = 32
 private const val MAP_POINTS_SOURCE_ID = "map-renderer-points-source"
 internal const val MAP_POINTS_LAYER_ID = "map-renderer-points-layer"
 private const val MAP_POINT_LABELS_LAYER_ID = "map-renderer-point-labels-layer"
+private const val MAP_LINES_SOURCE_ID = "map-renderer-lines-source"
+internal const val MAP_LINES_LAYER_ID = "map-renderer-lines-layer"
+private const val MAP_LINE_LABELS_SOURCE_ID = "map-renderer-line-labels-source"
+private const val MAP_LINE_LABELS_LAYER_ID = "map-renderer-line-labels-layer"
+private const val MAP_POLYGONS_SOURCE_ID = "map-renderer-polygons-source"
+internal const val MAP_POLYGONS_FILL_LAYER_ID = "map-renderer-polygons-fill-layer"
+internal const val MAP_POLYGONS_OUTLINE_LAYER_ID = "map-renderer-polygons-outline-layer"
+private const val MAP_POLYGON_LABELS_SOURCE_ID = "map-renderer-polygon-labels-source"
+private const val MAP_POLYGON_LABELS_LAYER_ID = "map-renderer-polygon-labels-layer"
+private const val MAP_PREVIEW_LINE_SOURCE_ID = "map-renderer-preview-line-source"
+private const val MAP_PREVIEW_LINE_LAYER_ID = "map-renderer-preview-line-layer"
+private const val MAP_FIXED_LINE_SOURCE_ID = "map-renderer-fixed-line-source"
+private const val MAP_FIXED_LINE_LAYER_ID = "map-renderer-fixed-line-layer"
+private const val MAP_PREVIEW_POLYGON_SOURCE_ID = "map-renderer-preview-polygon-source"
+private const val MAP_PREVIEW_POLYGON_FILL_LAYER_ID = "map-renderer-preview-polygon-fill-layer"
+private const val MAP_FIXED_POLYGON_SOURCE_ID = "map-renderer-fixed-polygon-source"
+private const val MAP_FIXED_POLYGON_FILL_LAYER_ID = "map-renderer-fixed-polygon-fill-layer"
+private const val MAP_FIXED_POLYGON_OUTLINE_LAYER_ID = "map-renderer-fixed-polygon-outline-layer"
 private const val MAP_POINT_LABEL_PROPERTY = "label"
-internal const val MAP_POINT_KEY_PROPERTY = "pointKey"
+internal const val MAP_FEATURE_KEY_PROPERTY = "featureKey"
+internal const val MAP_FEATURE_TYPE_PROPERTY = "featureType"
 
 @Composable
 actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
     onCameraIdle: (MapCameraSnapshot) -> Unit,
-    onPointClick: (RenderPointClick) -> Unit,
+    onFeatureClick: (RenderFeatureClick) -> Unit,
 ) {
     val context = LocalContext.current
     val isInPreview = LocalInspectionMode.current
@@ -102,9 +132,9 @@ actual fun MapRenderer(
         onCameraIdle = onCameraIdle,
     )
 
-    BindPointClickObservation(
+    BindFeatureClickObservation(
         holder = mapViewHolder,
-        onPointClick = onPointClick,
+        onFeatureClick = onFeatureClick,
     )
 
     AndroidView(
@@ -210,12 +240,12 @@ private fun BindCameraObservation(
 }
 
 @Composable
-private fun BindPointClickObservation(
+private fun BindFeatureClickObservation(
     holder: MapViewHolder,
-    onPointClick: (RenderPointClick) -> Unit,
+    onFeatureClick: (RenderFeatureClick) -> Unit,
 ) {
-    val pointClickAdapter = remember(onPointClick) {
-        MapLibrePointClickAdapter(onPointClick = onPointClick)
+    val pointClickAdapter = remember(onFeatureClick) {
+        MapLibreFeatureClickAdapter(onFeatureClick = onFeatureClick)
     }
 
     LaunchedEffect(holder, pointClickAdapter) {
@@ -248,6 +278,9 @@ internal class MapViewHolder(
         val style = map.loadStyle(model.style, lastAppliedStyle)
         lastAppliedStyle = model.style
         style.applyPoints(model.points)
+        style.applyLines(model.lines)
+        style.applyPolygons(model.polygons)
+        style.applyDrawingPreview(model.drawingPreview)
     }
 
     fun onLowMemory() {
@@ -407,7 +440,8 @@ private fun Style.applyPoints(points: List<RenderMapPoint>) {
             Feature.fromGeometry(
                 Point.fromLngLat(point.longitude, point.latitude),
             ).apply {
-                addStringProperty(MAP_POINT_KEY_PROPERTY, point.key)
+                addStringProperty(MAP_FEATURE_KEY_PROPERTY, point.key)
+                addStringProperty(MAP_FEATURE_TYPE_PROPERTY, RenderFeatureType.POINT.name)
                 addStringProperty(MAP_POINT_LABEL_PROPERTY, point.label)
             }
         },
@@ -442,6 +476,243 @@ private fun Style.applyPoints(points: List<RenderMapPoint>) {
                 textAllowOverlap(false),
             ),
         )
+    }
+}
+
+private fun Style.applyLines(lines: List<RenderMapLine>) {
+    val lineFeatures = FeatureCollection.fromFeatures(
+        lines.map { line ->
+            Feature.fromGeometry(
+                LineString.fromLngLats(line.vertices.map(RenderMapVertex::toGeometryPoint)),
+            ).apply {
+                addStringProperty(MAP_FEATURE_KEY_PROPERTY, line.key)
+                addStringProperty(MAP_FEATURE_TYPE_PROPERTY, RenderFeatureType.LINE.name)
+                addStringProperty(MAP_POINT_LABEL_PROPERTY, line.label)
+            }
+        },
+    )
+    val labelFeatures = FeatureCollection.fromFeatures(
+        lines.map { line ->
+            Feature.fromGeometry(Point.fromLngLat(line.labelLongitude, line.labelLatitude)).apply {
+                addStringProperty(MAP_POINT_LABEL_PROPERTY, line.label)
+            }
+        },
+    )
+
+    val lineSource = getSourceAs<GeoJsonSource>(MAP_LINES_SOURCE_ID)
+        ?: GeoJsonSource(MAP_LINES_SOURCE_ID, lineFeatures).also(::addSource)
+    lineSource.setGeoJson(lineFeatures)
+    val labelSource = getSourceAs<GeoJsonSource>(MAP_LINE_LABELS_SOURCE_ID)
+        ?: GeoJsonSource(MAP_LINE_LABELS_SOURCE_ID, labelFeatures).also(::addSource)
+    labelSource.setGeoJson(labelFeatures)
+
+    if (getLayer(MAP_LINES_LAYER_ID) == null) {
+        addLayer(
+            LineLayer(MAP_LINES_LAYER_ID, MAP_LINES_SOURCE_ID).withProperties(
+                lineColor("#D81B60"),
+                lineWidth(4f),
+                lineOpacity(0.95f),
+                lineJoin("round"),
+                lineCap("round"),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_LINE_LABELS_LAYER_ID) == null) {
+        addLayer(
+            SymbolLayer(MAP_LINE_LABELS_LAYER_ID, MAP_LINE_LABELS_SOURCE_ID).withProperties(
+                textField("{$MAP_POINT_LABEL_PROPERTY}"),
+                textSize(12f),
+                textColor("#2B211D"),
+                textHaloColor("#FFF7F0"),
+                textHaloWidth(1.5f),
+                textOffset(arrayOf(0f, 1.2f)),
+                textAnchor("top"),
+                textAllowOverlap(false),
+            ),
+        )
+    }
+}
+
+private fun Style.applyPolygons(polygons: List<RenderMapPolygon>) {
+    val polygonFeatures = FeatureCollection.fromFeatures(
+        polygons.map { polygon ->
+            Feature.fromGeometry(
+                Polygon.fromLngLats(listOf(polygon.vertices.closedRing())),
+            ).apply {
+                addStringProperty(MAP_FEATURE_KEY_PROPERTY, polygon.key)
+                addStringProperty(MAP_FEATURE_TYPE_PROPERTY, RenderFeatureType.POLYGON.name)
+                addStringProperty(MAP_POINT_LABEL_PROPERTY, polygon.label)
+            }
+        },
+    )
+    val labelFeatures = FeatureCollection.fromFeatures(
+        polygons.map { polygon ->
+            Feature.fromGeometry(Point.fromLngLat(polygon.labelLongitude, polygon.labelLatitude)).apply {
+                addStringProperty(MAP_POINT_LABEL_PROPERTY, polygon.label)
+            }
+        },
+    )
+
+    val polygonSource = getSourceAs<GeoJsonSource>(MAP_POLYGONS_SOURCE_ID)
+        ?: GeoJsonSource(MAP_POLYGONS_SOURCE_ID, polygonFeatures).also(::addSource)
+    polygonSource.setGeoJson(polygonFeatures)
+    val labelSource = getSourceAs<GeoJsonSource>(MAP_POLYGON_LABELS_SOURCE_ID)
+        ?: GeoJsonSource(MAP_POLYGON_LABELS_SOURCE_ID, labelFeatures).also(::addSource)
+    labelSource.setGeoJson(labelFeatures)
+
+    if (getLayer(MAP_POLYGONS_FILL_LAYER_ID) == null) {
+        addLayer(
+            FillLayer(MAP_POLYGONS_FILL_LAYER_ID, MAP_POLYGONS_SOURCE_ID).withProperties(
+                fillColor("#F06292"),
+                fillOpacity(0.25f),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_POLYGONS_OUTLINE_LAYER_ID) == null) {
+        addLayer(
+            LineLayer(MAP_POLYGONS_OUTLINE_LAYER_ID, MAP_POLYGONS_SOURCE_ID).withProperties(
+                lineColor("#111111"),
+                lineWidth(3f),
+                lineOpacity(0.95f),
+                lineJoin("round"),
+                lineCap("round"),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_POLYGON_LABELS_LAYER_ID) == null) {
+        addLayer(
+            SymbolLayer(MAP_POLYGON_LABELS_LAYER_ID, MAP_POLYGON_LABELS_SOURCE_ID).withProperties(
+                textField("{$MAP_POINT_LABEL_PROPERTY}"),
+                textSize(12f),
+                textColor("#2B211D"),
+                textHaloColor("#FFF7F0"),
+                textHaloWidth(1.5f),
+                textOffset(arrayOf(0f, 1.2f)),
+                textAnchor("top"),
+                textAllowOverlap(false),
+            ),
+        )
+    }
+}
+
+private fun Style.applyDrawingPreview(preview: RenderDrawingPreview?) {
+    val fixedLineFeatureCollection = FeatureCollection.fromFeatures(
+        buildList {
+            if (preview != null && preview.fixedLineVertices.size >= 2) {
+                add(
+                    Feature.fromGeometry(
+                        LineString.fromLngLats(preview.fixedLineVertices.map(RenderMapVertex::toGeometryPoint)),
+                    ),
+                )
+            }
+        },
+    )
+    val previewLineFeatureCollection = FeatureCollection.fromFeatures(
+        buildList {
+            if (preview != null && preview.previewLineVertices.size >= 2) {
+                add(
+                    Feature.fromGeometry(
+                        LineString.fromLngLats(preview.previewLineVertices.map(RenderMapVertex::toGeometryPoint)),
+                    ),
+                )
+            }
+        },
+    )
+    val fixedPolygonFeatureCollection = FeatureCollection.fromFeatures(
+        buildList {
+            if (preview != null && preview.fixedPolygonVertices.size >= 3) {
+                add(
+                    Feature.fromGeometry(
+                        Polygon.fromLngLats(listOf(preview.fixedPolygonVertices.closedRing())),
+                    ),
+                )
+            }
+        },
+    )
+    val previewPolygonFeatureCollection = FeatureCollection.fromFeatures(emptyList())
+
+    val fixedLineSource = getSourceAs<GeoJsonSource>(MAP_FIXED_LINE_SOURCE_ID)
+        ?: GeoJsonSource(MAP_FIXED_LINE_SOURCE_ID, fixedLineFeatureCollection).also(::addSource)
+    fixedLineSource.setGeoJson(fixedLineFeatureCollection)
+
+    val previewLineSource = getSourceAs<GeoJsonSource>(MAP_PREVIEW_LINE_SOURCE_ID)
+        ?: GeoJsonSource(MAP_PREVIEW_LINE_SOURCE_ID, previewLineFeatureCollection).also(::addSource)
+    previewLineSource.setGeoJson(previewLineFeatureCollection)
+
+    val fixedPolygonSource = getSourceAs<GeoJsonSource>(MAP_FIXED_POLYGON_SOURCE_ID)
+        ?: GeoJsonSource(MAP_FIXED_POLYGON_SOURCE_ID, fixedPolygonFeatureCollection).also(::addSource)
+    fixedPolygonSource.setGeoJson(fixedPolygonFeatureCollection)
+
+    val previewPolygonSource = getSourceAs<GeoJsonSource>(MAP_PREVIEW_POLYGON_SOURCE_ID)
+        ?: GeoJsonSource(MAP_PREVIEW_POLYGON_SOURCE_ID, previewPolygonFeatureCollection).also(::addSource)
+    previewPolygonSource.setGeoJson(previewPolygonFeatureCollection)
+
+    if (getLayer(MAP_FIXED_POLYGON_FILL_LAYER_ID) == null) {
+        addLayer(
+            FillLayer(MAP_FIXED_POLYGON_FILL_LAYER_ID, MAP_FIXED_POLYGON_SOURCE_ID).withProperties(
+                fillColor("#EC407A"),
+                fillOpacity(0.2f),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_FIXED_POLYGON_OUTLINE_LAYER_ID) == null) {
+        addLayer(
+            LineLayer(MAP_FIXED_POLYGON_OUTLINE_LAYER_ID, MAP_FIXED_POLYGON_SOURCE_ID).withProperties(
+                lineColor("#111111"),
+                lineWidth(3f),
+                lineOpacity(0.92f),
+                lineJoin("round"),
+                lineCap("round"),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_PREVIEW_POLYGON_FILL_LAYER_ID) == null) {
+        addLayer(
+            FillLayer(MAP_PREVIEW_POLYGON_FILL_LAYER_ID, MAP_PREVIEW_POLYGON_SOURCE_ID).withProperties(
+                fillColor("#EC407A"),
+                fillOpacity(0f),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_FIXED_LINE_LAYER_ID) == null) {
+        addLayer(
+            LineLayer(MAP_FIXED_LINE_LAYER_ID, MAP_FIXED_LINE_SOURCE_ID).withProperties(
+                lineColor("#EC407A"),
+                lineWidth(4f),
+                lineOpacity(0.92f),
+                lineJoin("round"),
+                lineCap("round"),
+            ),
+        )
+    }
+
+    if (getLayer(MAP_PREVIEW_LINE_LAYER_ID) == null) {
+        addLayer(
+            LineLayer(MAP_PREVIEW_LINE_LAYER_ID, MAP_PREVIEW_LINE_SOURCE_ID).withProperties(
+                lineColor("#111111"),
+                lineWidth(4f),
+                lineOpacity(0.92f),
+                lineJoin("round"),
+                lineCap("round"),
+            ),
+        )
+    }
+}
+
+private fun RenderMapVertex.toGeometryPoint(): Point = Point.fromLngLat(longitude, latitude)
+
+private fun List<RenderMapVertex>.closedRing(): List<Point> {
+    val points = map(RenderMapVertex::toGeometryPoint)
+    return if (points.firstOrNull() == points.lastOrNull()) {
+        points
+    } else {
+        points + points.first()
     }
 }
 

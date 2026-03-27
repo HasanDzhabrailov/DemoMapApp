@@ -10,13 +10,26 @@ interface MapScreenComponent {
     fun onCenterMarkerClick()
     fun onCenterMarkerMenuDismiss()
     fun onCreatePointClick()
+    fun onCreateLineClick()
+    fun onCreatePolygonClick()
     fun onCreatePointLatitudeChange(value: String)
     fun onCreatePointLongitudeChange(value: String)
     fun onCreatePointTitleChange(value: String)
     fun onCreatePointConfirm()
     fun onCreatePointSheetDismiss()
-    fun onPointClick(pointKey: String, anchor: PointInfoWindowAnchor)
-    fun onPointInfoWindowDismiss()
+    fun onDrawingAddPositionClick()
+    fun onDrawingRemoveLastPositionClick()
+    fun onDrawingDetailsClick()
+    fun onDrawingDismiss()
+    fun onCreateShapeTitleChange(value: String)
+    fun onCreateShapeConfirm()
+    fun onCreateShapeSheetDismiss()
+    fun onFeatureClick(
+        featureKey: String,
+        featureType: FeatureType,
+        anchor: FeatureInfoWindowAnchor,
+    )
+    fun onFeatureInfoWindowDismiss()
 
     fun onDebugPanelToggle()
 
@@ -26,8 +39,22 @@ interface MapScreenComponent {
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
-        val selectedPointInfoWindow: PointInfoWindow? = null,
+        val drawingMode: DrawingMode? = null,
+        val shapeDrawingDraft: ShapeDrawingDraft? = null,
+        val isCreateShapeSheetVisible: Boolean = false,
+        val selectedFeatureInfoWindow: FeatureInfoWindow? = null,
     )
+
+    enum class DrawingMode {
+        LINE,
+        POLYGON,
+    }
+
+    enum class FeatureType {
+        POINT,
+        LINE,
+        POLYGON,
+    }
 
     data class CreatePointDraft(
         val latitudeInput: String,
@@ -35,13 +62,19 @@ interface MapScreenComponent {
         val titleInput: String = "",
     )
 
-    data class PointInfoWindow(
-        val title: String,
-        val createdAtText: String,
-        val anchor: PointInfoWindowAnchor,
+    data class ShapeDrawingDraft(
+        val mode: DrawingMode,
+        val fixedVertices: List<MapVertex> = emptyList(),
+        val titleInput: String = "",
     )
 
-    data class PointInfoWindowAnchor(
+    data class FeatureInfoWindow(
+        val title: String,
+        val createdAtText: String,
+        val anchor: FeatureInfoWindowAnchor,
+    )
+
+    data class FeatureInfoWindowAnchor(
         val screenX: Int,
         val screenY: Int,
     )

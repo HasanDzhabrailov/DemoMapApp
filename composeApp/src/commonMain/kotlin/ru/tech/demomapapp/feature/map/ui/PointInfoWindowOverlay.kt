@@ -22,7 +22,7 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 @Composable
 internal fun PointInfoWindowOverlay(
-    state: MapScreenComponent.PointInfoWindow,
+    state: MapScreenComponent.FeatureInfoWindow,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -74,7 +74,7 @@ internal fun PointInfoWindowOverlay(
     }
 }
 
-private fun MapScreenComponent.PointInfoWindowAnchor.toPopupOffset(
+private fun MapScreenComponent.FeatureInfoWindowAnchor.toPopupOffset(
     density: androidx.compose.ui.unit.Density,
 ): IntOffset = with(density) {
     val horizontalMarginPx = 12.dp.roundToPx()

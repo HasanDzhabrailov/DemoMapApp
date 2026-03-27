@@ -7,34 +7,46 @@ internal class MapLibreCameraAdapter(
     private val onCameraIdle: (MapCameraSnapshot) -> Unit,
 ) {
     private var map: MapLibreMap? = null
-    private var listener: MapLibreMap.OnCameraIdleListener? = null
+    private var idleListener: MapLibreMap.OnCameraIdleListener? = null
+    private var moveListener: MapLibreMap.OnCameraMoveListener? = null
     private var lastSnapshot: MapCameraSnapshot? = null
 
     fun attach(map: MapLibreMap) {
-        if (this.map === map && listener != null) {
+        if (this.map === map && idleListener != null && moveListener != null) {
             return
         }
 
         detach()
 
-        val idleListener = MapLibreMap.OnCameraIdleListener {
+        val localIdleListener = MapLibreMap.OnCameraIdleListener {
+            emitSnapshot(map)
+        }
+        val localMoveListener = MapLibreMap.OnCameraMoveListener {
             emitSnapshot(map)
         }
 
         this.map = map
-        listener = idleListener
-        map.addOnCameraIdleListener(idleListener)
+        idleListener = localIdleListener
+        moveListener = localMoveListener
+        map.addOnCameraIdleListener(localIdleListener)
+        map.addOnCameraMoveListener(localMoveListener)
+        emitSnapshot(map)
     }
 
     fun detach() {
         val currentMap = map
-        val currentListener = listener
-        if (currentMap != null && currentListener != null) {
-            currentMap.removeOnCameraIdleListener(currentListener)
+        val currentIdleListener = idleListener
+        val currentMoveListener = moveListener
+        if (currentMap != null && currentIdleListener != null) {
+            currentMap.removeOnCameraIdleListener(currentIdleListener)
+        }
+        if (currentMap != null && currentMoveListener != null) {
+            currentMap.removeOnCameraMoveListener(currentMoveListener)
         }
 
         map = null
-        listener = null
+        idleListener = null
+        moveListener = null
         lastSnapshot = null
     }
 

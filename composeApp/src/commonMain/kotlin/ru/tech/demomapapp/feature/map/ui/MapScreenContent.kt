@@ -18,8 +18,8 @@ import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.toRenderModel
-import ru.tech.demomapapp.feature.map.render.RenderPointClick
 import ru.tech.demomapapp.feature.map.render.MapRenderer
+import ru.tech.demomapapp.feature.map.render.RenderFeatureClick
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +29,10 @@ fun MapScreenContent(
 ) {
     val model by component.model.subscribeAsState()
     val debugModel by component.debugModel.subscribeAsState()
-    val renderModel = model.mapState.toRenderModel()
+    val renderModel = model.mapState.toRenderModel(
+        shapeDrawingDraft = model.shapeDrawingDraft,
+        currentSnapshot = model.lastCameraSnapshot,
+    )
 
     Box(
         modifier = modifier
@@ -40,7 +43,13 @@ fun MapScreenContent(
             model = renderModel,
             modifier = Modifier.fillMaxSize(),
             onCameraIdle = component::onCameraIdle,
-            onPointClick = { click -> component.onPointClick(click.pointKey, click.toPointInfoWindowAnchor()) },
+            onFeatureClick = { click ->
+                component.onFeatureClick(
+                    featureKey = click.featureKey,
+                    featureType = click.toFeatureType(),
+                    anchor = click.toFeatureInfoWindowAnchor(),
+                )
+            },
         )
 
         CenterMarker(
@@ -61,6 +70,8 @@ fun MapScreenContent(
             CenterMarkerMenuOverlay(
                 onDismiss = component::onCenterMarkerMenuDismiss,
                 onCreatePointClick = component::onCreatePointClick,
+                onCreateLineClick = component::onCreateLineClick,
+                onCreatePolygonClick = component::onCreatePolygonClick,
             )
         }
 
@@ -77,10 +88,33 @@ fun MapScreenContent(
             }
         }
 
-        model.selectedPointInfoWindow?.let { infoWindow ->
+        model.shapeDrawingDraft?.let { draft ->
+            ShapeDrawingControlsOverlay(
+                mode = draft.mode,
+                fixedVertexCount = draft.fixedVertices.size,
+                onRemoveLastClick = component::onDrawingRemoveLastPositionClick,
+                onAddPositionClick = component::onDrawingAddPositionClick,
+                onDetailsClick = component::onDrawingDetailsClick,
+                onDismissClick = component::onDrawingDismiss,
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
+
+        if (model.isCreateShapeSheetVisible) {
+            model.shapeDrawingDraft?.let { draft ->
+                CreateShapeBottomSheet(
+                    draft = draft,
+                    onTitleChange = component::onCreateShapeTitleChange,
+                    onConfirm = component::onCreateShapeConfirm,
+                    onDismiss = component::onCreateShapeSheetDismiss,
+                )
+            }
+        }
+
+        model.selectedFeatureInfoWindow?.let { infoWindow ->
             PointInfoWindowOverlay(
                 state = infoWindow,
-                onDismiss = component::onPointInfoWindowDismiss,
+                onDismiss = component::onFeatureInfoWindowDismiss,
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -123,6 +157,10 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onCreatePointClick() = Unit
 
+    override fun onCreateLineClick() = Unit
+
+    override fun onCreatePolygonClick() = Unit
+
     override fun onCreatePointLatitudeChange(value: String) = Unit
 
     override fun onCreatePointLongitudeChange(value: String) = Unit
@@ -133,18 +171,40 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onCreatePointSheetDismiss() = Unit
 
-    override fun onPointClick(
-        pointKey: String,
-        anchor: MapScreenComponent.PointInfoWindowAnchor,
+    override fun onDrawingAddPositionClick() = Unit
+
+    override fun onDrawingRemoveLastPositionClick() = Unit
+
+    override fun onDrawingDetailsClick() = Unit
+
+    override fun onDrawingDismiss() = Unit
+
+    override fun onCreateShapeTitleChange(value: String) = Unit
+
+    override fun onCreateShapeConfirm() = Unit
+
+    override fun onCreateShapeSheetDismiss() = Unit
+
+    override fun onFeatureClick(
+        featureKey: String,
+        featureType: MapScreenComponent.FeatureType,
+        anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) = Unit
 
-    override fun onPointInfoWindowDismiss() = Unit
+    override fun onFeatureInfoWindowDismiss() = Unit
 
     override fun onDebugPanelToggle() = Unit
 }
 
-private fun RenderPointClick.toPointInfoWindowAnchor(): MapScreenComponent.PointInfoWindowAnchor =
-    MapScreenComponent.PointInfoWindowAnchor(
+private fun RenderFeatureClick.toFeatureInfoWindowAnchor(): MapScreenComponent.FeatureInfoWindowAnchor =
+    MapScreenComponent.FeatureInfoWindowAnchor(
         screenX = anchor.screenX,
         screenY = anchor.screenY,
     )
+
+private fun RenderFeatureClick.toFeatureType(): MapScreenComponent.FeatureType =
+    when (featureType) {
+        ru.tech.demomapapp.feature.map.render.RenderFeatureType.POINT -> MapScreenComponent.FeatureType.POINT
+        ru.tech.demomapapp.feature.map.render.RenderFeatureType.LINE -> MapScreenComponent.FeatureType.LINE
+        ru.tech.demomapapp.feature.map.render.RenderFeatureType.POLYGON -> MapScreenComponent.FeatureType.POLYGON
+    }
