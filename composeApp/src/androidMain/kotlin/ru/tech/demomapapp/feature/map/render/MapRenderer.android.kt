@@ -32,7 +32,9 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import kotlin.coroutines.resume
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.LineLayer
@@ -68,7 +70,8 @@ import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 
 private const val MAP_VIEW_STATE_KEY = "map_renderer_view_state"
-private const val MAP_COMPASS_MARGIN_PX = 32
+private const val MAP_COMPASS_MARGIN_HORIZONTAL_PX = 32
+private const val MAP_COMPASS_MARGIN_BOTTOM_PX = 88
 private const val MAP_POINTS_SOURCE_ID = "map-renderer-points-source"
 internal const val MAP_POINTS_LAYER_ID = "map-renderer-points-layer"
 private const val MAP_POINT_LABELS_LAYER_ID = "map-renderer-point-labels-layer"
@@ -98,7 +101,9 @@ internal const val MAP_FEATURE_TYPE_PROPERTY = "featureType"
 actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
+    viewportCommand: MapViewportCommand?,
     onCameraIdle: (MapCameraSnapshot) -> Unit,
+    onViewportCommandConsumed: () -> Unit,
     onFeatureClick: (RenderFeatureClick) -> Unit,
 ) {
     val context = LocalContext.current
@@ -137,10 +142,29 @@ actual fun MapRenderer(
         onFeatureClick = onFeatureClick,
     )
 
+    ApplyViewportCommand(
+        holder = mapViewHolder,
+        viewportCommand = viewportCommand,
+        onViewportCommandConsumed = onViewportCommandConsumed,
+    )
+
     AndroidView(
         modifier = modifier,
         factory = { mapViewHolder.mapView },
     )
+}
+
+@Composable
+private fun ApplyViewportCommand(
+    holder: MapViewHolder,
+    viewportCommand: MapViewportCommand?,
+    onViewportCommandConsumed: () -> Unit,
+) {
+    LaunchedEffect(holder, viewportCommand) {
+        val command = viewportCommand ?: return@LaunchedEffect
+        holder.applyViewportCommand(command)
+        onViewportCommandConsumed()
+    }
 }
 
 @Composable
@@ -318,6 +342,18 @@ internal class MapViewHolder(
         areUiSettingsConfigured = true
     }
 
+    suspend fun applyViewportCommand(command: MapViewportCommand) {
+        if (isDestroyed) {
+            return
+        }
+
+        val map = awaitMap()
+        when (command) {
+            MapViewportCommand.ZOOM_IN -> map.animateCamera(CameraUpdateFactory.zoomIn())
+            MapViewportCommand.ZOOM_OUT -> map.animateCamera(CameraUpdateFactory.zoomOut())
+        }
+    }
+
     suspend fun awaitMap(): MapLibreMap {
         mapLibreMap?.let { return it }
         pendingMap?.let { return it.await() }
@@ -406,12 +442,12 @@ private fun rememberMapViewHolder(
 
 private fun MapLibreMap.configureUiSettings() {
     uiSettings.apply {
-        compassGravity = Gravity.TOP or Gravity.END
+        compassGravity = Gravity.BOTTOM or Gravity.END
         setCompassMargins(
-            MAP_COMPASS_MARGIN_PX,
-            MAP_COMPASS_MARGIN_PX,
-            MAP_COMPASS_MARGIN_PX,
-            MAP_COMPASS_MARGIN_PX,
+            MAP_COMPASS_MARGIN_HORIZONTAL_PX,
+            MAP_COMPASS_MARGIN_HORIZONTAL_PX,
+            MAP_COMPASS_MARGIN_HORIZONTAL_PX,
+            MAP_COMPASS_MARGIN_BOTTOM_PX,
         )
     }
 }

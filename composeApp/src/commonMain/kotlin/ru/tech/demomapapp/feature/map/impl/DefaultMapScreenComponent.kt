@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
@@ -28,12 +29,81 @@ internal class DefaultMapScreenComponent(
         )
     }
 
+    override fun onMapToolsClick() {
+        val model = mutableModel.value
+        val isMenuVisible = !model.isMapToolsMenuVisible
+        mutableModel.value = model.copy(
+            isMapToolsMenuVisible = isMenuVisible,
+            isCenterMarkerMenuVisible = if (isMenuVisible) {
+                false
+            } else {
+                model.isCenterMarkerMenuVisible
+            },
+            selectedFeatureInfoWindow = if (isMenuVisible) {
+                null
+            } else {
+                model.selectedFeatureInfoWindow
+            },
+        )
+    }
+
+    override fun onMapToolsDismiss() {
+        mutableModel.value = mutableModel.value.copy(
+            isMapToolsMenuVisible = false,
+        )
+    }
+
+    override fun onZoomInClick() {
+        mutableModel.value = mutableModel.value.copy(
+            pendingViewportCommand = MapViewportCommand.ZOOM_IN,
+        )
+    }
+
+    override fun onZoomOutClick() {
+        mutableModel.value = mutableModel.value.copy(
+            pendingViewportCommand = MapViewportCommand.ZOOM_OUT,
+        )
+    }
+
+    override fun onAvailableMapsClick() {
+        mutableModel.value = mutableModel.value.copy(
+            isMapToolsMenuVisible = false,
+        )
+    }
+
+    override fun onMapsOnScreenClick() {
+        mutableModel.value = mutableModel.value.copy(
+            isMapToolsMenuVisible = false,
+        )
+    }
+
+    override fun onGpsToggle() {
+        val model = mutableModel.value
+        mutableModel.value = model.copy(
+            isGpsEnabled = !model.isGpsEnabled,
+        )
+    }
+
+    override fun onRulerToggle() {
+        val model = mutableModel.value
+        mutableModel.value = model.copy(
+            isRulerEnabled = !model.isRulerEnabled,
+        )
+    }
+
+    override fun onViewportCommandConsumed() {
+        mutableModel.value = mutableModel.value.copy(
+            pendingViewportCommand = null,
+        )
+    }
+
     override fun onCenterMarkerClick() {
         val model = mutableModel.value
         if (model.drawingMode != null) {
             return
         }
         mutableModel.value = model.copy(
+            isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = true,
             selectedFeatureInfoWindow = null,
         )
@@ -48,6 +118,7 @@ internal class DefaultMapScreenComponent(
     override fun onCreatePointClick() {
         val model = mutableModel.value
         mutableModel.value = model.copy(
+            isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = model.lastCameraSnapshot != null,
             createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
@@ -206,6 +277,7 @@ internal class DefaultMapScreenComponent(
         val model = mutableModel.value
         val feature = featureSelectionResolver.resolve(model.mapState, featureKey, featureType) ?: return
         mutableModel.value = model.copy(
+            isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             selectedFeatureInfoWindow = featureInfoWindowStateMapper.map(feature, anchor),
         )
@@ -220,6 +292,7 @@ internal class DefaultMapScreenComponent(
     private fun startDrawing(mode: MapScreenComponent.DrawingMode) {
         val model = mutableModel.value
         mutableModel.value = model.copy(
+            isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = false,
             createPointDraft = null,

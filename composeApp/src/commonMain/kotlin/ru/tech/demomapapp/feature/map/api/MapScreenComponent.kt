@@ -6,6 +6,15 @@ interface MapScreenComponent {
     val model: Value<Model>
 
     fun onCameraIdle(snapshot: MapCameraSnapshot)
+    fun onMapToolsClick()
+    fun onMapToolsDismiss()
+    fun onZoomInClick()
+    fun onZoomOutClick()
+    fun onAvailableMapsClick()
+    fun onMapsOnScreenClick()
+    fun onGpsToggle()
+    fun onRulerToggle()
+    fun onViewportCommandConsumed()
     fun onCenterMarkerClick()
     fun onCenterMarkerMenuDismiss()
     fun onCreatePointClick()
@@ -33,6 +42,10 @@ interface MapScreenComponent {
     data class Model(
         val mapState: MapState = MapState(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
+        val isMapToolsMenuVisible: Boolean = false,
+        val isGpsEnabled: Boolean = false,
+        val isRulerEnabled: Boolean = false,
+        val pendingViewportCommand: MapViewportCommand? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,

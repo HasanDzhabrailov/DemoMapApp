@@ -12,12 +12,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 @Composable
 actual fun MapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
+    viewportCommand: MapViewportCommand?,
     onCameraIdle: (MapCameraSnapshot) -> Unit,
+    onViewportCommandConsumed: () -> Unit,
     onFeatureClick: (RenderFeatureClick) -> Unit,
 ) {
     Box(

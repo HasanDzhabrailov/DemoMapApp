@@ -39,7 +39,9 @@ fun MapScreenContent(
         MapRenderer(
             model = renderModel,
             modifier = Modifier.fillMaxSize(),
+            viewportCommand = model.pendingViewportCommand,
             onCameraIdle = component::onCameraIdle,
+            onViewportCommandConsumed = component::onViewportCommandConsumed,
             onFeatureClick = { click ->
                 component.onFeatureClick(
                     featureKey = click.featureKey,
@@ -48,6 +50,29 @@ fun MapScreenContent(
                 )
             },
         )
+
+        MapToolsButton(
+            onClick = component::onMapToolsClick,
+            modifier = Modifier.align(Alignment.BottomStart),
+        )
+
+        MapZoomControlsOverlay(
+            onZoomInClick = component::onZoomInClick,
+            onZoomOutClick = component::onZoomOutClick,
+            modifier = Modifier.align(Alignment.BottomEnd),
+        )
+
+        if (model.isMapToolsMenuVisible) {
+            MapToolsMenuOverlay(
+                isGpsEnabled = model.isGpsEnabled,
+                isRulerEnabled = model.isRulerEnabled,
+                onDismiss = component::onMapToolsDismiss,
+                onAvailableMapsClick = component::onAvailableMapsClick,
+                onMapsOnScreenClick = component::onMapsOnScreenClick,
+                onGpsToggle = component::onGpsToggle,
+                onRulerToggle = component::onRulerToggle,
+            )
+        }
 
         CenterMarker(
             onClick = component::onCenterMarkerClick,
@@ -131,6 +156,24 @@ private class PreviewMapScreenComponent : MapScreenComponent {
         )
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+
+    override fun onMapToolsClick() = Unit
+
+    override fun onMapToolsDismiss() = Unit
+
+    override fun onZoomInClick() = Unit
+
+    override fun onZoomOutClick() = Unit
+
+    override fun onAvailableMapsClick() = Unit
+
+    override fun onMapsOnScreenClick() = Unit
+
+    override fun onGpsToggle() = Unit
+
+    override fun onRulerToggle() = Unit
+
+    override fun onViewportCommandConsumed() = Unit
 
     override fun onCenterMarkerClick() = Unit
 

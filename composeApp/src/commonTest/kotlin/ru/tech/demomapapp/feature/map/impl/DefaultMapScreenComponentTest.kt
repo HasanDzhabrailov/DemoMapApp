@@ -9,8 +9,95 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 class DefaultMapScreenComponentTest {
+
+    @Test
+    fun `map tools menu closes center marker menu when opened`() {
+        val component = createComponent()
+
+        component.onCenterMarkerClick()
+        component.onMapToolsClick()
+
+        assertTrue(component.model.value.isMapToolsMenuVisible)
+        assertFalse(component.model.value.isCenterMarkerMenuVisible)
+    }
+
+    @Test
+    fun `map tools menu clears info window when opened`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePointClick()
+        component.onCreatePointTitleChange("Test point")
+        component.onCreatePointConfirm()
+
+        val point = component.model.value.mapState.points.single()
+        component.onFeatureClick(
+            featureKey = point.id,
+            featureType = MapScreenComponent.FeatureType.POINT,
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+        )
+
+        component.onMapToolsClick()
+
+        assertTrue(component.model.value.isMapToolsMenuVisible)
+        assertNull(component.model.value.selectedFeatureInfoWindow)
+    }
+
+    @Test
+    fun `center marker click closes map tools menu`() {
+        val component = createComponent()
+
+        component.onMapToolsClick()
+        component.onCenterMarkerClick()
+
+        assertFalse(component.model.value.isMapToolsMenuVisible)
+        assertTrue(component.model.value.isCenterMarkerMenuVisible)
+    }
+
+    @Test
+    fun `map tools toggles keep menu open and do not trigger viewport command`() {
+        val component = createComponent()
+
+        component.onMapToolsClick()
+        component.onGpsToggle()
+        component.onRulerToggle()
+
+        assertTrue(component.model.value.isMapToolsMenuVisible)
+        assertTrue(component.model.value.isGpsEnabled)
+        assertTrue(component.model.value.isRulerEnabled)
+        assertNull(component.model.value.pendingViewportCommand)
+        assertNull(component.model.value.lastCameraSnapshot)
+    }
+
+    @Test
+    fun `map tools placeholder actions close menu`() {
+        val component = createComponent()
+
+        component.onMapToolsClick()
+        component.onAvailableMapsClick()
+        assertFalse(component.model.value.isMapToolsMenuVisible)
+
+        component.onMapToolsClick()
+        component.onMapsOnScreenClick()
+        assertFalse(component.model.value.isMapToolsMenuVisible)
+    }
+
+    @Test
+    fun `zoom commands are enqueued and consumed`() {
+        val component = createComponent()
+
+        component.onZoomInClick()
+        assertEquals(MapViewportCommand.ZOOM_IN, component.model.value.pendingViewportCommand)
+
+        component.onViewportCommandConsumed()
+        assertNull(component.model.value.pendingViewportCommand)
+
+        component.onZoomOutClick()
+        assertEquals(MapViewportCommand.ZOOM_OUT, component.model.value.pendingViewportCommand)
+    }
 
     @Test
     fun `point click opens info window from component state`() {
