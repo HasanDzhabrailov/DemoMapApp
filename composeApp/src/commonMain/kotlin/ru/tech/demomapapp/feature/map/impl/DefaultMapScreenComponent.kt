@@ -11,7 +11,10 @@ import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
+import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
+import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
+import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
@@ -36,6 +39,7 @@ internal class DefaultMapScreenComponent(
     override val model: Value<MapScreenComponent.Model> = mapStoreHolder.model
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
+        acceptIntent(MapStore.Intent.Viewport.CameraIdle(snapshot))
         setModel(recalculateRulerState(
             currentModel().copy(
                 lastCameraSnapshot = snapshot,
@@ -45,6 +49,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onMapToolsClick() {
+        acceptIntent(MapStore.Intent.Tools.MapToolsClicked)
         val model = currentModel()
         val isMenuVisible = !model.isMapToolsMenuVisible
         setModel(model.copy(
@@ -63,36 +68,42 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onMapToolsDismiss() {
+        acceptIntent(MapStore.Intent.Tools.MapToolsDismissed)
         setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
         ))
     }
 
     override fun onZoomInClick() {
+        acceptIntent(MapStore.Intent.Viewport.ZoomInClicked)
         setModel(currentModel().copy(
             pendingViewportCommand = MapViewportCommand.ZoomIn,
         ))
     }
 
     override fun onZoomOutClick() {
+        acceptIntent(MapStore.Intent.Viewport.ZoomOutClicked)
         setModel(currentModel().copy(
             pendingViewportCommand = MapViewportCommand.ZoomOut,
         ))
     }
 
     override fun onAvailableMapsClick() {
+        acceptIntent(MapStore.Intent.Tools.AvailableMapsClicked)
         setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
         ))
     }
 
     override fun onMapsOnScreenClick() {
+        acceptIntent(MapStore.Intent.Tools.MapsOnScreenClicked)
         setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
         ))
     }
 
     override fun onGpsToggle() {
+        acceptIntent(MapStore.Intent.Location.GpsToggled)
         val model = currentModel()
         if (model.pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
             setModel(recalculateRulerState(
@@ -125,6 +136,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onMyLocationClick() {
+        acceptIntent(MapStore.Intent.Location.MyLocationClicked)
         val model = currentModel()
         setModel(recalculateRulerState(
             when (model.myLocationMode) {
@@ -149,6 +161,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCurrentLocationFocusClick() {
+        acceptIntent(MapStore.Intent.Location.CurrentLocationFocusClicked)
         val model = currentModel()
         val marker = model.currentLocationMarker
         setModel(when {
@@ -172,12 +185,14 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onLocationRequestConsumed() {
+        acceptIntent(MapStore.Intent.Location.LocationRequestConsumed)
         setModel(currentModel().copy(
             pendingLocationRequest = null,
         ))
     }
 
     override fun onLocationResult(result: LocationRequestResult) {
+        acceptIntent(MapStore.Intent.Location.LocationResultReceived(result))
         val model = currentModel()
         val request = model.pendingLocationRequest
         setModel(recalculateRulerState(
@@ -222,6 +237,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onRulerToggle() {
+        acceptIntent(MapStore.Intent.Ruler.Toggled)
         val model = currentModel()
         setModel(if (model.isRulerEnabled) {
             clearRulerState(
@@ -235,12 +251,14 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onViewportCommandConsumed() {
+        acceptIntent(MapStore.Intent.Viewport.ViewportCommandConsumed)
         setModel(currentModel().copy(
             pendingViewportCommand = null,
         ))
     }
 
     override fun onCenterMarkerClick() {
+        acceptIntent(MapStore.Intent.CenterMarker.Clicked)
         val model = currentModel()
         if (model.drawingMode != null) {
             return
@@ -253,12 +271,14 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCenterMarkerMenuDismiss() {
+        acceptIntent(MapStore.Intent.CenterMarker.MenuDismissed)
         setModel(currentModel().copy(
             isCenterMarkerMenuVisible = false,
         ))
     }
 
     override fun onCreatePointClick() {
+        acceptIntent(MapStore.Intent.CreatePoint.Clicked)
         val model = currentModel()
         setModel(model.copy(
             isMapToolsMenuVisible = false,
@@ -270,26 +290,32 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreateLineClick() {
+        acceptIntent(MapStore.Intent.Drawing.CreateLineClicked)
         startDrawing(MapScreenComponent.DrawingMode.LINE)
     }
 
     override fun onCreatePolygonClick() {
+        acceptIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
         startDrawing(MapScreenComponent.DrawingMode.POLYGON)
     }
 
     override fun onCreatePointLatitudeChange(value: String) {
+        acceptIntent(MapStore.Intent.CreatePoint.LatitudeChanged(value))
         updateCreatePointDraft { copy(latitudeInput = value) }
     }
 
     override fun onCreatePointLongitudeChange(value: String) {
+        acceptIntent(MapStore.Intent.CreatePoint.LongitudeChanged(value))
         updateCreatePointDraft { copy(longitudeInput = value) }
     }
 
     override fun onCreatePointTitleChange(value: String) {
+        acceptIntent(MapStore.Intent.CreatePoint.TitleChanged(value))
         updateCreatePointDraft { copy(titleInput = value) }
     }
 
     override fun onCreatePointConfirm() {
+        acceptIntent(MapStore.Intent.CreatePoint.Confirmed)
         val model = currentModel()
         val draft = model.createPointDraft ?: return
         val point = createMapPointUseCase.create(
@@ -312,6 +338,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreatePointSheetDismiss() {
+        acceptIntent(MapStore.Intent.CreatePoint.SheetDismissed)
         setModel(currentModel().copy(
             isCreatePointSheetVisible = false,
             createPointDraft = null,
@@ -319,6 +346,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onDrawingAddPositionClick() {
+        acceptIntent(MapStore.Intent.Drawing.AddPositionClicked)
         val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         val snapshot = model.lastCameraSnapshot ?: return
@@ -329,6 +357,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onDrawingRemoveLastPositionClick() {
+        acceptIntent(MapStore.Intent.Drawing.RemoveLastPositionClicked)
         val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         setModel(model.copy(
@@ -337,6 +366,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onDrawingDetailsClick() {
+        acceptIntent(MapStore.Intent.Drawing.DetailsClicked)
         val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         if (!draft.canOpenDetails()) {
@@ -348,6 +378,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onDrawingDismiss() {
+        acceptIntent(MapStore.Intent.Drawing.Dismissed)
         setModel(currentModel().copy(
             drawingMode = null,
             shapeDrawingDraft = null,
@@ -356,6 +387,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreateShapeTitleChange(value: String) {
+        acceptIntent(MapStore.Intent.Drawing.TitleChanged(value))
         val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         setModel(model.copy(
@@ -364,6 +396,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreateShapeConfirm() {
+        acceptIntent(MapStore.Intent.Drawing.Confirmed)
         val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         val createdAt = timeProvider.currentTimeMillis()
@@ -407,6 +440,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreateShapeSheetDismiss() {
+        acceptIntent(MapStore.Intent.Drawing.ShapeSheetDismissed)
         setModel(currentModel().copy(
             isCreateShapeSheetVisible = false,
         ))
@@ -417,6 +451,13 @@ internal class DefaultMapScreenComponent(
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) {
+        acceptIntent(
+            MapStore.Intent.FeatureSelection.FeatureClicked(
+                featureKey = featureKey,
+                featureType = featureType.toStoreFeatureType(),
+                anchor = anchor.toStoreAnchor(),
+            ),
+        )
         val model = currentModel()
         val feature = featureSelectionResolver.resolve(model.mapState, featureKey, featureType) ?: return
         setModel(model.copy(
@@ -427,6 +468,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onFeatureInfoWindowDismiss() {
+        acceptIntent(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
         setModel(currentModel().copy(
             selectedFeatureInfoWindow = null,
         ))
@@ -495,6 +537,10 @@ internal class DefaultMapScreenComponent(
     }
 
     private fun currentModel(): MapScreenComponent.Model = model.value
+
+    private fun acceptIntent(intent: MapStore.Intent) {
+        mapStoreHolder.accept(intent)
+    }
 
     private fun setModel(model: MapScreenComponent.Model) {
         mapStoreHolder.updateModel(model)
