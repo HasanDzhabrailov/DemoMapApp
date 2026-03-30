@@ -333,7 +333,7 @@ internal class MapStoreExecutor(
                 infoWindow = featureInfoWindowStateMapper.map(
                     feature = feature,
                     anchor = intent.anchor,
-                ).toStoreInfoWindow(),
+                ),
             ),
         )
     }

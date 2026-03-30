@@ -5,11 +5,13 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
+import ru.tech.demomapapp.feature.map.impl.store.toStoreDraft
+import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.render.MapRenderModel
 import ru.tech.demomapapp.feature.map.render.RenderDrawingPreview
 import ru.tech.demomapapp.feature.map.render.RenderCurrentLocationMarker
@@ -36,7 +38,7 @@ internal fun MapState.toRenderModel(
         currentLocationMarker = currentLocationMarker?.toRenderCurrentLocationMarker(),
         rulerMeasurement = rulerMeasurement?.toRenderRulerMeasurement(rulerArrowGeometryCalculator),
         drawingPreview = shapeDrawingPreviewMapper.map(
-            draft = shapeDrawingDraft,
+            draft = shapeDrawingDraft?.toStoreDraft(),
             currentSnapshot = currentSnapshot,
         ),
     )

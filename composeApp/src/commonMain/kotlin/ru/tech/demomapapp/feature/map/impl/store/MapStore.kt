@@ -94,8 +94,8 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         sealed interface FeatureSelection : Intent {
             data class FeatureClicked(
                 val featureKey: String,
-                val featureType: MapScreenComponent.FeatureType,
-                val anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+                val featureType: FeatureType,
+                val anchor: FeatureInfoWindowAnchor,
             ) : FeatureSelection
 
             object FeatureInfoWindowDismissed : FeatureSelection
@@ -240,6 +240,13 @@ internal fun MapScreenComponent.DrawingMode.toStoreDrawingMode(): MapStore.Drawi
         MapScreenComponent.DrawingMode.POLYGON -> MapStore.DrawingMode.POLYGON
     }
 
+internal fun MapScreenComponent.FeatureType.toStoreFeatureType(): MapStore.FeatureType =
+    when (this) {
+        MapScreenComponent.FeatureType.POINT -> MapStore.FeatureType.POINT
+        MapScreenComponent.FeatureType.LINE -> MapStore.FeatureType.LINE
+        MapScreenComponent.FeatureType.POLYGON -> MapStore.FeatureType.POLYGON
+    }
+
 private fun MapStore.ShapeDrawingDraft.toComponentDraft(): MapScreenComponent.ShapeDrawingDraft =
     MapScreenComponent.ShapeDrawingDraft(
         mode = mode.toComponentDrawingMode(),
@@ -247,7 +254,7 @@ private fun MapStore.ShapeDrawingDraft.toComponentDraft(): MapScreenComponent.Sh
         titleInput = titleInput,
     )
 
-private fun MapScreenComponent.ShapeDrawingDraft.toStoreDraft(): MapStore.ShapeDrawingDraft =
+internal fun MapScreenComponent.ShapeDrawingDraft.toStoreDraft(): MapStore.ShapeDrawingDraft =
     MapStore.ShapeDrawingDraft(
         mode = mode.toStoreDrawingMode(),
         fixedVertices = fixedVertices,

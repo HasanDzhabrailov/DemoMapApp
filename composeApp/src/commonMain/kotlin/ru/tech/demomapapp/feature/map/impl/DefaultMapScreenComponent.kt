@@ -9,6 +9,8 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
+import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
+import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
@@ -154,8 +156,8 @@ internal class DefaultMapScreenComponent(
         acceptIntent(
             MapStore.Intent.FeatureSelection.FeatureClicked(
                 featureKey = featureKey,
-                featureType = featureType,
-                anchor = anchor,
+                featureType = featureType.toStoreFeatureType(),
+                anchor = anchor.toStoreAnchor(),
             ),
         )
     }

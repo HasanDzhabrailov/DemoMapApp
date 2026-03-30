@@ -1,20 +1,20 @@
 package ru.tech.demomapapp.feature.map.impl
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.render.RenderDrawingPreview
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
 
 internal fun interface ShapeDrawingPreviewMapper {
     fun map(
-        draft: MapScreenComponent.ShapeDrawingDraft?,
+        draft: MapStore.ShapeDrawingDraft?,
         currentSnapshot: MapCameraSnapshot?,
     ): RenderDrawingPreview?
 }
 
 internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
     override fun map(
-        draft: MapScreenComponent.ShapeDrawingDraft?,
+        draft: MapStore.ShapeDrawingDraft?,
         currentSnapshot: MapCameraSnapshot?,
     ): RenderDrawingPreview? {
         val currentVertex = currentSnapshot?.toVertex() ?: return null
@@ -26,12 +26,12 @@ internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
 
         val previewVertex = currentVertex.toRenderVertex()
         return when (activeDraft.mode) {
-            MapScreenComponent.DrawingMode.LINE -> RenderDrawingPreview(
+            MapStore.DrawingMode.LINE -> RenderDrawingPreview(
                 fixedLineVertices = fixedVertices,
                 previewLineVertices = listOfNotNull(fixedVertices.lastOrNull(), previewVertex),
             )
 
-            MapScreenComponent.DrawingMode.POLYGON -> {
+            MapStore.DrawingMode.POLYGON -> {
                 val previewLineVertices = buildList {
                     if (fixedVertices.isNotEmpty()) {
                         add(fixedVertices.last())

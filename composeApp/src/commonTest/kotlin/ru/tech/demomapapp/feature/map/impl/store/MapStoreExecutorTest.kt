@@ -7,7 +7,6 @@ import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
@@ -273,8 +272,8 @@ class MapStoreExecutorTest {
         executor.executeIntent(
             MapStore.Intent.FeatureSelection.FeatureClicked(
                 featureKey = "point-1",
-                featureType = MapScreenComponent.FeatureType.POINT,
-                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+                featureType = MapStore.FeatureType.POINT,
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
             ),
         )
 
@@ -301,8 +300,8 @@ class MapStoreExecutorTest {
         executor.executeIntent(
             MapStore.Intent.FeatureSelection.FeatureClicked(
                 featureKey = "missing",
-                featureType = MapScreenComponent.FeatureType.POINT,
-                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+                featureType = MapStore.FeatureType.POINT,
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
             ),
         )
 
