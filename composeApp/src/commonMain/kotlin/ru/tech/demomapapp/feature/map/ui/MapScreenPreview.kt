@@ -1,0 +1,109 @@
+package ru.tech.demomapapp.feature.map.ui
+
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.LocationRequestResult
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationRequest
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
+
+@Preview
+@Composable
+internal fun MapScreenContentPreview() {
+    MaterialTheme {
+        MapScreenContent(component = PreviewMapScreenComponent())
+    }
+}
+
+private class PreviewMapScreenComponent : MapScreenComponent {
+    override val model: Value<MapScreenComponent.Model> =
+        MutableValue(
+            MapScreenComponent.Model(
+                lastCameraSnapshot = MapCameraSnapshot(
+                    latitude = 55.75124,
+                    longitude = 37.61842,
+                    zoom = 12.34567,
+                    bearing = 18.2,
+                ),
+                rulerInfoWindow = RulerInfoWindowState(
+                    distanceText = "12,9 км",
+                    trueAzimuthText = "A = 97° 33' 29\"",
+                ),
+            ),
+        )
+
+    override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+
+    override fun onMapToolsClick() = Unit
+
+    override fun onMapToolsDismiss() = Unit
+
+    override fun onZoomInClick() = Unit
+
+    override fun onZoomOutClick() = Unit
+
+    override fun onAvailableMapsClick() = Unit
+
+    override fun onMapsOnScreenClick() = Unit
+
+    override fun onGpsToggle() = Unit
+
+    override fun onMyLocationClick() = Unit
+
+    override fun onCurrentLocationFocusClick() = Unit
+
+    override fun onLocationRequestConsumed() = Unit
+
+    override fun onLocationResult(result: LocationRequestResult) = Unit
+
+    override fun onRulerToggle() = Unit
+
+    override fun onViewportCommandConsumed() = Unit
+
+    override fun onCenterMarkerClick() = Unit
+
+    override fun onCenterMarkerMenuDismiss() = Unit
+
+    override fun onCreatePointClick() = Unit
+
+    override fun onCreateLineClick() = Unit
+
+    override fun onCreatePolygonClick() = Unit
+
+    override fun onCreatePointLatitudeChange(value: String) = Unit
+
+    override fun onCreatePointLongitudeChange(value: String) = Unit
+
+    override fun onCreatePointTitleChange(value: String) = Unit
+
+    override fun onCreatePointConfirm() = Unit
+
+    override fun onCreatePointSheetDismiss() = Unit
+
+    override fun onDrawingAddPositionClick() = Unit
+
+    override fun onDrawingRemoveLastPositionClick() = Unit
+
+    override fun onDrawingDetailsClick() = Unit
+
+    override fun onDrawingDismiss() = Unit
+
+    override fun onCreateShapeTitleChange(value: String) = Unit
+
+    override fun onCreateShapeConfirm() = Unit
+
+    override fun onCreateShapeSheetDismiss() = Unit
+
+    override fun onFeatureClick(
+        featureKey: String,
+        featureType: MapScreenComponent.FeatureType,
+        anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+    ) = Unit
+
+    override fun onFeatureInfoWindowDismiss() = Unit
+}

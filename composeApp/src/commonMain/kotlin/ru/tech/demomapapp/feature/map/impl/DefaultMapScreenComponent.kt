@@ -6,8 +6,8 @@ import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStore
+import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
 import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
 import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
@@ -16,159 +16,61 @@ internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
-    private val mapStoreHolder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
+    private val holder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
         MapStoreHolder(
             mapStoreFactory = mapStoreFactory,
             initialModel = MapScreenComponent.Model(),
         )
     }
-    override val model: Value<MapScreenComponent.Model> = mapStoreHolder.model
+    override val model: Value<MapScreenComponent.Model> = holder.model
 
-    override fun onCameraIdle(snapshot: MapCameraSnapshot) {
-        acceptIntent(MapStore.Intent.Viewport.CameraIdle(snapshot))
-    }
+    override fun onCameraIdle(snapshot: MapCameraSnapshot) =
+        holder.accept(MapStore.Intent.Viewport.CameraIdle(snapshot))
 
-    override fun onMapToolsClick() {
-        acceptIntent(MapStore.Intent.Tools.MapToolsClicked)
-    }
-
-    override fun onMapToolsDismiss() {
-        acceptIntent(MapStore.Intent.Tools.MapToolsDismissed)
-    }
-
-    override fun onZoomInClick() {
-        acceptIntent(MapStore.Intent.Viewport.ZoomInClicked)
-    }
-
-    override fun onZoomOutClick() {
-        acceptIntent(MapStore.Intent.Viewport.ZoomOutClicked)
-    }
-
-    override fun onAvailableMapsClick() {
-        acceptIntent(MapStore.Intent.Tools.AvailableMapsClicked)
-    }
-
-    override fun onMapsOnScreenClick() {
-        acceptIntent(MapStore.Intent.Tools.MapsOnScreenClicked)
-    }
-
-    override fun onGpsToggle() {
-        acceptIntent(MapStore.Intent.Location.GpsToggled)
-    }
-
-    override fun onMyLocationClick() {
-        acceptIntent(MapStore.Intent.Location.MyLocationClicked)
-    }
-
-    override fun onCurrentLocationFocusClick() {
-        acceptIntent(MapStore.Intent.Location.CurrentLocationFocusClicked)
-    }
-
-    override fun onLocationRequestConsumed() {
-        acceptIntent(MapStore.Intent.Location.LocationRequestConsumed)
-    }
-
-    override fun onLocationResult(result: LocationRequestResult) {
-        acceptIntent(MapStore.Intent.Location.LocationResultReceived(result))
-    }
-
-    override fun onRulerToggle() {
-        acceptIntent(MapStore.Intent.Ruler.Toggled)
-    }
-
-    override fun onViewportCommandConsumed() {
-        acceptIntent(MapStore.Intent.Viewport.ViewportCommandConsumed)
-    }
-
-    override fun onCenterMarkerClick() {
-        acceptIntent(MapStore.Intent.CenterMarker.Clicked)
-    }
-
-    override fun onCenterMarkerMenuDismiss() {
-        acceptIntent(MapStore.Intent.CenterMarker.MenuDismissed)
-    }
-
-    override fun onCreatePointClick() {
-        acceptIntent(MapStore.Intent.CreatePoint.Clicked)
-    }
-
-    override fun onCreateLineClick() {
-        acceptIntent(MapStore.Intent.Drawing.CreateLineClicked)
-    }
-
-    override fun onCreatePolygonClick() {
-        acceptIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
-    }
-
-    override fun onCreatePointLatitudeChange(value: String) {
-        acceptIntent(MapStore.Intent.CreatePoint.LatitudeChanged(value))
-    }
-
-    override fun onCreatePointLongitudeChange(value: String) {
-        acceptIntent(MapStore.Intent.CreatePoint.LongitudeChanged(value))
-    }
-
-    override fun onCreatePointTitleChange(value: String) {
-        acceptIntent(MapStore.Intent.CreatePoint.TitleChanged(value))
-    }
-
-    override fun onCreatePointConfirm() {
-        acceptIntent(MapStore.Intent.CreatePoint.Confirmed)
-    }
-
-    override fun onCreatePointSheetDismiss() {
-        acceptIntent(MapStore.Intent.CreatePoint.SheetDismissed)
-    }
-
-    override fun onDrawingAddPositionClick() {
-        acceptIntent(MapStore.Intent.Drawing.AddPositionClicked)
-    }
-
-    override fun onDrawingRemoveLastPositionClick() {
-        acceptIntent(MapStore.Intent.Drawing.RemoveLastPositionClicked)
-    }
-
-    override fun onDrawingDetailsClick() {
-        acceptIntent(MapStore.Intent.Drawing.DetailsClicked)
-    }
-
-    override fun onDrawingDismiss() {
-        acceptIntent(MapStore.Intent.Drawing.Dismissed)
-    }
-
-    override fun onCreateShapeTitleChange(value: String) {
-        acceptIntent(MapStore.Intent.Drawing.TitleChanged(value))
-    }
-
-    override fun onCreateShapeConfirm() {
-        acceptIntent(MapStore.Intent.Drawing.Confirmed)
-    }
-
-    override fun onCreateShapeSheetDismiss() {
-        acceptIntent(MapStore.Intent.Drawing.ShapeSheetDismissed)
-    }
+    override fun onMapToolsClick() = holder.accept(MapStore.Intent.Tools.MapToolsClicked)
+    override fun onMapToolsDismiss() = holder.accept(MapStore.Intent.Tools.MapToolsDismissed)
+    override fun onZoomInClick() = holder.accept(MapStore.Intent.Viewport.ZoomInClicked)
+    override fun onZoomOutClick() = holder.accept(MapStore.Intent.Viewport.ZoomOutClicked)
+    override fun onAvailableMapsClick() = holder.accept(MapStore.Intent.Tools.AvailableMapsClicked)
+    override fun onMapsOnScreenClick() = holder.accept(MapStore.Intent.Tools.MapsOnScreenClicked)
+    override fun onGpsToggle() = holder.accept(MapStore.Intent.Location.GpsToggled)
+    override fun onMyLocationClick() = holder.accept(MapStore.Intent.Location.MyLocationClicked)
+    override fun onCurrentLocationFocusClick() = holder.accept(MapStore.Intent.Location.CurrentLocationFocusClicked)
+    override fun onLocationRequestConsumed() = holder.accept(MapStore.Intent.Location.LocationRequestConsumed)
+    override fun onLocationResult(result: LocationRequestResult) = holder.accept(MapStore.Intent.Location.LocationResultReceived(result))
+    override fun onRulerToggle() = holder.accept(MapStore.Intent.Ruler.Toggled)
+    override fun onViewportCommandConsumed() = holder.accept(MapStore.Intent.Viewport.ViewportCommandConsumed)
+    override fun onCenterMarkerClick() = holder.accept(MapStore.Intent.CenterMarker.Clicked)
+    override fun onCenterMarkerMenuDismiss() = holder.accept(MapStore.Intent.CenterMarker.MenuDismissed)
+    override fun onCreatePointClick() = holder.accept(MapStore.Intent.CreatePoint.Clicked)
+    override fun onCreateLineClick() = holder.accept(MapStore.Intent.Drawing.CreateLineClicked)
+    override fun onCreatePolygonClick() = holder.accept(MapStore.Intent.Drawing.CreatePolygonClicked)
+    override fun onCreatePointLatitudeChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.LatitudeChanged(value))
+    override fun onCreatePointLongitudeChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.LongitudeChanged(value))
+    override fun onCreatePointTitleChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.TitleChanged(value))
+    override fun onCreatePointConfirm() = holder.accept(MapStore.Intent.CreatePoint.Confirmed)
+    override fun onCreatePointSheetDismiss() = holder.accept(MapStore.Intent.CreatePoint.SheetDismissed)
+    override fun onDrawingAddPositionClick() = holder.accept(MapStore.Intent.Drawing.AddPositionClicked)
+    override fun onDrawingRemoveLastPositionClick() = holder.accept(MapStore.Intent.Drawing.RemoveLastPositionClicked)
+    override fun onDrawingDetailsClick() = holder.accept(MapStore.Intent.Drawing.DetailsClicked)
+    override fun onDrawingDismiss() = holder.accept(MapStore.Intent.Drawing.Dismissed)
+    override fun onCreateShapeTitleChange(value: String) = holder.accept(MapStore.Intent.Drawing.TitleChanged(value))
+    override fun onCreateShapeConfirm() = holder.accept(MapStore.Intent.Drawing.Confirmed)
+    override fun onCreateShapeSheetDismiss() = holder.accept(MapStore.Intent.Drawing.ShapeSheetDismissed)
 
     override fun onFeatureClick(
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
-    ) {
-        acceptIntent(
-            MapStore.Intent.FeatureSelection.FeatureClicked(
-                featureKey = featureKey,
-                featureType = featureType.toStoreFeatureType(),
-                anchor = anchor.toStoreAnchor(),
-            ),
+    ) = holder.accept(
+        MapStore.Intent.FeatureSelection.FeatureClicked(
+            featureKey = featureKey,
+            featureType = featureType.toStoreFeatureType(),
+            anchor = anchor.toStoreAnchor(),
         )
-    }
+    )
 
-    override fun onFeatureInfoWindowDismiss() {
-        acceptIntent(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
-    }
-
-    private fun acceptIntent(intent: MapStore.Intent) {
-        mapStoreHolder.accept(intent)
-    }
+    override fun onFeatureInfoWindowDismiss() = holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
 
     private companion object {
         const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"
