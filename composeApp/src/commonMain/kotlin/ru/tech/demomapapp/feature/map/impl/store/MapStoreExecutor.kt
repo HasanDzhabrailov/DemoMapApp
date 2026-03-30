@@ -325,14 +325,14 @@ internal class MapStoreExecutor(
         val feature = featureSelectionResolver.resolve(
             mapState = currentState().mapState,
             featureKey = intent.featureKey,
-            featureType = intent.featureType.toComponentFeatureType(),
+            featureType = intent.featureType,
         ) ?: return
 
         callbacks.onMessage(
             MapStoreMessage.FeatureInfoWindowOpened(
                 infoWindow = featureInfoWindowStateMapper.map(
                     feature = feature,
-                    anchor = intent.anchor.toComponentAnchor(),
+                    anchor = intent.anchor,
                 ).toStoreInfoWindow(),
             ),
         )
@@ -401,18 +401,5 @@ internal class MapStoreExecutor(
             latitude = latitude,
             longitude = longitude,
             isPlaceholder = true,
-        )
-
-    private fun MapStore.FeatureType.toComponentFeatureType() =
-        when (this) {
-            MapStore.FeatureType.POINT -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.POINT
-            MapStore.FeatureType.LINE -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.LINE
-            MapStore.FeatureType.POLYGON -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.POLYGON
-        }
-
-    private fun MapStore.FeatureInfoWindowAnchor.toComponentAnchor() =
-        ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureInfoWindowAnchor(
-            screenX = screenX,
-            screenY = screenY,
         )
 }

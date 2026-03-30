@@ -94,8 +94,8 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         sealed interface FeatureSelection : Intent {
             data class FeatureClicked(
                 val featureKey: String,
-                val featureType: FeatureType,
-                val anchor: FeatureInfoWindowAnchor,
+                val featureType: MapScreenComponent.FeatureType,
+                val anchor: MapScreenComponent.FeatureInfoWindowAnchor,
             ) : FeatureSelection
 
             object FeatureInfoWindowDismissed : FeatureSelection
@@ -285,10 +285,3 @@ internal fun MapCameraSnapshot.toCreatePointDraft(): MapStore.CreatePointDraft =
         latitudeInput = latitude.toString(),
         longitudeInput = longitude.toString(),
     )
-
-internal fun MapScreenComponent.FeatureType.toStoreFeatureType(): MapStore.FeatureType =
-    when (this) {
-        MapScreenComponent.FeatureType.POINT -> MapStore.FeatureType.POINT
-        MapScreenComponent.FeatureType.LINE -> MapStore.FeatureType.LINE
-        MapScreenComponent.FeatureType.POLYGON -> MapStore.FeatureType.POLYGON
-    }

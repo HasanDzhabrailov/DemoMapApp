@@ -7,9 +7,13 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
+import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
+import ru.tech.demomapapp.feature.map.impl.DefaultCreateMapLineUseCase
+import ru.tech.demomapapp.feature.map.impl.DefaultCreateMapPointUseCase
+import ru.tech.demomapapp.feature.map.impl.DefaultCreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
@@ -17,15 +21,17 @@ import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
+import ru.tech.demomapapp.feature.map.impl.SystemTimeProvider
+import ru.tech.demomapapp.feature.map.impl.UuidFeatureIdProvider
 
 internal class MapStoreFactory(
     private val storeFactory: StoreFactory = DefaultStoreFactory(),
-    private val createMapPointUseCase: CreateMapPointUseCase,
-    private val createMapLineUseCase: CreateMapLineUseCase,
-    private val createMapPolygonUseCase: CreateMapPolygonUseCase,
-    private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
-    private val timeProvider: TimeProvider,
-    private val featureIdProvider: FeatureIdProvider,
+    private val createMapPointUseCase: CreateMapPointUseCase = DefaultCreateMapPointUseCase(),
+    private val createMapLineUseCase: CreateMapLineUseCase = DefaultCreateMapLineUseCase(),
+    private val createMapPolygonUseCase: CreateMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
+    private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
+    private val timeProvider: TimeProvider = SystemTimeProvider(),
+    private val featureIdProvider: FeatureIdProvider = UuidFeatureIdProvider(),
     private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,

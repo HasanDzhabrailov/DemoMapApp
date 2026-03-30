@@ -9,34 +9,15 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
-import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
-import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
-    private val createMapPointUseCase: CreateMapPointUseCase = DefaultCreateMapPointUseCase(),
-    private val createMapLineUseCase: CreateMapLineUseCase = DefaultCreateMapLineUseCase(),
-    private val createMapPolygonUseCase: CreateMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
-    private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
-    private val timeProvider: TimeProvider = SystemTimeProvider(),
-    private val featureIdProvider: FeatureIdProvider = UuidFeatureIdProvider(),
-    private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-    private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
-    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(
-        createMapPointUseCase = createMapPointUseCase,
-        createMapLineUseCase = createMapLineUseCase,
-        createMapPolygonUseCase = createMapPolygonUseCase,
-        shapeDrawingDraftUpdater = shapeDrawingDraftUpdater,
-        timeProvider = timeProvider,
-        featureIdProvider = featureIdProvider,
-        rulerMeasurementCalculator = rulerMeasurementCalculator,
-        rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
-    ),
+    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mapStoreHolder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
         MapStoreHolder(
             mapStoreFactory = mapStoreFactory,
-            initialModel = defaultModel(),
+            initialModel = MapScreenComponent.Model(),
         )
     }
     override val model: Value<MapScreenComponent.Model> = mapStoreHolder.model
@@ -82,7 +63,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onLocationRequestConsumed() {
-        mapStoreHolder.consumeLocationRequest()
+        acceptIntent(MapStore.Intent.Location.LocationRequestConsumed)
     }
 
     override fun onLocationResult(result: LocationRequestResult) {
@@ -94,7 +75,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onViewportCommandConsumed() {
-        mapStoreHolder.consumeViewportCommand()
+        acceptIntent(MapStore.Intent.Viewport.ViewportCommandConsumed)
     }
 
     override fun onCenterMarkerClick() {
@@ -173,8 +154,8 @@ internal class DefaultMapScreenComponent(
         acceptIntent(
             MapStore.Intent.FeatureSelection.FeatureClicked(
                 featureKey = featureKey,
-                featureType = featureType.toStoreFeatureType(),
-                anchor = anchor.toStoreAnchor(),
+                featureType = featureType,
+                anchor = anchor,
             ),
         )
     }
@@ -182,9 +163,6 @@ internal class DefaultMapScreenComponent(
     override fun onFeatureInfoWindowDismiss() {
         acceptIntent(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
     }
-
-    private fun defaultModel(): MapScreenComponent.Model =
-        MapScreenComponent.Model()
 
     private fun acceptIntent(intent: MapStore.Intent) {
         mapStoreHolder.accept(intent)

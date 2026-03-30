@@ -30,6 +30,19 @@ internal class MapStoreHolder(
     val model: Value<MapScreenComponent.Model> = mutableModel
 
     fun accept(intent: MapStore.Intent) {
+        when (intent) {
+            MapStore.Intent.Location.LocationRequestConsumed -> {
+                pendingLocationRequest = null
+                mutableModel.value = mutableModel.value.copy(pendingLocationRequest = null)
+            }
+
+            MapStore.Intent.Viewport.ViewportCommandConsumed -> {
+                pendingViewportCommand = null
+                mutableModel.value = mutableModel.value.copy(pendingViewportCommand = null)
+            }
+
+            else -> Unit
+        }
         store.accept(intent)
     }
 
@@ -45,19 +58,6 @@ internal class MapStoreHolder(
             ),
         )
     }
-
-    fun consumeLocationRequest() {
-        pendingLocationRequest = null
-        mutableModel.value = mutableModel.value.copy(pendingLocationRequest = null)
-        store.accept(MapStore.Intent.Location.LocationRequestConsumed)
-    }
-
-    fun consumeViewportCommand() {
-        pendingViewportCommand = null
-        mutableModel.value = mutableModel.value.copy(pendingViewportCommand = null)
-        store.accept(MapStore.Intent.Viewport.ViewportCommandConsumed)
-    }
-
     override fun onDestroy() {
         labelDisposable.dispose()
         stateDisposable.dispose()
