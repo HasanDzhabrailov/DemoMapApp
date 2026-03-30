@@ -7,6 +7,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
@@ -53,6 +54,57 @@ class MapStoreReducerTest {
         assertTrue(updatedState.isCreatePointSheetVisible)
         assertEquals("55.75", updatedState.createPointDraft?.latitudeInput)
         assertEquals("37.61", updatedState.createPointDraft?.longitudeInput)
+    }
+
+    @Test
+    fun `create point field updates stay reducer owned`() {
+        val initialState = MapStore.State(
+            createPointDraft = MapStore.CreatePointDraft(
+                latitudeInput = "55.75",
+                longitudeInput = "37.61",
+            ),
+        )
+
+        val updatedState = reduce(
+            reduce(
+                reduce(initialState, MapStoreMessage.CreatePointLatitudeChanged("59.0")),
+                MapStoreMessage.CreatePointLongitudeChanged("30.0"),
+            ),
+            MapStoreMessage.CreatePointTitleChanged("Test point"),
+        )
+
+        assertEquals("59.0", updatedState.createPointDraft?.latitudeInput)
+        assertEquals("30.0", updatedState.createPointDraft?.longitudeInput)
+        assertEquals("Test point", updatedState.createPointDraft?.titleInput)
+    }
+
+    @Test
+    fun `create point created appends point and clears sheet state`() {
+        val initialState = MapStore.State(
+            isCreatePointSheetVisible = true,
+            createPointDraft = MapStore.CreatePointDraft(
+                latitudeInput = "55.75",
+                longitudeInput = "37.61",
+                titleInput = "Test point",
+            ),
+        )
+
+        val updatedState = reduce(
+            initialState,
+            MapStoreMessage.CreatePointCreated(
+                MapPoint(
+                    id = "point-1",
+                    latitude = 55.75,
+                    longitude = 37.61,
+                    title = "Test point",
+                    createdAtEpochMillis = 1L,
+                ),
+            ),
+        )
+
+        assertEquals(1, updatedState.mapState.points.size)
+        assertFalse(updatedState.isCreatePointSheetVisible)
+        assertNull(updatedState.createPointDraft)
     }
 
     @Test

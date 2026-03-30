@@ -51,6 +51,12 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
                 copy(titleInput = msg.value)
             }
 
+            is MapStoreMessage.CreatePointCreated -> copy(
+                mapState = mapState.copy(points = mapState.points + msg.point),
+                isCreatePointSheetVisible = false,
+                createPointDraft = null,
+            )
+
             is MapStoreMessage.DrawingDismissed -> copy(
                 drawingMode = null,
                 shapeDrawingDraft = null,

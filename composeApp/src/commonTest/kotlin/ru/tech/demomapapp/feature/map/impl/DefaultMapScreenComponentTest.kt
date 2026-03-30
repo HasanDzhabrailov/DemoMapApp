@@ -461,6 +461,34 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
+    fun `invalid point input does not create point and keeps draft open`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePointClick()
+        component.onCreatePointLatitudeChange("invalid")
+        component.onCreatePointTitleChange("Test point")
+        component.onCreatePointConfirm()
+
+        assertTrue(component.model.value.mapState.points.isEmpty())
+        assertTrue(component.model.value.isCreatePointSheetVisible)
+        assertEquals("invalid", component.model.value.createPointDraft?.latitudeInput)
+    }
+
+    @Test
+    fun `point sheet dismiss clears draft`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePointClick()
+        component.onCreatePointTitleChange("Test point")
+        component.onCreatePointSheetDismiss()
+
+        assertFalse(component.model.value.isCreatePointSheetVisible)
+        assertNull(component.model.value.createPointDraft)
+    }
+
+    @Test
     fun `camera idle clears visible feature info window`() {
         val component = createComponent()
 

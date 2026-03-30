@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.impl.store
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
@@ -26,6 +27,8 @@ internal sealed interface MapStoreMessage {
     data class CreatePointLongitudeChanged(val value: String) : MapStoreMessage
 
     data class CreatePointTitleChanged(val value: String) : MapStoreMessage
+
+    data class CreatePointCreated(val point: MapPoint) : MapStoreMessage
 
     object CreatePointSheetDismissed : MapStoreMessage
 

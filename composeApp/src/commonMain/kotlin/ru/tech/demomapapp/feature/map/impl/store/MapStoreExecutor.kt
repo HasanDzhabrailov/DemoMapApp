@@ -6,10 +6,17 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
+import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
+import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
+import ru.tech.demomapapp.feature.map.impl.TimeProvider
 
 internal class MapStoreExecutor(
+    private val createMapPointUseCase: CreateMapPointUseCase,
+    private val timeProvider: TimeProvider,
+    private val featureIdProvider: FeatureIdProvider,
     private val rulerMeasurementCalculator: RulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter,
 ) : com.arkivanov.mvikotlin.core.store.Executor<
@@ -71,13 +78,13 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Location.GpsToggled -> handleGpsToggle()
             is MapStore.Intent.Location.LocationRequestConsumed -> Unit
             is MapStore.Intent.Location.LocationResultReceived -> handleLocationResult(intent.result)
+            is MapStore.Intent.CreatePoint.Confirmed -> handleCreatePointConfirm()
             is MapStore.Intent.Ruler.Toggled -> handleRulerToggle()
             is MapStore.Intent.Viewport.CameraIdle -> handleCameraIdle(intent.snapshot)
             is MapStore.Intent.Viewport.ViewportCommandConsumed -> Unit
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Location,
-            is MapStore.Intent.CreatePoint.Confirmed,
             is MapStore.Intent.Drawing.AddPositionClicked,
             is MapStore.Intent.Drawing.Confirmed,
             is MapStore.Intent.Drawing.RemoveLastPositionClicked,
@@ -248,6 +255,21 @@ internal class MapStoreExecutor(
         val updatedState = state.copy(isRulerEnabled = true)
         callbacks.onMessage(MapStoreMessage.RulerEnabled)
         publishRulerState(updatedState)
+    }
+
+    private fun handleCreatePointConfirm() {
+        val draft = currentState().createPointDraft ?: return
+        val point = createMapPointUseCase.create(
+            CreateMapPointInput(
+                id = featureIdProvider.nextId(),
+                latitudeInput = draft.latitudeInput,
+                longitudeInput = draft.longitudeInput,
+                titleInput = draft.titleInput,
+                createdAtEpochMillis = timeProvider.currentTimeMillis(),
+            ),
+        ) ?: return
+
+        callbacks.onMessage(MapStoreMessage.CreatePointCreated(point))
     }
 
     private fun handleCameraIdle(snapshot: MapCameraSnapshot) {

@@ -25,6 +25,9 @@ internal class DefaultMapScreenComponent(
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(
+        createMapPointUseCase = createMapPointUseCase,
+        timeProvider = timeProvider,
+        featureIdProvider = featureIdProvider,
         rulerMeasurementCalculator = rulerMeasurementCalculator,
         rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
     ),
@@ -127,25 +130,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onCreatePointConfirm() {
         acceptIntent(MapStore.Intent.CreatePoint.Confirmed)
-        val model = currentModel()
-        val draft = model.createPointDraft ?: return
-        val point = createMapPointUseCase.create(
-            CreateMapPointInput(
-                id = featureIdProvider.nextId(),
-                latitudeInput = draft.latitudeInput,
-                longitudeInput = draft.longitudeInput,
-                titleInput = draft.titleInput,
-                createdAtEpochMillis = timeProvider.currentTimeMillis(),
-            ),
-        ) ?: return
-
-        setModel(model.copy(
-            mapState = model.mapState.copy(
-                points = model.mapState.points + point,
-            ),
-            isCreatePointSheetVisible = false,
-            createPointDraft = null,
-        ))
     }
 
     override fun onCreatePointSheetDismiss() {
