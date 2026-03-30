@@ -101,7 +101,8 @@ Use the existing project setup for formatting and verification.
 
 Preferred commands, if configured in this repository:
 
-- `./gradlew ktlintCheck`
+- `./gradlew ktlintFormat` — auto-format code to fix style violations
+- `./gradlew ktlintCheck` — verify code style compliance
 - `./gradlew detekt`
 - `./gradlew test`
 
