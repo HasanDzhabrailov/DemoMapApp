@@ -5,6 +5,11 @@ import com.arkivanov.mvikotlin.core.store.Reducer
 internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
     override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State =
         when (msg) {
+            is MapStoreMessage.CameraIdleReceived -> copy(
+                lastCameraSnapshot = msg.snapshot,
+                selectedFeatureInfoWindow = null,
+            )
+
             is MapStoreMessage.CenterMarkerMenuDismissed -> copy(
                 isCenterMarkerMenuVisible = false,
             )
@@ -67,6 +72,11 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
                 selectedFeatureInfoWindow = null,
             )
 
+            is MapStoreMessage.CurrentLocationMarkerUpdated -> copy(
+                myLocationMode = msg.mode,
+                currentLocationMarker = msg.marker,
+            )
+
             is MapStoreMessage.MapToolsMenuDismissed -> copy(
                 isMapToolsMenuVisible = false,
             )
@@ -105,6 +115,26 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
                 val draft = shapeDrawingDraft ?: return this
                 copy(shapeDrawingDraft = draft.copy(titleInput = msg.value))
             }
+
+            is MapStoreMessage.RulerCleared -> copy(
+                rulerMeasurement = null,
+                rulerInfoWindow = null,
+            )
+
+            is MapStoreMessage.RulerDisabled -> copy(
+                isRulerEnabled = false,
+                rulerMeasurement = null,
+                rulerInfoWindow = null,
+            )
+
+            is MapStoreMessage.RulerEnabled -> copy(
+                isRulerEnabled = true,
+            )
+
+            is MapStoreMessage.RulerMeasurementUpdated -> copy(
+                rulerMeasurement = msg.measurement,
+                rulerInfoWindow = msg.infoWindow,
+            )
 
             is MapStoreMessage.StateSynced -> msg.state
         }

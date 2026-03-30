@@ -1,13 +1,13 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
-import ru.tech.demomapapp.feature.map.impl.recalculateRulerState
 
 internal class MapStoreExecutor(
     private val rulerMeasurementCalculator: RulerMeasurementCalculator,
@@ -66,21 +66,22 @@ internal class MapStoreExecutor(
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> {
                 callbacks.onMessage(MapStoreMessage.FeatureInfoWindowDismissed)
             }
+            is MapStore.Intent.Location.MyLocationClicked -> handleMyLocationClick()
             is MapStore.Intent.Location.CurrentLocationFocusClicked -> handleCurrentLocationFocusClick()
             is MapStore.Intent.Location.GpsToggled -> handleGpsToggle()
             is MapStore.Intent.Location.LocationRequestConsumed -> Unit
             is MapStore.Intent.Location.LocationResultReceived -> handleLocationResult(intent.result)
+            is MapStore.Intent.Ruler.Toggled -> handleRulerToggle()
+            is MapStore.Intent.Viewport.CameraIdle -> handleCameraIdle(intent.snapshot)
             is MapStore.Intent.Viewport.ViewportCommandConsumed -> Unit
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Location,
-            is MapStore.Intent.Ruler,
             is MapStore.Intent.CreatePoint.Confirmed,
             is MapStore.Intent.Drawing.AddPositionClicked,
             is MapStore.Intent.Drawing.Confirmed,
             is MapStore.Intent.Drawing.RemoveLastPositionClicked,
             is MapStore.Intent.FeatureSelection.FeatureClicked,
-            is MapStore.Intent.Viewport.CameraIdle,
             -> Unit
             is MapStore.Intent.SyncState -> callbacks.onMessage(MapStoreMessage.StateSynced(intent.state))
             is MapStore.Intent.Tools.AvailableMapsClicked,
@@ -98,22 +99,20 @@ internal class MapStoreExecutor(
     private fun handleGpsToggle() {
         val model = currentModel()
         if (currentState().activeLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
-            syncModel(
-                model = recalculateRulerState(
-                    model.copy(
-                        myLocationMode = MyLocationMode.OFF,
-                        currentLocationMarker = null,
-                        pendingLocationRequest = null,
-                    ),
-                    rulerMeasurementCalculator = rulerMeasurementCalculator,
-                    rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
+            val updatedState = MapStore.State.fromModel(
+                model = model.copy(
+                    myLocationMode = MyLocationMode.OFF,
+                    currentLocationMarker = null,
+                    pendingLocationRequest = null,
                 ),
                 activeLocationRequest = null,
             )
+            syncState(updatedState)
+            publishRulerState(updatedState)
             return
         }
 
-        val updatedModel = recalculateRulerState(
+        val updatedModel =
             when (model.myLocationMode) {
                 MyLocationMode.GPS -> model.copy(
                     myLocationMode = MyLocationMode.OFF,
@@ -128,19 +127,41 @@ internal class MapStoreExecutor(
                     currentLocationMarker = null,
                     pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
                 )
-            },
-            rulerMeasurementCalculator = rulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
-        )
+            }
         val nextActiveLocationRequest = if (updatedModel.pendingLocationRequest != null) {
             updatedModel.pendingLocationRequest
         } else {
             null
         }
-        syncModel(updatedModel, activeLocationRequest = nextActiveLocationRequest)
+        val updatedState = MapStore.State.fromModel(
+            model = updatedModel,
+            activeLocationRequest = nextActiveLocationRequest,
+        )
+        syncState(updatedState)
+        publishRulerState(updatedState)
         if (updatedModel.pendingLocationRequest != null) {
             callbacks.onLabel(MapStore.Label.Location.RequestIssued(updatedModel.pendingLocationRequest))
         }
+    }
+
+    private fun handleMyLocationClick() {
+        val model = currentModel()
+        if (model.myLocationMode == MyLocationMode.GPS) {
+            return
+        }
+
+        val snapshot = model.lastCameraSnapshot ?: return
+        val updatedModel = model.copy(
+            myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
+            currentLocationMarker = snapshot.toPlaceholderLocationMarker(),
+            pendingLocationRequest = null,
+        )
+        val updatedState = MapStore.State.fromModel(
+            model = updatedModel,
+            activeLocationRequest = null,
+        )
+        syncState(updatedState)
+        publishRulerState(updatedState)
     }
 
     private fun handleCurrentLocationFocusClick() {
@@ -169,8 +190,7 @@ internal class MapStoreExecutor(
     private fun handleLocationResult(result: LocationRequestResult) {
         val model = currentModel()
         val request = currentState().activeLocationRequest
-        val updatedModel = recalculateRulerState(
-            when (result) {
+        val updatedModel = when (result) {
                 LocationRequestResult.PermissionDenied -> {
                     model.copy(
                         myLocationMode = MyLocationMode.OFF,
@@ -206,14 +226,38 @@ internal class MapStoreExecutor(
                         longitude = result.longitude,
                     ),
                 )
-            },
-            rulerMeasurementCalculator = rulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
+            }
+        val updatedState = MapStore.State.fromModel(
+            model = updatedModel,
+            activeLocationRequest = null,
         )
-        syncModel(updatedModel, activeLocationRequest = null)
+        syncState(updatedState)
+        publishRulerState(updatedState)
         updatedModel.pendingViewportCommand?.let { command ->
             callbacks.onLabel(MapStore.Label.Viewport.CommandRequested(command))
         }
+    }
+
+    private fun handleRulerToggle() {
+        val state = currentState()
+        if (state.isRulerEnabled) {
+            callbacks.onMessage(MapStoreMessage.RulerDisabled)
+            return
+        }
+
+        val updatedState = state.copy(isRulerEnabled = true)
+        callbacks.onMessage(MapStoreMessage.RulerEnabled)
+        publishRulerState(updatedState)
+    }
+
+    private fun handleCameraIdle(snapshot: MapCameraSnapshot) {
+        callbacks.onMessage(MapStoreMessage.CameraIdleReceived(snapshot))
+        publishRulerState(
+            currentState().copy(
+                lastCameraSnapshot = snapshot,
+                selectedFeatureInfoWindow = null,
+            ),
+        )
     }
 
     private fun emitViewportCommand(command: MapViewportCommand) {
@@ -224,17 +268,50 @@ internal class MapStoreExecutor(
 
     private fun currentModel() = callbacks.state.toModel()
 
+    private fun syncState(state: MapStore.State) {
+        callbacks.onMessage(MapStoreMessage.StateSynced(state))
+    }
+
     private fun syncModel(
         model: ru.tech.demomapapp.feature.map.api.MapScreenComponent.Model,
         activeLocationRequest: MapLocationRequest? = currentState().activeLocationRequest,
     ) {
-        callbacks.onMessage(
-            MapStoreMessage.StateSynced(
-                MapStore.State.fromModel(
-                    model = model,
-                    activeLocationRequest = activeLocationRequest,
-                ),
+        syncState(
+            MapStore.State.fromModel(
+                model = model,
+                activeLocationRequest = activeLocationRequest,
             ),
         )
     }
+
+    private fun publishRulerState(state: MapStore.State) {
+        val rulerResolution = state.resolveRulerState(
+            rulerMeasurementCalculator = rulerMeasurementCalculator,
+            rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
+        )
+
+        rulerResolution.fallbackMarker?.let { marker ->
+            callbacks.onMessage(
+                MapStoreMessage.CurrentLocationMarkerUpdated(
+                    mode = MyLocationMode.MANUAL_PLACEHOLDER,
+                    marker = marker,
+                ),
+            )
+        }
+
+        val measurement = rulerResolution.measurement
+        val infoWindow = rulerResolution.infoWindow
+        if (measurement != null && infoWindow != null) {
+            callbacks.onMessage(MapStoreMessage.RulerMeasurementUpdated(measurement, infoWindow))
+        } else {
+            callbacks.onMessage(MapStoreMessage.RulerCleared)
+        }
+    }
+
+    private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker =
+        MapLocationMarker(
+            latitude = latitude,
+            longitude = longitude,
+            isPlaceholder = true,
+        )
 }

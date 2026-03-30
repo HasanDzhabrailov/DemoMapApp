@@ -3,8 +3,13 @@ package ru.tech.demomapapp.feature.map.impl.store
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
+import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapVertex
 
@@ -48,6 +53,32 @@ class MapStoreReducerTest {
         assertTrue(updatedState.isCreatePointSheetVisible)
         assertEquals("55.75", updatedState.createPointDraft?.latitudeInput)
         assertEquals("37.61", updatedState.createPointDraft?.longitudeInput)
+    }
+
+    @Test
+    fun `camera idle stores snapshot and clears feature info window`() {
+        val initialState = MapStore.State(
+            selectedFeatureInfoWindow = MapStore.FeatureInfoWindow(
+                title = "Test",
+                createdAtText = "26.03.2026 10:00",
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+            ),
+        )
+
+        val updatedState = reduce(
+            initialState,
+            MapStoreMessage.CameraIdleReceived(
+                MapCameraSnapshot(
+                    latitude = 55.75,
+                    longitude = 37.61,
+                    zoom = 12.0,
+                    bearing = 0.0,
+                ),
+            ),
+        )
+
+        assertEquals(55.75, updatedState.lastCameraSnapshot?.latitude)
+        assertNull(updatedState.selectedFeatureInfoWindow)
     }
 
     @Test
@@ -95,6 +126,51 @@ class MapStoreReducerTest {
         )
 
         assertTrue(readyState.isCreateShapeSheetVisible)
+    }
+
+    @Test
+    fun `ruler messages update dedicated ruler state`() {
+        val enabledState = reduce(MapStore.State(), MapStoreMessage.RulerEnabled)
+        assertTrue(enabledState.isRulerEnabled)
+
+        val markerState = reduce(
+            enabledState,
+            MapStoreMessage.CurrentLocationMarkerUpdated(
+                mode = MyLocationMode.MANUAL_PLACEHOLDER,
+                marker = MapLocationMarker(
+                    latitude = 59.0,
+                    longitude = 30.0,
+                    isPlaceholder = true,
+                ),
+            ),
+        )
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, markerState.myLocationMode)
+        assertNotNull(markerState.currentLocationMarker)
+
+        val measuredState = reduce(
+            markerState,
+            MapStoreMessage.RulerMeasurementUpdated(
+                measurement = RulerMeasurement(
+                    startLatitude = 59.0,
+                    startLongitude = 30.0,
+                    endLatitude = 59.1,
+                    endLongitude = 30.1,
+                    distanceMeters = 100.0,
+                    trueAzimuthDegrees = 42.0,
+                ),
+                infoWindow = RulerInfoWindowState(
+                    distanceText = "100 м",
+                    trueAzimuthText = "A = 42°",
+                    magneticAzimuthText = "Am = 40°",
+                ),
+            ),
+        )
+        assertEquals("100 м", measuredState.rulerInfoWindow?.distanceText)
+
+        val disabledState = reduce(measuredState, MapStoreMessage.RulerDisabled)
+        assertFalse(disabledState.isRulerEnabled)
+        assertNull(disabledState.rulerMeasurement)
+        assertNull(disabledState.rulerInfoWindow)
     }
 
     private fun reduce(state: MapStore.State, message: MapStoreMessage): MapStore.State =

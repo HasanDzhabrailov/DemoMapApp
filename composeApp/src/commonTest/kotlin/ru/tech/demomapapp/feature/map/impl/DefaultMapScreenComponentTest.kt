@@ -240,6 +240,21 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
+    fun `my location click cancels pending gps request and keeps manual placeholder`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onGpsToggle()
+        component.onMyLocationClick()
+
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
+        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(30.0, component.model.value.currentLocationMarker?.longitude)
+        assertTrue(component.model.value.currentLocationMarker?.isPlaceholder == true)
+        assertNull(component.model.value.pendingLocationRequest)
+    }
+
+    @Test
     fun `my location click while gps inactive does nothing without camera snapshot`() {
         val component = createComponent()
 
