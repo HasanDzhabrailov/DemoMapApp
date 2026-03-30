@@ -559,6 +559,39 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
+    fun `drawing remove last position updates draft in store-backed flow`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreateLineClick()
+        component.onDrawingAddPositionClick()
+        component.onCameraIdle(defaultSnapshot(latitude = 55.76, longitude = 37.62))
+        component.onDrawingAddPositionClick()
+        component.onDrawingRemoveLastPositionClick()
+
+        assertEquals(1, component.model.value.shapeDrawingDraft?.fixedVertices?.size)
+    }
+
+    @Test
+    fun `drawing dismiss clears draft and closes shape sheet`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePolygonClick()
+        component.onDrawingAddPositionClick()
+        component.onCameraIdle(defaultSnapshot(latitude = 55.76, longitude = 37.62))
+        component.onDrawingAddPositionClick()
+        component.onCameraIdle(defaultSnapshot(latitude = 55.77, longitude = 37.63))
+        component.onDrawingAddPositionClick()
+        component.onDrawingDetailsClick()
+        component.onDrawingDismiss()
+
+        assertNull(component.model.value.shapeDrawingDraft)
+        assertNull(component.model.value.drawingMode)
+        assertFalse(component.model.value.isCreateShapeSheetVisible)
+    }
+
+    @Test
     fun `polygon creation stores polygon and can open shared info window`() {
         val component = createComponent()
 

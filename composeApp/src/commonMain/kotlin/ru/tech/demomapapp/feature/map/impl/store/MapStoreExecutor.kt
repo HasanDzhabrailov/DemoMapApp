@@ -6,6 +6,10 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
+import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
+import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
+import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
@@ -15,6 +19,8 @@ import ru.tech.demomapapp.feature.map.impl.TimeProvider
 
 internal class MapStoreExecutor(
     private val createMapPointUseCase: CreateMapPointUseCase,
+    private val createMapLineUseCase: CreateMapLineUseCase,
+    private val createMapPolygonUseCase: CreateMapPolygonUseCase,
     private val timeProvider: TimeProvider,
     private val featureIdProvider: FeatureIdProvider,
     private val rulerMeasurementCalculator: RulerMeasurementCalculator,
@@ -66,10 +72,15 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Drawing.CreatePolygonClicked -> callbacks.onMessage(
                 MapStoreMessage.DrawingStarted(MapStore.DrawingMode.POLYGON),
             )
+            is MapStore.Intent.Drawing.AddPositionClicked -> handleDrawingAddPositionClick()
+            is MapStore.Intent.Drawing.RemoveLastPositionClicked -> {
+                callbacks.onMessage(MapStoreMessage.DrawingLastPositionRemoved)
+            }
             is MapStore.Intent.Drawing.DetailsClicked -> callbacks.onMessage(MapStoreMessage.ShapeSheetOpened)
             is MapStore.Intent.Drawing.Dismissed -> callbacks.onMessage(MapStoreMessage.DrawingDismissed)
             is MapStore.Intent.Drawing.ShapeSheetDismissed -> callbacks.onMessage(MapStoreMessage.ShapeSheetDismissed)
             is MapStore.Intent.Drawing.TitleChanged -> callbacks.onMessage(MapStoreMessage.ShapeTitleChanged(intent.value))
+            is MapStore.Intent.Drawing.Confirmed -> handleCreateShapeConfirm()
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> {
                 callbacks.onMessage(MapStoreMessage.FeatureInfoWindowDismissed)
             }
@@ -85,9 +96,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Location,
-            is MapStore.Intent.Drawing.AddPositionClicked,
-            is MapStore.Intent.Drawing.Confirmed,
-            is MapStore.Intent.Drawing.RemoveLastPositionClicked,
             is MapStore.Intent.FeatureSelection.FeatureClicked,
             -> Unit
             is MapStore.Intent.SyncState -> callbacks.onMessage(MapStoreMessage.StateSynced(intent.state))
@@ -270,6 +278,43 @@ internal class MapStoreExecutor(
         ) ?: return
 
         callbacks.onMessage(MapStoreMessage.CreatePointCreated(point))
+    }
+
+    private fun handleDrawingAddPositionClick() {
+        val snapshot = currentState().lastCameraSnapshot ?: return
+        callbacks.onMessage(MapStoreMessage.DrawingPositionAdded(snapshot))
+    }
+
+    private fun handleCreateShapeConfirm() {
+        val draft = currentState().shapeDrawingDraft ?: return
+        val createdAt = timeProvider.currentTimeMillis()
+        val id = featureIdProvider.nextId()
+
+        when (draft.mode) {
+            MapStore.DrawingMode.LINE -> {
+                val line = createMapLineUseCase.create(
+                    CreateMapLineInput(
+                        id = id,
+                        vertices = draft.fixedVertices,
+                        titleInput = draft.titleInput,
+                        createdAtEpochMillis = createdAt,
+                    ),
+                ) ?: return
+                callbacks.onMessage(MapStoreMessage.LineCreated(line))
+            }
+
+            MapStore.DrawingMode.POLYGON -> {
+                val polygon = createMapPolygonUseCase.create(
+                    CreateMapPolygonInput(
+                        id = id,
+                        vertices = draft.fixedVertices,
+                        titleInput = draft.titleInput,
+                        createdAtEpochMillis = createdAt,
+                    ),
+                ) ?: return
+                callbacks.onMessage(MapStoreMessage.PolygonCreated(polygon))
+            }
+        }
     }
 
     private fun handleCameraIdle(snapshot: MapCameraSnapshot) {

@@ -26,6 +26,9 @@ internal class DefaultMapScreenComponent(
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(
         createMapPointUseCase = createMapPointUseCase,
+        createMapLineUseCase = createMapLineUseCase,
+        createMapPolygonUseCase = createMapPolygonUseCase,
+        shapeDrawingDraftUpdater = shapeDrawingDraftUpdater,
         timeProvider = timeProvider,
         featureIdProvider = featureIdProvider,
         rulerMeasurementCalculator = rulerMeasurementCalculator,
@@ -138,22 +141,10 @@ internal class DefaultMapScreenComponent(
 
     override fun onDrawingAddPositionClick() {
         acceptIntent(MapStore.Intent.Drawing.AddPositionClicked)
-        val model = currentModel()
-        val draft = model.shapeDrawingDraft ?: return
-        val snapshot = model.lastCameraSnapshot ?: return
-        setModel(model.copy(
-            shapeDrawingDraft = shapeDrawingDraftUpdater.addVertex(draft, snapshot),
-            selectedFeatureInfoWindow = null,
-        ))
     }
 
     override fun onDrawingRemoveLastPositionClick() {
         acceptIntent(MapStore.Intent.Drawing.RemoveLastPositionClicked)
-        val model = currentModel()
-        val draft = model.shapeDrawingDraft ?: return
-        setModel(model.copy(
-            shapeDrawingDraft = shapeDrawingDraftUpdater.removeLastVertex(draft),
-        ))
     }
 
     override fun onDrawingDetailsClick() {
@@ -170,46 +161,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onCreateShapeConfirm() {
         acceptIntent(MapStore.Intent.Drawing.Confirmed)
-        val model = currentModel()
-        val draft = model.shapeDrawingDraft ?: return
-        val createdAt = timeProvider.currentTimeMillis()
-        val id = featureIdProvider.nextId()
-
-        when (draft.mode) {
-            MapScreenComponent.DrawingMode.LINE -> {
-                val line = createMapLineUseCase.create(
-                    CreateMapLineInput(
-                        id = id,
-                        vertices = draft.fixedVertices,
-                        titleInput = draft.titleInput,
-                        createdAtEpochMillis = createdAt,
-                    ),
-                ) ?: return
-                setModel(model.copy(
-                    mapState = model.mapState.copy(lines = model.mapState.lines + line),
-                    drawingMode = null,
-                    shapeDrawingDraft = null,
-                    isCreateShapeSheetVisible = false,
-                ))
-            }
-
-            MapScreenComponent.DrawingMode.POLYGON -> {
-                val polygon = createMapPolygonUseCase.create(
-                    CreateMapPolygonInput(
-                        id = id,
-                        vertices = draft.fixedVertices,
-                        titleInput = draft.titleInput,
-                        createdAtEpochMillis = createdAt,
-                    ),
-                ) ?: return
-                setModel(model.copy(
-                    mapState = model.mapState.copy(polygons = model.mapState.polygons + polygon),
-                    drawingMode = null,
-                    shapeDrawingDraft = null,
-                    isCreateShapeSheetVisible = false,
-                ))
-            }
-        }
     }
 
     override fun onCreateShapeSheetDismiss() {

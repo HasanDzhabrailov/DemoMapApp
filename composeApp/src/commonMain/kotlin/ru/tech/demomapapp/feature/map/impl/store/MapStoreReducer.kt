@@ -1,8 +1,11 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import com.arkivanov.mvikotlin.core.store.Reducer
+import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 
-internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
+internal class MapStoreReducer(
+    private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
+) : Reducer<MapStore.State, MapStoreMessage> {
     override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State =
         when (msg) {
             is MapStoreMessage.CameraIdleReceived -> copy(
@@ -74,8 +77,25 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
                 selectedFeatureInfoWindow = null,
             )
 
+            is MapStoreMessage.DrawingPositionAdded -> updateShapeDrawingDraft(
+                clearSelectedFeatureInfoWindow = true,
+            ) { draft ->
+                shapeDrawingDraftUpdater.addVertex(draft, msg.snapshot)
+            }
+
+            is MapStoreMessage.DrawingLastPositionRemoved -> updateShapeDrawingDraft { draft ->
+                shapeDrawingDraftUpdater.removeLastVertex(draft)
+            }
+
             is MapStoreMessage.FeatureInfoWindowDismissed -> copy(
                 selectedFeatureInfoWindow = null,
+            )
+
+            is MapStoreMessage.LineCreated -> copy(
+                mapState = mapState.copy(lines = mapState.lines + msg.line),
+                drawingMode = null,
+                shapeDrawingDraft = null,
+                isCreateShapeSheetVisible = false,
             )
 
             is MapStoreMessage.CurrentLocationMarkerUpdated -> copy(
@@ -122,6 +142,13 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
                 copy(shapeDrawingDraft = draft.copy(titleInput = msg.value))
             }
 
+            is MapStoreMessage.PolygonCreated -> copy(
+                mapState = mapState.copy(polygons = mapState.polygons + msg.polygon),
+                drawingMode = null,
+                shapeDrawingDraft = null,
+                isCreateShapeSheetVisible = false,
+            )
+
             is MapStoreMessage.RulerCleared -> copy(
                 rulerMeasurement = null,
                 rulerInfoWindow = null,
@@ -150,6 +177,21 @@ internal object MapStoreReducer : Reducer<MapStore.State, MapStoreMessage> {
     ): MapStore.State {
         val draft = createPointDraft ?: return this
         return copy(createPointDraft = draft.transform())
+    }
+
+    private fun MapStore.State.updateShapeDrawingDraft(
+        clearSelectedFeatureInfoWindow: Boolean = false,
+        transform: (MapStore.ShapeDrawingDraft) -> MapStore.ShapeDrawingDraft,
+    ): MapStore.State {
+        val draft = shapeDrawingDraft ?: return this
+        return copy(
+            shapeDrawingDraft = transform(draft),
+            selectedFeatureInfoWindow = if (clearSelectedFeatureInfoWindow) {
+                null
+            } else {
+                selectedFeatureInfoWindow
+            },
+        )
     }
 
     private fun MapStore.ShapeDrawingDraft.canOpenDetails(): Boolean =

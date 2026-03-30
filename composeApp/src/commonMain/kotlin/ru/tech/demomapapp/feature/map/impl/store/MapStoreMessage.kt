@@ -1,8 +1,10 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
+import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
@@ -34,11 +36,19 @@ internal sealed interface MapStoreMessage {
 
     data class DrawingStarted(val mode: MapStore.DrawingMode) : MapStoreMessage
 
+    data class DrawingPositionAdded(val snapshot: MapCameraSnapshot) : MapStoreMessage
+
+    object DrawingLastPositionRemoved : MapStoreMessage
+
     object ShapeSheetOpened : MapStoreMessage
 
     object DrawingDismissed : MapStoreMessage
 
     data class ShapeTitleChanged(val value: String) : MapStoreMessage
+
+    data class LineCreated(val line: MapLine) : MapStoreMessage
+
+    data class PolygonCreated(val polygon: MapPolygon) : MapStoreMessage
 
     object ShapeSheetDismissed : MapStoreMessage
 

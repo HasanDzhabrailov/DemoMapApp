@@ -12,7 +12,10 @@ import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLine
+import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapVertex
+import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 
 class MapStoreReducerTest {
 
@@ -181,6 +184,135 @@ class MapStoreReducerTest {
     }
 
     @Test
+    fun `drawing position added updates draft in reducer and clears info window`() {
+        val initialState = MapStore.State(
+            shapeDrawingDraft = MapStore.ShapeDrawingDraft(
+                mode = MapStore.DrawingMode.LINE,
+                fixedVertices = listOf(vertex(55.75, 37.61)),
+            ),
+            selectedFeatureInfoWindow = MapStore.FeatureInfoWindow(
+                title = "Test",
+                createdAtText = "26.03.2026 10:00",
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+            ),
+        )
+
+        val addedVertexState = reduce(
+            initialState,
+            MapStoreMessage.DrawingPositionAdded(
+                MapCameraSnapshot(
+                    latitude = 55.76,
+                    longitude = 37.62,
+                    zoom = 12.0,
+                    bearing = 0.0,
+                ),
+            ),
+        )
+
+        assertEquals(2, addedVertexState.shapeDrawingDraft?.fixedVertices?.size)
+        assertNull(addedVertexState.selectedFeatureInfoWindow)
+        assertEquals(vertex(55.76, 37.62), addedVertexState.shapeDrawingDraft?.fixedVertices?.last())
+    }
+
+    @Test
+    fun `drawing last position removed updates draft in reducer without clearing info window`() {
+        val initialState = MapStore.State(
+            shapeDrawingDraft = MapStore.ShapeDrawingDraft(
+                mode = MapStore.DrawingMode.LINE,
+                fixedVertices = listOf(
+                    vertex(55.75, 37.61),
+                    vertex(55.76, 37.62),
+                ),
+            ),
+            selectedFeatureInfoWindow = MapStore.FeatureInfoWindow(
+                title = "Test",
+                createdAtText = "26.03.2026 10:00",
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+            ),
+        )
+
+        val removedVertexState = reduce(
+            initialState,
+            MapStoreMessage.DrawingLastPositionRemoved,
+        )
+
+        assertEquals(1, removedVertexState.shapeDrawingDraft?.fixedVertices?.size)
+        assertNotNull(removedVertexState.selectedFeatureInfoWindow)
+    }
+
+    @Test
+    fun `line created appends line and resets drawing state`() {
+        val initialState = MapStore.State(
+            drawingMode = MapStore.DrawingMode.LINE,
+            shapeDrawingDraft = MapStore.ShapeDrawingDraft(
+                mode = MapStore.DrawingMode.LINE,
+                fixedVertices = listOf(
+                    vertex(55.75, 37.61),
+                    vertex(55.76, 37.62),
+                ),
+            ),
+            isCreateShapeSheetVisible = true,
+        )
+
+        val updatedState = reduce(
+            initialState,
+            MapStoreMessage.LineCreated(
+                MapLine(
+                    id = "line-1",
+                    vertices = listOf(
+                        vertex(55.75, 37.61),
+                        vertex(55.76, 37.62),
+                    ),
+                    title = "Route A",
+                    createdAtEpochMillis = 1L,
+                ),
+            ),
+        )
+
+        assertEquals(1, updatedState.mapState.lines.size)
+        assertNull(updatedState.shapeDrawingDraft)
+        assertNull(updatedState.drawingMode)
+        assertFalse(updatedState.isCreateShapeSheetVisible)
+    }
+
+    @Test
+    fun `polygon created appends polygon and resets drawing state`() {
+        val initialState = MapStore.State(
+            drawingMode = MapStore.DrawingMode.POLYGON,
+            shapeDrawingDraft = MapStore.ShapeDrawingDraft(
+                mode = MapStore.DrawingMode.POLYGON,
+                fixedVertices = listOf(
+                    vertex(55.75, 37.61),
+                    vertex(55.76, 37.62),
+                    vertex(55.77, 37.63),
+                ),
+            ),
+            isCreateShapeSheetVisible = true,
+        )
+
+        val updatedState = reduce(
+            initialState,
+            MapStoreMessage.PolygonCreated(
+                MapPolygon(
+                    id = "polygon-1",
+                    vertices = listOf(
+                        vertex(55.75, 37.61),
+                        vertex(55.76, 37.62),
+                        vertex(55.77, 37.63),
+                    ),
+                    title = "Area A",
+                    createdAtEpochMillis = 1L,
+                ),
+            ),
+        )
+
+        assertEquals(1, updatedState.mapState.polygons.size)
+        assertNull(updatedState.shapeDrawingDraft)
+        assertNull(updatedState.drawingMode)
+        assertFalse(updatedState.isCreateShapeSheetVisible)
+    }
+
+    @Test
     fun `ruler messages update dedicated ruler state`() {
         val enabledState = reduce(MapStore.State(), MapStoreMessage.RulerEnabled)
         assertTrue(enabledState.isRulerEnabled)
@@ -226,7 +358,7 @@ class MapStoreReducerTest {
     }
 
     private fun reduce(state: MapStore.State, message: MapStoreMessage): MapStore.State =
-        with(MapStoreReducer) { state.reduce(message) }
+        with(MapStoreReducer(DefaultShapeDrawingDraftUpdater())) { state.reduce(message) }
 
     private fun vertex(latitude: Double, longitude: Double) =
         MapVertex(latitude = latitude, longitude = longitude)
