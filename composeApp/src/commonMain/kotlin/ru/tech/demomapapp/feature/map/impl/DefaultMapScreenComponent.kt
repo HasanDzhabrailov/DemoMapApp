@@ -50,28 +50,10 @@ internal class DefaultMapScreenComponent(
 
     override fun onMapToolsClick() {
         acceptIntent(MapStore.Intent.Tools.MapToolsClicked)
-        val model = currentModel()
-        val isMenuVisible = !model.isMapToolsMenuVisible
-        setModel(model.copy(
-            isMapToolsMenuVisible = isMenuVisible,
-            isCenterMarkerMenuVisible = if (isMenuVisible) {
-                false
-            } else {
-                model.isCenterMarkerMenuVisible
-            },
-            selectedFeatureInfoWindow = if (isMenuVisible) {
-                null
-            } else {
-                model.selectedFeatureInfoWindow
-            },
-        ))
     }
 
     override fun onMapToolsDismiss() {
         acceptIntent(MapStore.Intent.Tools.MapToolsDismissed)
-        setModel(currentModel().copy(
-            isMapToolsMenuVisible = false,
-        ))
     }
 
     override fun onZoomInClick() {
@@ -90,16 +72,10 @@ internal class DefaultMapScreenComponent(
 
     override fun onAvailableMapsClick() {
         acceptIntent(MapStore.Intent.Tools.AvailableMapsClicked)
-        setModel(currentModel().copy(
-            isMapToolsMenuVisible = false,
-        ))
     }
 
     override fun onMapsOnScreenClick() {
         acceptIntent(MapStore.Intent.Tools.MapsOnScreenClicked)
-        setModel(currentModel().copy(
-            isMapToolsMenuVisible = false,
-        ))
     }
 
     override fun onGpsToggle() {
@@ -259,59 +235,34 @@ internal class DefaultMapScreenComponent(
 
     override fun onCenterMarkerClick() {
         acceptIntent(MapStore.Intent.CenterMarker.Clicked)
-        val model = currentModel()
-        if (model.drawingMode != null) {
-            return
-        }
-        setModel(model.copy(
-            isMapToolsMenuVisible = false,
-            isCenterMarkerMenuVisible = true,
-            selectedFeatureInfoWindow = null,
-        ))
     }
 
     override fun onCenterMarkerMenuDismiss() {
         acceptIntent(MapStore.Intent.CenterMarker.MenuDismissed)
-        setModel(currentModel().copy(
-            isCenterMarkerMenuVisible = false,
-        ))
     }
 
     override fun onCreatePointClick() {
         acceptIntent(MapStore.Intent.CreatePoint.Clicked)
-        val model = currentModel()
-        setModel(model.copy(
-            isMapToolsMenuVisible = false,
-            isCenterMarkerMenuVisible = false,
-            isCreatePointSheetVisible = model.lastCameraSnapshot != null,
-            createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
-            selectedFeatureInfoWindow = null,
-        ))
     }
 
     override fun onCreateLineClick() {
         acceptIntent(MapStore.Intent.Drawing.CreateLineClicked)
-        startDrawing(MapScreenComponent.DrawingMode.LINE)
     }
 
     override fun onCreatePolygonClick() {
         acceptIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
-        startDrawing(MapScreenComponent.DrawingMode.POLYGON)
     }
 
     override fun onCreatePointLatitudeChange(value: String) {
         acceptIntent(MapStore.Intent.CreatePoint.LatitudeChanged(value))
-        updateCreatePointDraft { copy(latitudeInput = value) }
     }
 
     override fun onCreatePointLongitudeChange(value: String) {
         acceptIntent(MapStore.Intent.CreatePoint.LongitudeChanged(value))
-        updateCreatePointDraft { copy(longitudeInput = value) }
     }
 
     override fun onCreatePointTitleChange(value: String) {
         acceptIntent(MapStore.Intent.CreatePoint.TitleChanged(value))
-        updateCreatePointDraft { copy(titleInput = value) }
     }
 
     override fun onCreatePointConfirm() {
@@ -339,10 +290,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onCreatePointSheetDismiss() {
         acceptIntent(MapStore.Intent.CreatePoint.SheetDismissed)
-        setModel(currentModel().copy(
-            isCreatePointSheetVisible = false,
-            createPointDraft = null,
-        ))
     }
 
     override fun onDrawingAddPositionClick() {
@@ -367,32 +314,14 @@ internal class DefaultMapScreenComponent(
 
     override fun onDrawingDetailsClick() {
         acceptIntent(MapStore.Intent.Drawing.DetailsClicked)
-        val model = currentModel()
-        val draft = model.shapeDrawingDraft ?: return
-        if (!draft.canOpenDetails()) {
-            return
-        }
-        setModel(model.copy(
-            isCreateShapeSheetVisible = true,
-        ))
     }
 
     override fun onDrawingDismiss() {
         acceptIntent(MapStore.Intent.Drawing.Dismissed)
-        setModel(currentModel().copy(
-            drawingMode = null,
-            shapeDrawingDraft = null,
-            isCreateShapeSheetVisible = false,
-        ))
     }
 
     override fun onCreateShapeTitleChange(value: String) {
         acceptIntent(MapStore.Intent.Drawing.TitleChanged(value))
-        val model = currentModel()
-        val draft = model.shapeDrawingDraft ?: return
-        setModel(model.copy(
-            shapeDrawingDraft = draft.copy(titleInput = value),
-        ))
     }
 
     override fun onCreateShapeConfirm() {
@@ -441,9 +370,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onCreateShapeSheetDismiss() {
         acceptIntent(MapStore.Intent.Drawing.ShapeSheetDismissed)
-        setModel(currentModel().copy(
-            isCreateShapeSheetVisible = false,
-        ))
     }
 
     override fun onFeatureClick(
@@ -469,23 +395,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onFeatureInfoWindowDismiss() {
         acceptIntent(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
-        setModel(currentModel().copy(
-            selectedFeatureInfoWindow = null,
-        ))
-    }
-
-    private fun startDrawing(mode: MapScreenComponent.DrawingMode) {
-        val model = currentModel()
-        setModel(model.copy(
-            isMapToolsMenuVisible = false,
-            isCenterMarkerMenuVisible = false,
-            isCreatePointSheetVisible = false,
-            createPointDraft = null,
-            drawingMode = mode,
-            shapeDrawingDraft = MapScreenComponent.ShapeDrawingDraft(mode = mode),
-            isCreateShapeSheetVisible = false,
-            selectedFeatureInfoWindow = null,
-        ))
     }
 
     private fun defaultModel(): MapScreenComponent.Model =
@@ -526,16 +435,6 @@ internal class DefaultMapScreenComponent(
             rulerInfoWindow = null,
         )
 
-    private fun updateCreatePointDraft(
-        transform: MapScreenComponent.CreatePointDraft.() -> MapScreenComponent.CreatePointDraft,
-    ) {
-        val model = currentModel()
-        val draft = model.createPointDraft ?: return
-        setModel(model.copy(
-            createPointDraft = draft.transform(),
-        ))
-    }
-
     private fun currentModel(): MapScreenComponent.Model = model.value
 
     private fun acceptIntent(intent: MapStore.Intent) {
@@ -546,27 +445,12 @@ internal class DefaultMapScreenComponent(
         mapStoreHolder.updateModel(model)
     }
 
-    private fun MapCameraSnapshot.toCreatePointDraft(): MapScreenComponent.CreatePointDraft =
-        MapScreenComponent.CreatePointDraft(
-            latitudeInput = latitude.toString(),
-            longitudeInput = longitude.toString(),
-        )
-
     private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker =
         MapLocationMarker(
             latitude = latitude,
             longitude = longitude,
             isPlaceholder = true,
         )
-
-    private fun MapScreenComponent.ShapeDrawingDraft.canOpenDetails(): Boolean =
-        fixedVertices.size >= minimumVertexCount()
-
-    private fun MapScreenComponent.ShapeDrawingDraft.minimumVertexCount(): Int =
-        when (mode) {
-            MapScreenComponent.DrawingMode.LINE -> 2
-            MapScreenComponent.DrawingMode.POLYGON -> 3
-        }
 
     private companion object {
         const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"

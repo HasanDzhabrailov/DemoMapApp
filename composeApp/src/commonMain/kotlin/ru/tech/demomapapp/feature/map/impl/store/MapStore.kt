@@ -281,6 +281,12 @@ internal fun MapScreenComponent.FeatureInfoWindowAnchor.toStoreAnchor(): MapStor
         screenY = screenY,
     )
 
+internal fun MapCameraSnapshot.toCreatePointDraft(): MapStore.CreatePointDraft =
+    MapStore.CreatePointDraft(
+        latitudeInput = latitude.toString(),
+        longitudeInput = longitude.toString(),
+    )
+
 internal fun MapScreenComponent.FeatureType.toStoreFeatureType(): MapStore.FeatureType =
     when (this) {
         MapScreenComponent.FeatureType.POINT -> MapStore.FeatureType.POINT
