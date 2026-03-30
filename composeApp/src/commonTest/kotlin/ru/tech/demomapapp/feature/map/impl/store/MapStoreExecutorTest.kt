@@ -13,8 +13,8 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
-import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
+import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
@@ -22,27 +22,40 @@ import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.MapPointCreatedAtFormatter
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
+import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
 
 class MapStoreExecutorTest {
 
     @Test
     fun `create point confirm emits created message from executor`() {
         val executor = MapStoreExecutor(
-            createMapPointUseCase = CreateMapPointUseCase { input ->
-                ru.tech.demomapapp.feature.map.api.MapPoint(
-                    id = input.id,
-                    latitude = 55.75,
-                    longitude = 37.61,
-                    title = input.titleInput,
-                    createdAtEpochMillis = input.createdAtEpochMillis,
-                )
-            },
-            createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
-            createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
-            timeProvider = TimeProvider { 123L },
-            featureIdProvider = FeatureIdProvider { "point-1" },
-            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            createPointHandler = CreatePointHandler(
+                createMapPointUseCase = CreateMapPointUseCase { input ->
+                    ru.tech.demomapapp.feature.map.api.MapPoint(
+                        id = input.id,
+                        latitude = 55.75,
+                        longitude = 37.61,
+                        title = input.titleInput,
+                        createdAtEpochMillis = input.createdAtEpochMillis,
+                    )
+                },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "point-1" },
+            ),
+            drawingHandler = DrawingHandler(
+                createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
+                createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            locationHandler = LocationHandler(),
+            featureClickHandler = FeatureClickHandler(
+                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -80,13 +93,22 @@ class MapStoreExecutorTest {
     @Test
     fun `create point confirm with invalid input emits no message`() {
         val executor = MapStoreExecutor(
-            createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
-            createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
-            createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
-            timeProvider = TimeProvider { 123L },
-            featureIdProvider = FeatureIdProvider { "point-1" },
-            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            createPointHandler = CreatePointHandler(
+                createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "point-1" },
+            ),
+            drawingHandler = DrawingHandler(
+                createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
+                createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            locationHandler = LocationHandler(),
+            featureClickHandler = FeatureClickHandler(
+                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -142,20 +164,29 @@ class MapStoreExecutorTest {
     @Test
     fun `shape confirm emits line created message from executor`() {
         val executor = MapStoreExecutor(
-            createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
-            createMapLineUseCase = CreateMapLineUseCase { input ->
-                MapLine(
-                    id = input.id,
-                    vertices = input.vertices,
-                    title = input.titleInput,
-                    createdAtEpochMillis = input.createdAtEpochMillis,
-                )
-            },
-            createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
-            timeProvider = TimeProvider { 123L },
-            featureIdProvider = FeatureIdProvider { "line-1" },
-            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            createPointHandler = CreatePointHandler(
+                createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            drawingHandler = DrawingHandler(
+                createMapLineUseCase = CreateMapLineUseCase { input ->
+                    MapLine(
+                        id = input.id,
+                        vertices = input.vertices,
+                        title = input.titleInput,
+                        createdAtEpochMillis = input.createdAtEpochMillis,
+                    )
+                },
+                createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "line-1" },
+            ),
+            locationHandler = LocationHandler(),
+            featureClickHandler = FeatureClickHandler(
+                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -196,20 +227,29 @@ class MapStoreExecutorTest {
     @Test
     fun `shape confirm emits polygon created message from executor`() {
         val executor = MapStoreExecutor(
-            createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
-            createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
-            createMapPolygonUseCase = CreateMapPolygonUseCase { input ->
-                MapPolygon(
-                    id = input.id,
-                    vertices = input.vertices,
-                    title = input.titleInput,
-                    createdAtEpochMillis = input.createdAtEpochMillis,
-                )
-            },
-            timeProvider = TimeProvider { 123L },
-            featureIdProvider = FeatureIdProvider { "polygon-1" },
-            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            createPointHandler = CreatePointHandler(
+                createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            drawingHandler = DrawingHandler(
+                createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
+                createMapPolygonUseCase = CreateMapPolygonUseCase { input ->
+                    MapPolygon(
+                        id = input.id,
+                        vertices = input.vertices,
+                        title = input.titleInput,
+                        createdAtEpochMillis = input.createdAtEpochMillis,
+                    )
+                },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "polygon-1" },
+            ),
+            locationHandler = LocationHandler(),
+            featureClickHandler = FeatureClickHandler(
+                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+            ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -310,14 +350,23 @@ class MapStoreExecutorTest {
 
     private fun createExecutor(): MapStoreExecutor =
         MapStoreExecutor(
-            createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
-            createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
-            createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
-            timeProvider = TimeProvider { 123L },
-            featureIdProvider = FeatureIdProvider { "feature-1" },
-            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
-                createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
+            createPointHandler = CreatePointHandler(
+                createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            drawingHandler = DrawingHandler(
+                createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
+                createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
+                timeProvider = TimeProvider { 123L },
+                featureIdProvider = FeatureIdProvider { "feature-1" },
+            ),
+            locationHandler = LocationHandler(),
+            featureClickHandler = FeatureClickHandler(
+                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
+                    createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
+                ),
             ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,

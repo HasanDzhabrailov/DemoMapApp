@@ -23,6 +23,10 @@ import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
 import ru.tech.demomapapp.feature.map.impl.SystemTimeProvider
 import ru.tech.demomapapp.feature.map.impl.UuidFeatureIdProvider
+import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
+import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
 
 internal class MapStoreFactory(
     private val storeFactory: StoreFactory = DefaultStoreFactory(),
@@ -37,6 +41,34 @@ internal class MapStoreFactory(
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
 ) {
+    private val createPointHandler: CreatePointHandler by lazy {
+        CreatePointHandler(
+            createMapPointUseCase = createMapPointUseCase,
+            timeProvider = timeProvider,
+            featureIdProvider = featureIdProvider,
+        )
+    }
+
+    private val drawingHandler: DrawingHandler by lazy {
+        DrawingHandler(
+            createMapLineUseCase = createMapLineUseCase,
+            createMapPolygonUseCase = createMapPolygonUseCase,
+            timeProvider = timeProvider,
+            featureIdProvider = featureIdProvider,
+        )
+    }
+
+    private val locationHandler: LocationHandler by lazy {
+        LocationHandler()
+    }
+
+    private val featureClickHandler: FeatureClickHandler by lazy {
+        FeatureClickHandler(
+            featureSelectionResolver = featureSelectionResolver,
+            featureInfoWindowStateMapper = featureInfoWindowStateMapper,
+        )
+    }
+
     fun create(initialState: MapStore.State = MapStore.State()): MapStore =
         object : MapStore, Store<MapStore.Intent, MapStore.State, MapStore.Label> by storeFactory.create(
             name = "MapStore",
@@ -44,13 +76,10 @@ internal class MapStoreFactory(
             bootstrapper = null,
             executorFactory = {
                 MapStoreExecutor(
-                    createMapPointUseCase = createMapPointUseCase,
-                    createMapLineUseCase = createMapLineUseCase,
-                    createMapPolygonUseCase = createMapPolygonUseCase,
-                    timeProvider = timeProvider,
-                    featureIdProvider = featureIdProvider,
-                    featureSelectionResolver = featureSelectionResolver,
-                    featureInfoWindowStateMapper = featureInfoWindowStateMapper,
+                    createPointHandler = createPointHandler,
+                    drawingHandler = drawingHandler,
+                    locationHandler = locationHandler,
+                    featureClickHandler = featureClickHandler,
                     rulerMeasurementCalculator = rulerMeasurementCalculator,
                     rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
                 )
