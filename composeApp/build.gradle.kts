@@ -29,6 +29,8 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.decompose)
             implementation(libs.decompose.compose)
+            implementation(libs.mvikotlin)
+            implementation(libs.mvikotlin.main)
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)

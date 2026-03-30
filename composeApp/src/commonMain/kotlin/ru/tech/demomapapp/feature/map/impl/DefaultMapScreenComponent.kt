@@ -1,8 +1,8 @@
 package ru.tech.demomapapp.feature.map.impl
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
@@ -10,6 +10,8 @@ import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
+import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
@@ -23,24 +25,29 @@ internal class DefaultMapScreenComponent(
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
+    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
-    private val mutableModel = MutableValue(defaultModel())
-
-    override val model: Value<MapScreenComponent.Model> = mutableModel
+    private val mapStoreHolder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
+        MapStoreHolder(
+            mapStoreFactory = mapStoreFactory,
+            initialModel = defaultModel(),
+        )
+    }
+    override val model: Value<MapScreenComponent.Model> = mapStoreHolder.model
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
-        mutableModel.value = recalculateRulerState(
-            mutableModel.value.copy(
+        setModel(recalculateRulerState(
+            currentModel().copy(
                 lastCameraSnapshot = snapshot,
                 selectedFeatureInfoWindow = null,
             ),
-        )
+        ))
     }
 
     override fun onMapToolsClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         val isMenuVisible = !model.isMapToolsMenuVisible
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             isMapToolsMenuVisible = isMenuVisible,
             isCenterMarkerMenuVisible = if (isMenuVisible) {
                 false
@@ -52,53 +59,53 @@ internal class DefaultMapScreenComponent(
             } else {
                 model.selectedFeatureInfoWindow
             },
-        )
+        ))
     }
 
     override fun onMapToolsDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
-        )
+        ))
     }
 
     override fun onZoomInClick() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             pendingViewportCommand = MapViewportCommand.ZoomIn,
-        )
+        ))
     }
 
     override fun onZoomOutClick() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             pendingViewportCommand = MapViewportCommand.ZoomOut,
-        )
+        ))
     }
 
     override fun onAvailableMapsClick() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
-        )
+        ))
     }
 
     override fun onMapsOnScreenClick() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isMapToolsMenuVisible = false,
-        )
+        ))
     }
 
     override fun onGpsToggle() {
-        val model = mutableModel.value
+        val model = currentModel()
         if (model.pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
-            mutableModel.value = recalculateRulerState(
+            setModel(recalculateRulerState(
                 model.copy(
                     myLocationMode = MyLocationMode.OFF,
                     currentLocationMarker = null,
                     pendingLocationRequest = null,
                 ),
-            )
+            ))
             return
         }
 
-        mutableModel.value = recalculateRulerState(
+        setModel(recalculateRulerState(
             when (model.myLocationMode) {
             MyLocationMode.GPS -> model.copy(
                 myLocationMode = MyLocationMode.OFF,
@@ -114,12 +121,12 @@ internal class DefaultMapScreenComponent(
                 pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
             )
             },
-        )
+        ))
     }
 
     override fun onMyLocationClick() {
-        val model = mutableModel.value
-        mutableModel.value = recalculateRulerState(
+        val model = currentModel()
+        setModel(recalculateRulerState(
             when (model.myLocationMode) {
             MyLocationMode.GPS -> model
 
@@ -138,13 +145,13 @@ internal class DefaultMapScreenComponent(
                 )
             }
             },
-        )
+        ))
     }
 
     override fun onCurrentLocationFocusClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         val marker = model.currentLocationMarker
-        mutableModel.value = when {
+        setModel(when {
             marker != null -> {
                 model.copy(
                     pendingViewportCommand = MapViewportCommand.MoveTo(
@@ -161,19 +168,19 @@ internal class DefaultMapScreenComponent(
             }
 
             else -> model
-        }
+        })
     }
 
     override fun onLocationRequestConsumed() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             pendingLocationRequest = null,
-        )
+        ))
     }
 
     override fun onLocationResult(result: LocationRequestResult) {
-        val model = mutableModel.value
+        val model = currentModel()
         val request = model.pendingLocationRequest
-        mutableModel.value = recalculateRulerState(
+        setModel(recalculateRulerState(
             when (result) {
             LocationRequestResult.PermissionDenied -> {
                 model.copy(
@@ -211,12 +218,12 @@ internal class DefaultMapScreenComponent(
                 ),
             )
             },
-        )
+        ))
     }
 
     override fun onRulerToggle() {
-        val model = mutableModel.value
-        mutableModel.value = if (model.isRulerEnabled) {
+        val model = currentModel()
+        setModel(if (model.isRulerEnabled) {
             clearRulerState(
                 model.copy(isRulerEnabled = false),
             )
@@ -224,42 +231,42 @@ internal class DefaultMapScreenComponent(
             recalculateRulerState(
                 model.copy(isRulerEnabled = true),
             )
-        }
+        })
     }
 
     override fun onViewportCommandConsumed() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             pendingViewportCommand = null,
-        )
+        ))
     }
 
     override fun onCenterMarkerClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         if (model.drawingMode != null) {
             return
         }
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = true,
             selectedFeatureInfoWindow = null,
-        )
+        ))
     }
 
     override fun onCenterMarkerMenuDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isCenterMarkerMenuVisible = false,
-        )
+        ))
     }
 
     override fun onCreatePointClick() {
-        val model = mutableModel.value
-        mutableModel.value = model.copy(
+        val model = currentModel()
+        setModel(model.copy(
             isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = model.lastCameraSnapshot != null,
             createPointDraft = model.lastCameraSnapshot?.toCreatePointDraft(),
             selectedFeatureInfoWindow = null,
-        )
+        ))
     }
 
     override fun onCreateLineClick() {
@@ -283,7 +290,7 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCreatePointConfirm() {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.createPointDraft ?: return
         val point = createMapPointUseCase.create(
             CreateMapPointInput(
@@ -295,69 +302,69 @@ internal class DefaultMapScreenComponent(
             ),
         ) ?: return
 
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             mapState = model.mapState.copy(
                 points = model.mapState.points + point,
             ),
             isCreatePointSheetVisible = false,
             createPointDraft = null,
-        )
+        ))
     }
 
     override fun onCreatePointSheetDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isCreatePointSheetVisible = false,
             createPointDraft = null,
-        )
+        ))
     }
 
     override fun onDrawingAddPositionClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         val snapshot = model.lastCameraSnapshot ?: return
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             shapeDrawingDraft = shapeDrawingDraftUpdater.addVertex(draft, snapshot),
             selectedFeatureInfoWindow = null,
-        )
+        ))
     }
 
     override fun onDrawingRemoveLastPositionClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             shapeDrawingDraft = shapeDrawingDraftUpdater.removeLastVertex(draft),
-        )
+        ))
     }
 
     override fun onDrawingDetailsClick() {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         if (!draft.canOpenDetails()) {
             return
         }
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             isCreateShapeSheetVisible = true,
-        )
+        ))
     }
 
     override fun onDrawingDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             drawingMode = null,
             shapeDrawingDraft = null,
             isCreateShapeSheetVisible = false,
-        )
+        ))
     }
 
     override fun onCreateShapeTitleChange(value: String) {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             shapeDrawingDraft = draft.copy(titleInput = value),
-        )
+        ))
     }
 
     override fun onCreateShapeConfirm() {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.shapeDrawingDraft ?: return
         val createdAt = timeProvider.currentTimeMillis()
         val id = featureIdProvider.nextId()
@@ -372,12 +379,12 @@ internal class DefaultMapScreenComponent(
                         createdAtEpochMillis = createdAt,
                     ),
                 ) ?: return
-                mutableModel.value = model.copy(
+                setModel(model.copy(
                     mapState = model.mapState.copy(lines = model.mapState.lines + line),
                     drawingMode = null,
                     shapeDrawingDraft = null,
                     isCreateShapeSheetVisible = false,
-                )
+                ))
             }
 
             MapScreenComponent.DrawingMode.POLYGON -> {
@@ -389,20 +396,20 @@ internal class DefaultMapScreenComponent(
                         createdAtEpochMillis = createdAt,
                     ),
                 ) ?: return
-                mutableModel.value = model.copy(
+                setModel(model.copy(
                     mapState = model.mapState.copy(polygons = model.mapState.polygons + polygon),
                     drawingMode = null,
                     shapeDrawingDraft = null,
                     isCreateShapeSheetVisible = false,
-                )
+                ))
             }
         }
     }
 
     override fun onCreateShapeSheetDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             isCreateShapeSheetVisible = false,
-        )
+        ))
     }
 
     override fun onFeatureClick(
@@ -410,24 +417,24 @@ internal class DefaultMapScreenComponent(
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) {
-        val model = mutableModel.value
+        val model = currentModel()
         val feature = featureSelectionResolver.resolve(model.mapState, featureKey, featureType) ?: return
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             selectedFeatureInfoWindow = featureInfoWindowStateMapper.map(feature, anchor),
-        )
+        ))
     }
 
     override fun onFeatureInfoWindowDismiss() {
-        mutableModel.value = mutableModel.value.copy(
+        setModel(currentModel().copy(
             selectedFeatureInfoWindow = null,
-        )
+        ))
     }
 
     private fun startDrawing(mode: MapScreenComponent.DrawingMode) {
-        val model = mutableModel.value
-        mutableModel.value = model.copy(
+        val model = currentModel()
+        setModel(model.copy(
             isMapToolsMenuVisible = false,
             isCenterMarkerMenuVisible = false,
             isCreatePointSheetVisible = false,
@@ -436,7 +443,7 @@ internal class DefaultMapScreenComponent(
             shapeDrawingDraft = MapScreenComponent.ShapeDrawingDraft(mode = mode),
             isCreateShapeSheetVisible = false,
             selectedFeatureInfoWindow = null,
-        )
+        ))
     }
 
     private fun defaultModel(): MapScreenComponent.Model =
@@ -480,11 +487,17 @@ internal class DefaultMapScreenComponent(
     private fun updateCreatePointDraft(
         transform: MapScreenComponent.CreatePointDraft.() -> MapScreenComponent.CreatePointDraft,
     ) {
-        val model = mutableModel.value
+        val model = currentModel()
         val draft = model.createPointDraft ?: return
-        mutableModel.value = model.copy(
+        setModel(model.copy(
             createPointDraft = draft.transform(),
-        )
+        ))
+    }
+
+    private fun currentModel(): MapScreenComponent.Model = model.value
+
+    private fun setModel(model: MapScreenComponent.Model) {
+        mapStoreHolder.updateModel(model)
     }
 
     private fun MapCameraSnapshot.toCreatePointDraft(): MapScreenComponent.CreatePointDraft =
@@ -508,6 +521,10 @@ internal class DefaultMapScreenComponent(
             MapScreenComponent.DrawingMode.LINE -> 2
             MapScreenComponent.DrawingMode.POLYGON -> 3
         }
+
+    private companion object {
+        const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"
+    }
 }
 
 internal fun interface TimeProvider {
