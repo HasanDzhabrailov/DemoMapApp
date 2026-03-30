@@ -13,6 +13,8 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
+import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
@@ -23,6 +25,8 @@ internal class MapStoreExecutor(
     private val createMapPolygonUseCase: CreateMapPolygonUseCase,
     private val timeProvider: TimeProvider,
     private val featureIdProvider: FeatureIdProvider,
+    private val featureSelectionResolver: MapFeatureSelectionResolver,
+    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper,
     private val rulerMeasurementCalculator: RulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter,
 ) : com.arkivanov.mvikotlin.core.store.Executor<
@@ -81,6 +85,7 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Drawing.ShapeSheetDismissed -> callbacks.onMessage(MapStoreMessage.ShapeSheetDismissed)
             is MapStore.Intent.Drawing.TitleChanged -> callbacks.onMessage(MapStoreMessage.ShapeTitleChanged(intent.value))
             is MapStore.Intent.Drawing.Confirmed -> handleCreateShapeConfirm()
+            is MapStore.Intent.FeatureSelection.FeatureClicked -> handleFeatureClick(intent)
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> {
                 callbacks.onMessage(MapStoreMessage.FeatureInfoWindowDismissed)
             }
@@ -96,7 +101,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Location,
-            is MapStore.Intent.FeatureSelection.FeatureClicked,
             -> Unit
             is MapStore.Intent.SyncState -> callbacks.onMessage(MapStoreMessage.StateSynced(intent.state))
             is MapStore.Intent.Tools.AvailableMapsClicked,
@@ -317,6 +321,23 @@ internal class MapStoreExecutor(
         }
     }
 
+    private fun handleFeatureClick(intent: MapStore.Intent.FeatureSelection.FeatureClicked) {
+        val feature = featureSelectionResolver.resolve(
+            mapState = currentState().mapState,
+            featureKey = intent.featureKey,
+            featureType = intent.featureType.toComponentFeatureType(),
+        ) ?: return
+
+        callbacks.onMessage(
+            MapStoreMessage.FeatureInfoWindowOpened(
+                infoWindow = featureInfoWindowStateMapper.map(
+                    feature = feature,
+                    anchor = intent.anchor.toComponentAnchor(),
+                ).toStoreInfoWindow(),
+            ),
+        )
+    }
+
     private fun handleCameraIdle(snapshot: MapCameraSnapshot) {
         callbacks.onMessage(MapStoreMessage.CameraIdleReceived(snapshot))
         publishRulerState(
@@ -380,5 +401,18 @@ internal class MapStoreExecutor(
             latitude = latitude,
             longitude = longitude,
             isPlaceholder = true,
+        )
+
+    private fun MapStore.FeatureType.toComponentFeatureType() =
+        when (this) {
+            MapStore.FeatureType.POINT -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.POINT
+            MapStore.FeatureType.LINE -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.LINE
+            MapStore.FeatureType.POLYGON -> ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureType.POLYGON
+        }
+
+    private fun MapStore.FeatureInfoWindowAnchor.toComponentAnchor() =
+        ru.tech.demomapapp.feature.map.api.MapScreenComponent.FeatureInfoWindowAnchor(
+            screenX = screenX,
+            screenY = screenY,
         )
 }

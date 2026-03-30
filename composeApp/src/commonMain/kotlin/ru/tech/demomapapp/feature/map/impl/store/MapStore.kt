@@ -254,14 +254,14 @@ private fun MapScreenComponent.ShapeDrawingDraft.toStoreDraft(): MapStore.ShapeD
         titleInput = titleInput,
     )
 
-private fun MapStore.FeatureInfoWindow.toComponentInfoWindow(): MapScreenComponent.FeatureInfoWindow =
+internal fun MapStore.FeatureInfoWindow.toComponentInfoWindow(): MapScreenComponent.FeatureInfoWindow =
     MapScreenComponent.FeatureInfoWindow(
         title = title,
         createdAtText = createdAtText,
         anchor = anchor.toComponentAnchor(),
     )
 
-private fun MapScreenComponent.FeatureInfoWindow.toStoreInfoWindow(): MapStore.FeatureInfoWindow =
+internal fun MapScreenComponent.FeatureInfoWindow.toStoreInfoWindow(): MapStore.FeatureInfoWindow =
     MapStore.FeatureInfoWindow(
         title = title,
         createdAtText = createdAtText,

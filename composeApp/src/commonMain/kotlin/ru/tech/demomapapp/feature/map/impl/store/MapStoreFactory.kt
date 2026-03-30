@@ -7,8 +7,12 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
+import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
@@ -22,6 +26,8 @@ internal class MapStoreFactory(
     private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
     private val timeProvider: TimeProvider,
     private val featureIdProvider: FeatureIdProvider,
+    private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
 ) {
@@ -37,6 +43,8 @@ internal class MapStoreFactory(
                     createMapPolygonUseCase = createMapPolygonUseCase,
                     timeProvider = timeProvider,
                     featureIdProvider = featureIdProvider,
+                    featureSelectionResolver = featureSelectionResolver,
+                    featureInfoWindowStateMapper = featureInfoWindowStateMapper,
                     rulerMeasurementCalculator = rulerMeasurementCalculator,
                     rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
                 )

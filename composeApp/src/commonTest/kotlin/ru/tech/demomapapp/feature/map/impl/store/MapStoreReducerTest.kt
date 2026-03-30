@@ -137,6 +137,29 @@ class MapStoreReducerTest {
     }
 
     @Test
+    fun `feature info window open closes conflicting overlays in reducer`() {
+        val initialState = MapStore.State(
+            isMapToolsMenuVisible = true,
+            isCenterMarkerMenuVisible = true,
+        )
+
+        val updatedState = reduce(
+            initialState,
+            MapStoreMessage.FeatureInfoWindowOpened(
+                MapStore.FeatureInfoWindow(
+                    title = "Test",
+                    createdAtText = "26.03.2026 10:00",
+                    anchor = MapStore.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+                ),
+            ),
+        )
+
+        assertFalse(updatedState.isMapToolsMenuVisible)
+        assertFalse(updatedState.isCenterMarkerMenuVisible)
+        assertEquals("Test", updatedState.selectedFeatureInfoWindow?.title)
+    }
+
+    @Test
     fun `drawing start resets point flow and opens draft`() {
         val initialState = MapStore.State(
             isCreatePointSheetVisible = true,

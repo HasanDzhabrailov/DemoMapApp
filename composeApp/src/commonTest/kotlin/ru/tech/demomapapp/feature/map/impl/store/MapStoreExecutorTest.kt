@@ -7,6 +7,7 @@ import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapPolygon
+import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
@@ -14,9 +15,12 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
+import ru.tech.demomapapp.feature.map.impl.MapPointCreatedAtFormatter
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
 
 class MapStoreExecutorTest {
@@ -37,6 +41,8 @@ class MapStoreExecutorTest {
             createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "point-1" },
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -79,6 +85,8 @@ class MapStoreExecutorTest {
             createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "point-1" },
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -146,6 +154,8 @@ class MapStoreExecutorTest {
             createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "line-1" },
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -198,6 +208,8 @@ class MapStoreExecutorTest {
             },
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "polygon-1" },
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
@@ -237,6 +249,65 @@ class MapStoreExecutorTest {
         )
     }
 
+    @Test
+    fun `feature click resolves feature and emits shared info window message`() {
+        val executor = createExecutor()
+        val callbacks = TestExecutorCallbacks(
+            state = MapStore.State(
+                mapState = MapState(
+                    points = listOf(
+                        ru.tech.demomapapp.feature.map.api.MapPoint(
+                            id = "point-1",
+                            latitude = 55.75,
+                            longitude = 37.61,
+                            title = "Test point",
+                            createdAtEpochMillis = 123L,
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        executor.init(callbacks)
+        executor.executeIntent(
+            MapStore.Intent.FeatureSelection.FeatureClicked(
+                featureKey = "point-1",
+                featureType = MapStore.FeatureType.POINT,
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+            ),
+        )
+
+        assertEquals(
+            listOf<MapStoreMessage>(
+                MapStoreMessage.FeatureInfoWindowOpened(
+                    MapStore.FeatureInfoWindow(
+                        title = "Test point",
+                        createdAtText = "26.03.2026 10:00",
+                        anchor = MapStore.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+                    ),
+                ),
+            ),
+            callbacks.messages,
+        )
+    }
+
+    @Test
+    fun `feature click with missing feature emits no message`() {
+        val executor = createExecutor()
+        val callbacks = TestExecutorCallbacks(state = MapStore.State())
+
+        executor.init(callbacks)
+        executor.executeIntent(
+            MapStore.Intent.FeatureSelection.FeatureClicked(
+                featureKey = "missing",
+                featureType = MapStore.FeatureType.POINT,
+                anchor = MapStore.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+            ),
+        )
+
+        assertTrue(callbacks.messages.isEmpty())
+    }
+
     private fun createExecutor(): MapStoreExecutor =
         MapStoreExecutor(
             createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
@@ -244,6 +315,10 @@ class MapStoreExecutorTest {
             createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "feature-1" },
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
+                createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
+            ),
             rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
             rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )

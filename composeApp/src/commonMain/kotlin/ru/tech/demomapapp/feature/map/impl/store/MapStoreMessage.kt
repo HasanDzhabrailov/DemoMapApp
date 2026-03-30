@@ -52,6 +52,10 @@ internal sealed interface MapStoreMessage {
 
     object ShapeSheetDismissed : MapStoreMessage
 
+    data class FeatureInfoWindowOpened(
+        val infoWindow: MapStore.FeatureInfoWindow,
+    ) : MapStoreMessage
+
     object FeatureInfoWindowDismissed : MapStoreMessage
 
     data class CurrentLocationMarkerUpdated(

@@ -87,6 +87,12 @@ internal class MapStoreReducer(
                 shapeDrawingDraftUpdater.removeLastVertex(draft)
             }
 
+            is MapStoreMessage.FeatureInfoWindowOpened -> copy(
+                isMapToolsMenuVisible = false,
+                isCenterMarkerMenuVisible = false,
+                selectedFeatureInfoWindow = msg.infoWindow,
+            )
+
             is MapStoreMessage.FeatureInfoWindowDismissed -> copy(
                 selectedFeatureInfoWindow = null,
             )

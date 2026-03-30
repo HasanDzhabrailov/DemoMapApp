@@ -20,8 +20,6 @@ internal class DefaultMapScreenComponent(
     private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
     private val timeProvider: TimeProvider = SystemTimeProvider(),
     private val featureIdProvider: FeatureIdProvider = UuidFeatureIdProvider(),
-    private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(
@@ -179,13 +177,6 @@ internal class DefaultMapScreenComponent(
                 anchor = anchor.toStoreAnchor(),
             ),
         )
-        val model = currentModel()
-        val feature = featureSelectionResolver.resolve(model.mapState, featureKey, featureType) ?: return
-        setModel(model.copy(
-            isMapToolsMenuVisible = false,
-            isCenterMarkerMenuVisible = false,
-            selectedFeatureInfoWindow = featureInfoWindowStateMapper.map(feature, anchor),
-        ))
     }
 
     override fun onFeatureInfoWindowDismiss() {
@@ -195,14 +186,8 @@ internal class DefaultMapScreenComponent(
     private fun defaultModel(): MapScreenComponent.Model =
         MapScreenComponent.Model()
 
-    private fun currentModel(): MapScreenComponent.Model = model.value
-
     private fun acceptIntent(intent: MapStore.Intent) {
         mapStoreHolder.accept(intent)
-    }
-
-    private fun setModel(model: MapScreenComponent.Model) {
-        mapStoreHolder.updateModel(model)
     }
 
     private companion object {

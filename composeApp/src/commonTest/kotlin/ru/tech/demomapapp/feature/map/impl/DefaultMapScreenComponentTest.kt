@@ -14,6 +14,7 @@ import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 
 class DefaultMapScreenComponentTest {
 
@@ -343,6 +344,17 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
+    fun `ruler flow does not use shared feature info window state`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
+        component.onRulerToggle()
+
+        assertNotNull(component.model.value.rulerInfoWindow)
+        assertNull(component.model.value.selectedFeatureInfoWindow)
+    }
+
+    @Test
     fun `ruler recalculates on camera updates while active`() {
         val component = createComponent()
 
@@ -458,6 +470,27 @@ class DefaultMapScreenComponentTest {
             ),
             component.model.value.selectedFeatureInfoWindow,
         )
+    }
+
+    @Test
+    fun `feature info window dismiss clears shared info window`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePointClick()
+        component.onCreatePointTitleChange("Test point")
+        component.onCreatePointConfirm()
+
+        val point = component.model.value.mapState.points.single()
+        component.onFeatureClick(
+            featureKey = point.id,
+            featureType = MapScreenComponent.FeatureType.POINT,
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+        )
+
+        component.onFeatureInfoWindowDismiss()
+
+        assertNull(component.model.value.selectedFeatureInfoWindow)
     }
 
     @Test
@@ -626,17 +659,53 @@ class DefaultMapScreenComponentTest {
         )
     }
 
+    @Test
+    fun `line creation stores line and can open shared info window`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreateLineClick()
+        component.onDrawingAddPositionClick()
+        component.onCameraIdle(defaultSnapshot(latitude = 55.76, longitude = 37.62))
+        component.onDrawingAddPositionClick()
+        component.onDrawingDetailsClick()
+        component.onCreateShapeTitleChange("Route A")
+        component.onCreateShapeConfirm()
+
+        val line = component.model.value.mapState.lines.single()
+        component.onFeatureClick(
+            featureKey = line.id,
+            featureType = MapScreenComponent.FeatureType.LINE,
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 130, screenY = 250),
+        )
+
+        assertEquals(
+            MapScreenComponent.FeatureInfoWindow(
+                title = "Route A",
+                createdAtText = "26.03.2026 10:00",
+                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 130, screenY = 250),
+            ),
+            component.model.value.selectedFeatureInfoWindow,
+        )
+    }
+
     private fun createComponent(): DefaultMapScreenComponent {
         var nextId = 0
         return DefaultMapScreenComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
-            timeProvider = TimeProvider { 1_774_986_400_000L },
-            featureIdProvider = FeatureIdProvider {
-                nextId += 1
-                "feature-$nextId"
-            },
-            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
-                createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
+            mapStoreFactory = MapStoreFactory(
+                createMapPointUseCase = DefaultCreateMapPointUseCase(),
+                createMapLineUseCase = DefaultCreateMapLineUseCase(),
+                createMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
+                shapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
+                timeProvider = TimeProvider { 1_774_986_400_000L },
+                featureIdProvider = FeatureIdProvider {
+                    nextId += 1
+                    "feature-$nextId"
+                },
+                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
+                    createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
+                ),
             ),
         )
     }
