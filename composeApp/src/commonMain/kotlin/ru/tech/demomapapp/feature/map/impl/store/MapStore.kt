@@ -101,7 +101,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             object FeatureInfoWindowDismissed : FeatureSelection
         }
 
-        data class SyncState(val state: State) : Intent
     }
 
     data class State(

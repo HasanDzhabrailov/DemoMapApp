@@ -46,18 +46,6 @@ internal class MapStoreHolder(
         store.accept(intent)
     }
 
-    fun updateModel(model: MapScreenComponent.Model) {
-        pendingLocationRequest = model.pendingLocationRequest
-        pendingViewportCommand = model.pendingViewportCommand
-        store.accept(
-            MapStore.Intent.SyncState(
-                MapStore.State.fromModel(
-                    model = model.withoutTransientOutputs(),
-                    activeLocationRequest = store.state.activeLocationRequest,
-                ),
-            ),
-        )
-    }
     override fun onDestroy() {
         labelDisposable.dispose()
         stateDisposable.dispose()

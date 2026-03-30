@@ -102,7 +102,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Location,
             -> Unit
-            is MapStore.Intent.SyncState -> callbacks.onMessage(MapStoreMessage.StateSynced(intent.state))
             is MapStore.Intent.Tools.AvailableMapsClicked,
             is MapStore.Intent.Tools.MapToolsDismissed,
             is MapStore.Intent.Tools.MapsOnScreenClicked,
@@ -116,14 +115,10 @@ internal class MapStoreExecutor(
     override fun dispose() = Unit
 
     private fun handleGpsToggle() {
-        val model = currentModel()
         if (currentState().activeLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
-            val updatedState = MapStore.State.fromModel(
-                model = model.copy(
-                    myLocationMode = MyLocationMode.OFF,
-                    currentLocationMarker = null,
-                    pendingLocationRequest = null,
-                ),
+            val updatedState = currentState().copy(
+                myLocationMode = MyLocationMode.OFF,
+                currentLocationMarker = null,
                 activeLocationRequest = null,
             )
             syncState(updatedState)
@@ -131,52 +126,39 @@ internal class MapStoreExecutor(
             return
         }
 
-        val updatedModel =
-            when (model.myLocationMode) {
-                MyLocationMode.GPS -> model.copy(
+        val updatedState =
+            when (currentState().myLocationMode) {
+                MyLocationMode.GPS -> currentState().copy(
                     myLocationMode = MyLocationMode.OFF,
                     currentLocationMarker = null,
-                    pendingLocationRequest = null,
+                    activeLocationRequest = null,
                 )
 
                 MyLocationMode.OFF,
                 MyLocationMode.MANUAL_PLACEHOLDER,
-                -> model.copy(
+                -> currentState().copy(
                     myLocationMode = MyLocationMode.OFF,
                     currentLocationMarker = null,
-                    pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
+                    activeLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
                 )
             }
-        val nextActiveLocationRequest = if (updatedModel.pendingLocationRequest != null) {
-            updatedModel.pendingLocationRequest
-        } else {
-            null
-        }
-        val updatedState = MapStore.State.fromModel(
-            model = updatedModel,
-            activeLocationRequest = nextActiveLocationRequest,
-        )
         syncState(updatedState)
         publishRulerState(updatedState)
-        if (updatedModel.pendingLocationRequest != null) {
-            callbacks.onLabel(MapStore.Label.Location.RequestIssued(updatedModel.pendingLocationRequest))
+        updatedState.activeLocationRequest?.let { request ->
+            callbacks.onLabel(MapStore.Label.Location.RequestIssued(request))
         }
     }
 
     private fun handleMyLocationClick() {
-        val model = currentModel()
-        if (model.myLocationMode == MyLocationMode.GPS) {
+        val state = currentState()
+        if (state.myLocationMode == MyLocationMode.GPS) {
             return
         }
 
-        val snapshot = model.lastCameraSnapshot ?: return
-        val updatedModel = model.copy(
+        val snapshot = state.lastCameraSnapshot ?: return
+        val updatedState = state.copy(
             myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
             currentLocationMarker = snapshot.toPlaceholderLocationMarker(),
-            pendingLocationRequest = null,
-        )
-        val updatedState = MapStore.State.fromModel(
-            model = updatedModel,
             activeLocationRequest = null,
         )
         syncState(updatedState)
@@ -184,76 +166,72 @@ internal class MapStoreExecutor(
     }
 
     private fun handleCurrentLocationFocusClick() {
-        val model = currentModel()
+        val state = currentState()
         when {
-            model.currentLocationMarker != null -> emitViewportCommand(
+            state.currentLocationMarker != null -> emitViewportCommand(
                 MapViewportCommand.MoveTo(
-                    latitude = model.currentLocationMarker.latitude,
-                    longitude = model.currentLocationMarker.longitude,
+                    latitude = state.currentLocationMarker.latitude,
+                    longitude = state.currentLocationMarker.longitude,
                 ),
             )
 
-            model.myLocationMode == MyLocationMode.GPS -> {
-                val updatedModel = model.copy(
-                    pendingLocationRequest = MapLocationRequest.RecenterToGpsLocationRequest,
-                )
-                syncModel(
-                    updatedModel,
+            state.myLocationMode == MyLocationMode.GPS -> {
+                val updatedState = state.copy(
                     activeLocationRequest = MapLocationRequest.RecenterToGpsLocationRequest,
                 )
+                syncState(updatedState)
                 callbacks.onLabel(MapStore.Label.Location.RequestIssued(MapLocationRequest.RecenterToGpsLocationRequest))
             }
         }
     }
 
     private fun handleLocationResult(result: LocationRequestResult) {
-        val model = currentModel()
+        val state = currentState()
         val request = currentState().activeLocationRequest
-        val updatedModel = when (result) {
+        val updatedState = when (result) {
                 LocationRequestResult.PermissionDenied -> {
-                    model.copy(
+                    state.copy(
                         myLocationMode = MyLocationMode.OFF,
                         currentLocationMarker = null,
-                        pendingLocationRequest = null,
+                        activeLocationRequest = null,
                     )
                 }
 
                 LocationRequestResult.LocationUnavailable -> {
-                    if (model.myLocationMode == MyLocationMode.GPS && request != MapLocationRequest.EnableGpsLocationRequest) {
-                        model.copy(
-                            pendingLocationRequest = null,
+                    if (state.myLocationMode == MyLocationMode.GPS && request != MapLocationRequest.EnableGpsLocationRequest) {
+                        state.copy(
+                            activeLocationRequest = null,
                         )
                     } else {
-                        model.copy(
+                        state.copy(
                             myLocationMode = MyLocationMode.OFF,
                             currentLocationMarker = null,
-                            pendingLocationRequest = null,
+                            activeLocationRequest = null,
                         )
                     }
                 }
 
-                is LocationRequestResult.LocationResolved -> model.copy(
+                is LocationRequestResult.LocationResolved -> state.copy(
                     myLocationMode = MyLocationMode.GPS,
                     currentLocationMarker = MapLocationMarker(
                         latitude = result.latitude,
                         longitude = result.longitude,
                         isPlaceholder = false,
                     ),
-                    pendingLocationRequest = null,
-                    pendingViewportCommand = MapViewportCommand.MoveTo(
+                    activeLocationRequest = null,
+                )
+            }
+        syncState(updatedState)
+        publishRulerState(updatedState)
+        if (result is LocationRequestResult.LocationResolved) {
+            callbacks.onLabel(
+                MapStore.Label.Viewport.CommandRequested(
+                    MapViewportCommand.MoveTo(
                         latitude = result.latitude,
                         longitude = result.longitude,
                     ),
-                )
-            }
-        val updatedState = MapStore.State.fromModel(
-            model = updatedModel,
-            activeLocationRequest = null,
-        )
-        syncState(updatedState)
-        publishRulerState(updatedState)
-        updatedModel.pendingViewportCommand?.let { command ->
-            callbacks.onLabel(MapStore.Label.Viewport.CommandRequested(command))
+                ),
+            )
         }
     }
 
@@ -354,22 +332,8 @@ internal class MapStoreExecutor(
 
     private fun currentState() = callbacks.state
 
-    private fun currentModel() = callbacks.state.toModel()
-
     private fun syncState(state: MapStore.State) {
         callbacks.onMessage(MapStoreMessage.StateSynced(state))
-    }
-
-    private fun syncModel(
-        model: ru.tech.demomapapp.feature.map.api.MapScreenComponent.Model,
-        activeLocationRequest: MapLocationRequest? = currentState().activeLocationRequest,
-    ) {
-        syncState(
-            MapStore.State.fromModel(
-                model = model,
-                activeLocationRequest = activeLocationRequest,
-            ),
-        )
     }
 
     private fun publishRulerState(state: MapStore.State) {
