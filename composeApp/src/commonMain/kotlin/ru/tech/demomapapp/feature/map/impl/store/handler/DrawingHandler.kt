@@ -1,16 +1,14 @@
 package ru.tech.demomapapp.feature.map.impl.store.handler
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapLine
-import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.impl.store.MapStore
-import ru.tech.demomapapp.feature.map.impl.store.MapStoreMessage
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
+import ru.tech.demomapapp.feature.map.impl.store.MapStore
+import ru.tech.demomapapp.feature.map.impl.store.MapStoreMessage
 
 internal class DrawingHandler(
     private val createMapLineUseCase: CreateMapLineUseCase,
@@ -18,10 +16,7 @@ internal class DrawingHandler(
     private val timeProvider: TimeProvider,
     private val featureIdProvider: FeatureIdProvider,
 ) {
-    fun handleAddPosition(
-        snapshot: MapCameraSnapshot?,
-        onPositionAdded: (MapStoreMessage) -> Unit,
-    ) {
+    fun handleAddPosition(snapshot: MapCameraSnapshot?, onPositionAdded: (MapStoreMessage) -> Unit) {
         snapshot ?: return
         onPositionAdded(MapStoreMessage.DrawingPositionAdded(snapshot))
     }

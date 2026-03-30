@@ -8,11 +8,10 @@ internal fun interface RulerInfoWindowStateFormatter {
 }
 
 internal object DefaultRulerInfoWindowStateFormatter : RulerInfoWindowStateFormatter {
-    override fun format(measurement: RulerMeasurement): RulerInfoWindowState =
-        RulerInfoWindowState(
-            distanceText = formatDistance(measurement.distanceMeters),
-            trueAzimuthText = "A = ${formatAngleDms(measurement.trueAzimuthDegrees)}",
-        )
+    override fun format(measurement: RulerMeasurement): RulerInfoWindowState = RulerInfoWindowState(
+        distanceText = formatDistance(measurement.distanceMeters),
+        trueAzimuthText = "A = ${formatAngleDms(measurement.trueAzimuthDegrees)}",
+    )
 
     private fun formatDistance(distanceMeters: Double): String {
         if (distanceMeters >= 1_000.0) {

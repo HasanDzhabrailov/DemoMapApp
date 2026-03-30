@@ -13,10 +13,7 @@ import ru.tech.demomapapp.feature.map.impl.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 
 @Composable
-fun MapScreenContent(
-    component: MapScreenComponent,
-    modifier: Modifier = Modifier,
-) {
+fun MapScreenContent(component: MapScreenComponent, modifier: Modifier = Modifier) {
     val model by component.model.subscribeAsState()
     val renderModel = model.mapState.toRenderModel(
         shapeDrawingDraft = model.shapeDrawingDraft,
@@ -28,7 +25,7 @@ fun MapScreenContent(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface)
+            .background(MaterialTheme.colorScheme.surface),
     ) {
         MapRenderer(
             model = renderModel,

@@ -42,10 +42,7 @@ internal fun MapZoomControlsOverlay(
 }
 
 @Composable
-private fun MapZoomButton(
-    label: String,
-    onClick: () -> Unit,
-) {
+private fun MapZoomButton(label: String, onClick: () -> Unit) {
     Surface(
         modifier = Modifier.size(44.dp),
         onClick = onClick,

@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:function-naming")
+
 package ru.tech.demomapapp.feature.map.render
 
 import androidx.compose.foundation.background
@@ -10,13 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.savedstate.compose.LocalSavedStateRegistryOwner
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
@@ -110,10 +112,7 @@ private fun PreviewMapRenderer(modifier: Modifier) {
 }
 
 @Composable
-private fun ApplyMapRenderModel(
-    holder: MapViewHolder,
-    model: MapRenderModel,
-) {
+private fun ApplyMapRenderModel(holder: MapViewHolder, model: MapRenderModel) {
     val modelApplier = remember(holder) {
         MapRenderModelApplier()
     }
@@ -131,10 +130,7 @@ private fun ConfigureMapUiSettings(holder: MapViewHolder) {
 }
 
 @Composable
-private fun BindCameraObservation(
-    holder: MapViewHolder,
-    onCameraIdle: (MapCameraSnapshot) -> Unit,
-) {
+private fun BindCameraObservation(holder: MapViewHolder, onCameraIdle: (MapCameraSnapshot) -> Unit) {
     val cameraAdapter = remember(onCameraIdle) {
         MapLibreCameraAdapter(onCameraIdle = onCameraIdle)
     }
@@ -151,10 +147,7 @@ private fun BindCameraObservation(
 }
 
 @Composable
-private fun BindFeatureClickObservation(
-    holder: MapViewHolder,
-    onFeatureClick: (RenderFeatureClick) -> Unit,
-) {
+private fun BindFeatureClickObservation(holder: MapViewHolder, onFeatureClick: (RenderFeatureClick) -> Unit) {
     val pointClickAdapter = remember(onFeatureClick) {
         MapLibreFeatureClickAdapter(onFeatureClick = onFeatureClick)
     }

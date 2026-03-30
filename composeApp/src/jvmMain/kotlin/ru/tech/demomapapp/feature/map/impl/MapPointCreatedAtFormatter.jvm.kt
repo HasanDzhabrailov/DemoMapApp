@@ -6,7 +6,8 @@ import java.time.format.DateTimeFormatter
 
 private val mapPointCreatedAtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
 
-internal actual fun formatMapPointCreatedAt(epochMillis: Long): String =
-    Instant.ofEpochMilli(epochMillis)
+internal actual fun formatMapPointCreatedAt(epochMillis: Long): String {
+    return Instant.ofEpochMilli(epochMillis)
         .atZone(ZoneId.systemDefault())
         .format(mapPointCreatedAtFormatter)
+}

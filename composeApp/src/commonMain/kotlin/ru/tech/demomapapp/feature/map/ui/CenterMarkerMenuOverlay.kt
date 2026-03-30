@@ -71,10 +71,7 @@ internal fun CenterMarkerMenuOverlay(
 }
 
 @Composable
-private fun MenuAction(
-    text: String,
-    onClick: () -> Unit,
-) {
+private fun MenuAction(text: String, onClick: () -> Unit) {
     Text(
         text = text,
         modifier = Modifier

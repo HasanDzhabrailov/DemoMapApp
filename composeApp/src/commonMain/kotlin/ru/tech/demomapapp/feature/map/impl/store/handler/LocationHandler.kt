@@ -86,10 +86,7 @@ internal class LocationHandler {
         }
     }
 
-    fun handleLocationResult(
-        state: MapStore.State,
-        result: LocationRequestResult,
-    ): LocationResult {
+    fun handleLocationResult(state: MapStore.State, result: LocationRequestResult): LocationResult {
         val request = state.activeLocationRequest
         val updatedState = when (result) {
             LocationRequestResult.PermissionDenied -> state.copy(
@@ -99,7 +96,9 @@ internal class LocationHandler {
             )
 
             LocationRequestResult.LocationUnavailable -> {
-                if (state.myLocationMode == MyLocationMode.GPS && request != MapLocationRequest.EnableGpsLocationRequest) {
+                if (state.myLocationMode == MyLocationMode.GPS &&
+                    request != MapLocationRequest.EnableGpsLocationRequest
+                ) {
                     state.copy(activeLocationRequest = null)
                 } else {
                     state.copy(
@@ -136,10 +135,9 @@ internal class LocationHandler {
         )
     }
 
-    private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker =
-        MapLocationMarker(
-            latitude = latitude,
-            longitude = longitude,
-            isPlaceholder = true,
-        )
+    private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker = MapLocationMarker(
+        latitude = latitude,
+        longitude = longitude,
+        isPlaceholder = true,
+    )
 }

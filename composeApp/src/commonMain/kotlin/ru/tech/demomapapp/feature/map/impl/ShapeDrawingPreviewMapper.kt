@@ -6,17 +6,11 @@ import ru.tech.demomapapp.feature.map.render.RenderDrawingPreview
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
 
 internal fun interface ShapeDrawingPreviewMapper {
-    fun map(
-        draft: MapStore.ShapeDrawingDraft?,
-        currentSnapshot: MapCameraSnapshot?,
-    ): RenderDrawingPreview?
+    fun map(draft: MapStore.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview?
 }
 
 internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
-    override fun map(
-        draft: MapStore.ShapeDrawingDraft?,
-        currentSnapshot: MapCameraSnapshot?,
-    ): RenderDrawingPreview? {
+    override fun map(draft: MapStore.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview? {
         val currentVertex = currentSnapshot?.toVertex() ?: return null
         val activeDraft = draft ?: return null
         val fixedVertices = activeDraft.fixedVertices.map { it.toRenderVertex() }
@@ -50,8 +44,7 @@ internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
     }
 }
 
-private fun ru.tech.demomapapp.feature.map.api.MapVertex.toRenderVertex(): RenderMapVertex =
-    RenderMapVertex(
-        latitude = latitude,
-        longitude = longitude,
-    )
+private fun ru.tech.demomapapp.feature.map.api.MapVertex.toRenderVertex(): RenderMapVertex = RenderMapVertex(
+    latitude = latitude,
+    longitude = longitude,
+)

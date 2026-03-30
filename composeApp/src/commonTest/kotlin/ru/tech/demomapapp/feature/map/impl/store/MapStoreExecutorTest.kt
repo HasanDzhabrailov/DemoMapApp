@@ -11,10 +11,10 @@ import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapLineUseCase
-import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
-import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPointUseCase
+import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
+import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
@@ -348,29 +348,28 @@ class MapStoreExecutorTest {
         assertTrue(callbacks.messages.isEmpty())
     }
 
-    private fun createExecutor(): MapStoreExecutor =
-        MapStoreExecutor(
-            createPointHandler = CreatePointHandler(
-                createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
-                timeProvider = TimeProvider { 123L },
-                featureIdProvider = FeatureIdProvider { "feature-1" },
+    private fun createExecutor(): MapStoreExecutor = MapStoreExecutor(
+        createPointHandler = CreatePointHandler(
+            createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },
+            timeProvider = TimeProvider { 123L },
+            featureIdProvider = FeatureIdProvider { "feature-1" },
+        ),
+        drawingHandler = DrawingHandler(
+            createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
+            createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
+            timeProvider = TimeProvider { 123L },
+            featureIdProvider = FeatureIdProvider { "feature-1" },
+        ),
+        locationHandler = LocationHandler(),
+        featureClickHandler = FeatureClickHandler(
+            featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+            featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
+                createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
             ),
-            drawingHandler = DrawingHandler(
-                createMapLineUseCase = CreateMapLineUseCase { _: CreateMapLineInput -> null },
-                createMapPolygonUseCase = CreateMapPolygonUseCase { _: CreateMapPolygonInput -> null },
-                timeProvider = TimeProvider { 123L },
-                featureIdProvider = FeatureIdProvider { "feature-1" },
-            ),
-            locationHandler = LocationHandler(),
-            featureClickHandler = FeatureClickHandler(
-                featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
-                featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
-                    createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
-                ),
-            ),
-            rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
-        )
+        ),
+        rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
+        rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
+    )
 
     private class TestExecutorCallbacks(
         override var state: MapStore.State,

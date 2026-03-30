@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:function-naming")
+
 package ru.tech.demomapapp.feature.map.ui
 
 import androidx.compose.runtime.Composable

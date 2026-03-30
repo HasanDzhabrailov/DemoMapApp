@@ -60,10 +60,7 @@ internal fun MapLeftControlsOverlay(
 }
 
 @Composable
-internal fun MapToolsButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun MapToolsButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .size(42.dp),
@@ -88,11 +85,7 @@ internal fun MapToolsButton(
 }
 
 @Composable
-internal fun MyLocationButton(
-    onClick: () -> Unit,
-    isEnabled: Boolean,
-    modifier: Modifier = Modifier,
-) {
+internal fun MyLocationButton(onClick: () -> Unit, isEnabled: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.size(42.dp),
         onClick = onClick,
@@ -117,11 +110,7 @@ internal fun MyLocationButton(
 }
 
 @Composable
-internal fun CurrentLocationFocusButton(
-    onClick: () -> Unit,
-    isEnabled: Boolean,
-    modifier: Modifier = Modifier,
-) {
+internal fun CurrentLocationFocusButton(onClick: () -> Unit, isEnabled: Boolean, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.size(42.dp),
         onClick = onClick,
@@ -214,10 +203,7 @@ internal fun MapToolsMenuOverlay(
 }
 
 @Composable
-private fun MapToolsMenuAction(
-    text: String,
-    onClick: () -> Unit,
-) {
+private fun MapToolsMenuAction(text: String, onClick: () -> Unit) {
     Text(
         text = text,
         color = Color.White,
@@ -236,11 +222,7 @@ private fun MapToolsMenuAction(
 }
 
 @Composable
-private fun MapToolsMenuToggle(
-    text: String,
-    checked: Boolean,
-    onToggle: () -> Unit,
-) {
+private fun MapToolsMenuToggle(text: String, checked: Boolean, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

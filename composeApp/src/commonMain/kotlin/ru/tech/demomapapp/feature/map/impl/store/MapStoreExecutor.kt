@@ -10,7 +10,6 @@ import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
-import ru.tech.demomapapp.feature.map.impl.store.handler.LocationResult
 
 internal class MapStoreExecutor(
     private val createPointHandler: CreatePointHandler,
@@ -48,7 +47,9 @@ internal class MapStoreExecutor(
     override fun executeIntent(intent: MapStore.Intent) {
         when (intent) {
             is MapStore.Intent.CenterMarker.Clicked -> callbacks.onMessage(MapStoreMessage.CenterMarkerMenuOpened)
-            is MapStore.Intent.CenterMarker.MenuDismissed -> callbacks.onMessage(MapStoreMessage.CenterMarkerMenuDismissed)
+            is MapStore.Intent.CenterMarker.MenuDismissed -> callbacks.onMessage(
+                MapStoreMessage.CenterMarkerMenuDismissed,
+            )
             is MapStore.Intent.CreatePoint.Clicked -> callbacks.onMessage(MapStoreMessage.CreatePointSheetOpened)
             is MapStore.Intent.CreatePoint.LatitudeChanged -> callbacks.onMessage(
                 MapStoreMessage.CreatePointLatitudeChanged(intent.value),
@@ -59,7 +60,9 @@ internal class MapStoreExecutor(
             is MapStore.Intent.CreatePoint.TitleChanged -> callbacks.onMessage(
                 MapStoreMessage.CreatePointTitleChanged(intent.value),
             )
-            is MapStore.Intent.CreatePoint.SheetDismissed -> callbacks.onMessage(MapStoreMessage.CreatePointSheetDismissed)
+            is MapStore.Intent.CreatePoint.SheetDismissed -> callbacks.onMessage(
+                MapStoreMessage.CreatePointSheetDismissed,
+            )
             is MapStore.Intent.CreatePoint.Confirmed -> handleCreatePointConfirm()
             is MapStore.Intent.Drawing.CreateLineClicked -> callbacks.onMessage(
                 MapStoreMessage.DrawingStarted(MapStore.DrawingMode.LINE),

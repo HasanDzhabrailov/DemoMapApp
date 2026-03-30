@@ -24,17 +24,13 @@ class DefaultRootComponent(
             childFactory = ::child,
         )
 
-    private fun child(
-        config: Config,
-        componentContext: ComponentContext,
-    ): RootComponent.Child =
-        when (config) {
-            Config.MapScreen -> RootComponent.Child.MapScreen(
-                instance = DefaultMapScreenComponent(
-                    componentContext = componentContext,
-                ),
-            )
-        }
+    private fun child(config: Config, componentContext: ComponentContext): RootComponent.Child = when (config) {
+        Config.MapScreen -> RootComponent.Child.MapScreen(
+            instance = DefaultMapScreenComponent(
+                componentContext = componentContext,
+            ),
+        )
+    }
 
     @Serializable
     private sealed interface Config {

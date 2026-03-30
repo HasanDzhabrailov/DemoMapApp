@@ -14,10 +14,7 @@ import androidx.compose.ui.unit.dp
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 
 @Composable
-internal fun RulerInfoWindowOverlay(
-    state: RulerInfoWindowState,
-    modifier: Modifier = Modifier,
-) {
+internal fun RulerInfoWindowOverlay(state: RulerInfoWindowState, modifier: Modifier = Modifier) {
     val surfaceColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)
 
     Surface(

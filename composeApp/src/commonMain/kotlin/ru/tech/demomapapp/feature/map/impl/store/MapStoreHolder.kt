@@ -68,15 +68,13 @@ internal class MapStoreHolder(
         }
     }
 
-    private fun MapScreenComponent.Model.withTransientOutputs(): MapScreenComponent.Model =
-        copy(
-            pendingLocationRequest = pendingLocationRequest,
-            pendingViewportCommand = pendingViewportCommand,
-        )
+    private fun MapScreenComponent.Model.withTransientOutputs(): MapScreenComponent.Model = copy(
+        pendingLocationRequest = pendingLocationRequest,
+        pendingViewportCommand = pendingViewportCommand,
+    )
 
-    private fun MapScreenComponent.Model.withoutTransientOutputs(): MapScreenComponent.Model =
-        copy(
-            pendingLocationRequest = null,
-            pendingViewportCommand = null,
-        )
+    private fun MapScreenComponent.Model.withoutTransientOutputs(): MapScreenComponent.Model = copy(
+        pendingLocationRequest = null,
+        pendingViewportCommand = null,
+    )
 }

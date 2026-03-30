@@ -710,10 +710,7 @@ class DefaultMapScreenComponentTest {
         )
     }
 
-    private fun defaultSnapshot(
-        latitude: Double = 55.75,
-        longitude: Double = 37.61,
-    ): MapCameraSnapshot =
+    private fun defaultSnapshot(latitude: Double = 55.75, longitude: Double = 37.61): MapCameraSnapshot =
         MapCameraSnapshot(
             latitude = latitude,
             longitude = longitude,

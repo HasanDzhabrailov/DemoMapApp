@@ -7,11 +7,7 @@ import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.impl.store.MapStore
 
 internal fun interface MapFeatureSelectionResolver {
-    fun resolve(
-        mapState: MapState,
-        featureKey: String,
-        featureType: MapStore.FeatureType,
-    ): SelectedMapFeature?
+    fun resolve(mapState: MapState, featureKey: String, featureType: MapStore.FeatureType): SelectedMapFeature?
 }
 
 internal data class SelectedMapFeature(
@@ -24,12 +20,11 @@ internal class DefaultMapFeatureSelectionResolver : MapFeatureSelectionResolver 
         mapState: MapState,
         featureKey: String,
         featureType: MapStore.FeatureType,
-    ): SelectedMapFeature? =
-        when (featureType) {
-            MapStore.FeatureType.POINT -> mapState.points.findById(featureKey)?.toSelectedMapFeature()
-            MapStore.FeatureType.LINE -> mapState.lines.findById(featureKey)?.toSelectedMapFeature()
-            MapStore.FeatureType.POLYGON -> mapState.polygons.findById(featureKey)?.toSelectedMapFeature()
-        }
+    ): SelectedMapFeature? = when (featureType) {
+        MapStore.FeatureType.POINT -> mapState.points.findById(featureKey)?.toSelectedMapFeature()
+        MapStore.FeatureType.LINE -> mapState.lines.findById(featureKey)?.toSelectedMapFeature()
+        MapStore.FeatureType.POLYGON -> mapState.polygons.findById(featureKey)?.toSelectedMapFeature()
+    }
 }
 
 private fun List<MapPoint>.findById(id: String): MapPoint? = firstOrNull { it.id == id }

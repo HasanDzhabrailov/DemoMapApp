@@ -1,9 +1,9 @@
 package ru.tech.demomapapp
 
+import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.os.Bundle
 import android.os.StrictMode
-import android.content.pm.ApplicationInfo
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent

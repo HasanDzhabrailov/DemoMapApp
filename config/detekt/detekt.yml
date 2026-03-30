@@ -1,0 +1,34 @@
+complexity:
+  LongMethod:
+    threshold: 150
+  LongParameterList:
+    functionThreshold: 30
+    constructorThreshold: 30
+  LargeClass:
+    threshold: 800
+  TooManyFunctions:
+    thresholdInFiles: 35
+    thresholdInClasses: 35
+    thresholdInInterfaces: 35
+  CyclomaticComplexMethod:
+    threshold: 40
+
+style:
+  MaxLineLength:
+    maxLineLength: 120
+  NewLineAtEndOfFile:
+    active: true
+  MagicNumber:
+    active: false
+  ReturnCount:
+    max: 6
+
+naming:
+  FunctionNaming:
+    active: false
+  MatchingDeclarationName:
+    active: false
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false

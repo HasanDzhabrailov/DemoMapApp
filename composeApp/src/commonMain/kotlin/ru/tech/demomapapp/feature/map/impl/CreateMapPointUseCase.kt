@@ -29,7 +29,6 @@ internal class DefaultCreateMapPointUseCase : CreateMapPointUseCase {
     }
 }
 
-private fun String.toCoordinateOrNull(): Double? =
-    trim()
-        .replace(',', '.')
-        .toDoubleOrNull()
+private fun String.toCoordinateOrNull(): Double? = trim()
+    .replace(',', '.')
+    .toDoubleOrNull()

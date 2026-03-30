@@ -100,7 +100,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
 
             object FeatureInfoWindowDismissed : FeatureSelection
         }
-
     }
 
     data class State(
@@ -121,30 +120,26 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         val isCreateShapeSheetVisible: Boolean = false,
         val selectedFeatureInfoWindow: FeatureInfoWindow? = null,
     ) {
-        fun toModel(): MapScreenComponent.Model =
-            MapScreenComponent.Model(
-                mapState = mapState,
-                lastCameraSnapshot = lastCameraSnapshot,
-                isMapToolsMenuVisible = isMapToolsMenuVisible,
-                myLocationMode = myLocationMode,
-                currentLocationMarker = currentLocationMarker,
-                isRulerEnabled = isRulerEnabled,
-                rulerMeasurement = rulerMeasurement,
-                rulerInfoWindow = rulerInfoWindow,
-                isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
-                isCreatePointSheetVisible = isCreatePointSheetVisible,
-                createPointDraft = createPointDraft?.toComponentDraft(),
-                drawingMode = drawingMode?.toComponentDrawingMode(),
-                shapeDrawingDraft = shapeDrawingDraft?.toComponentDraft(),
-                isCreateShapeSheetVisible = isCreateShapeSheetVisible,
-                selectedFeatureInfoWindow = selectedFeatureInfoWindow?.toComponentInfoWindow(),
-            )
+        fun toModel(): MapScreenComponent.Model = MapScreenComponent.Model(
+            mapState = mapState,
+            lastCameraSnapshot = lastCameraSnapshot,
+            isMapToolsMenuVisible = isMapToolsMenuVisible,
+            myLocationMode = myLocationMode,
+            currentLocationMarker = currentLocationMarker,
+            isRulerEnabled = isRulerEnabled,
+            rulerMeasurement = rulerMeasurement,
+            rulerInfoWindow = rulerInfoWindow,
+            isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
+            isCreatePointSheetVisible = isCreatePointSheetVisible,
+            createPointDraft = createPointDraft?.toComponentDraft(),
+            drawingMode = drawingMode?.toComponentDrawingMode(),
+            shapeDrawingDraft = shapeDrawingDraft?.toComponentDraft(),
+            isCreateShapeSheetVisible = isCreateShapeSheetVisible,
+            selectedFeatureInfoWindow = selectedFeatureInfoWindow?.toComponentInfoWindow(),
+        )
 
         companion object {
-            fun fromModel(
-                model: MapScreenComponent.Model,
-                activeLocationRequest: MapLocationRequest? = null,
-            ): State =
+            fun fromModel(model: MapScreenComponent.Model, activeLocationRequest: MapLocationRequest? = null): State =
                 State(
                     mapState = model.mapState,
                     lastCameraSnapshot = model.lastCameraSnapshot,
@@ -220,31 +215,27 @@ private fun MapStore.CreatePointDraft.toComponentDraft(): MapScreenComponent.Cre
         titleInput = titleInput,
     )
 
-private fun MapScreenComponent.CreatePointDraft.toStoreDraft(): MapStore.CreatePointDraft =
-    MapStore.CreatePointDraft(
-        latitudeInput = latitudeInput,
-        longitudeInput = longitudeInput,
-        titleInput = titleInput,
-    )
+private fun MapScreenComponent.CreatePointDraft.toStoreDraft(): MapStore.CreatePointDraft = MapStore.CreatePointDraft(
+    latitudeInput = latitudeInput,
+    longitudeInput = longitudeInput,
+    titleInput = titleInput,
+)
 
-private fun MapStore.DrawingMode.toComponentDrawingMode(): MapScreenComponent.DrawingMode =
-    when (this) {
-        MapStore.DrawingMode.LINE -> MapScreenComponent.DrawingMode.LINE
-        MapStore.DrawingMode.POLYGON -> MapScreenComponent.DrawingMode.POLYGON
-    }
+private fun MapStore.DrawingMode.toComponentDrawingMode(): MapScreenComponent.DrawingMode = when (this) {
+    MapStore.DrawingMode.LINE -> MapScreenComponent.DrawingMode.LINE
+    MapStore.DrawingMode.POLYGON -> MapScreenComponent.DrawingMode.POLYGON
+}
 
-internal fun MapScreenComponent.DrawingMode.toStoreDrawingMode(): MapStore.DrawingMode =
-    when (this) {
-        MapScreenComponent.DrawingMode.LINE -> MapStore.DrawingMode.LINE
-        MapScreenComponent.DrawingMode.POLYGON -> MapStore.DrawingMode.POLYGON
-    }
+internal fun MapScreenComponent.DrawingMode.toStoreDrawingMode(): MapStore.DrawingMode = when (this) {
+    MapScreenComponent.DrawingMode.LINE -> MapStore.DrawingMode.LINE
+    MapScreenComponent.DrawingMode.POLYGON -> MapStore.DrawingMode.POLYGON
+}
 
-internal fun MapScreenComponent.FeatureType.toStoreFeatureType(): MapStore.FeatureType =
-    when (this) {
-        MapScreenComponent.FeatureType.POINT -> MapStore.FeatureType.POINT
-        MapScreenComponent.FeatureType.LINE -> MapStore.FeatureType.LINE
-        MapScreenComponent.FeatureType.POLYGON -> MapStore.FeatureType.POLYGON
-    }
+internal fun MapScreenComponent.FeatureType.toStoreFeatureType(): MapStore.FeatureType = when (this) {
+    MapScreenComponent.FeatureType.POINT -> MapStore.FeatureType.POINT
+    MapScreenComponent.FeatureType.LINE -> MapStore.FeatureType.LINE
+    MapScreenComponent.FeatureType.POLYGON -> MapStore.FeatureType.POLYGON
+}
 
 private fun MapStore.ShapeDrawingDraft.toComponentDraft(): MapScreenComponent.ShapeDrawingDraft =
     MapScreenComponent.ShapeDrawingDraft(
@@ -286,8 +277,7 @@ internal fun MapScreenComponent.FeatureInfoWindowAnchor.toStoreAnchor(): MapStor
         screenY = screenY,
     )
 
-internal fun MapCameraSnapshot.toCreatePointDraft(): MapStore.CreatePointDraft =
-    MapStore.CreatePointDraft(
-        latitudeInput = latitude.toString(),
-        longitudeInput = longitude.toString(),
-    )
+internal fun MapCameraSnapshot.toCreatePointDraft(): MapStore.CreatePointDraft = MapStore.CreatePointDraft(
+    latitudeInput = latitude.toString(),
+    longitudeInput = longitude.toString(),
+)

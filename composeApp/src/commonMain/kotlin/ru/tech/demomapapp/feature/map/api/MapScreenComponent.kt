@@ -36,11 +36,7 @@ interface MapScreenComponent {
     fun onCreateShapeTitleChange(value: String)
     fun onCreateShapeConfirm()
     fun onCreateShapeSheetDismiss()
-    fun onFeatureClick(
-        featureKey: String,
-        featureType: FeatureType,
-        anchor: FeatureInfoWindowAnchor,
-    )
+    fun onFeatureClick(featureKey: String, featureType: FeatureType, anchor: FeatureInfoWindowAnchor)
     fun onFeatureInfoWindowDismiss()
 
     data class Model(

@@ -1,7 +1,7 @@
 package ru.tech.demomapapp.feature.map.render
 
-import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import org.maplibre.android.maps.MapLibreMap
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 
 internal class MapLibreCameraAdapter(
     private val onCameraIdle: (MapCameraSnapshot) -> Unit,

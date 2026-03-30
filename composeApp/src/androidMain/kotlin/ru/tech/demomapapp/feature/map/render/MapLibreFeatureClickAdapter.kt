@@ -67,16 +67,14 @@ private fun MapLibreMap.toRenderFeatureClick(latLng: LatLng): RenderFeatureClick
     )
 }
 
-private fun String?.toRenderFeatureType(): RenderFeatureType? =
-    when (this) {
-        RenderFeatureType.POINT.name -> RenderFeatureType.POINT
-        RenderFeatureType.LINE.name -> RenderFeatureType.LINE
-        RenderFeatureType.POLYGON.name -> RenderFeatureType.POLYGON
-        else -> null
-    }
+private fun String?.toRenderFeatureType(): RenderFeatureType? = when (this) {
+    RenderFeatureType.POINT.name -> RenderFeatureType.POINT
+    RenderFeatureType.LINE.name -> RenderFeatureType.LINE
+    RenderFeatureType.POLYGON.name -> RenderFeatureType.POLYGON
+    else -> null
+}
 
-private fun PointF.toRenderFeatureAnchor(): RenderFeatureAnchor =
-    RenderFeatureAnchor(
-        screenX = x.roundToInt(),
-        screenY = y.roundToInt(),
-    )
+private fun PointF.toRenderFeatureAnchor(): RenderFeatureAnchor = RenderFeatureAnchor(
+    screenX = x.roundToInt(),
+    screenY = y.roundToInt(),
+)

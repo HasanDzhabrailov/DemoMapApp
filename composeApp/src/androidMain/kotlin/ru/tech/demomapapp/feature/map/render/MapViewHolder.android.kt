@@ -121,10 +121,7 @@ internal class MapViewHolder(
 }
 
 @Composable
-internal fun rememberMapViewHolder(
-    context: Context,
-    savedStateOwner: SavedStateRegistryOwner,
-): MapViewHolder {
+internal fun rememberMapViewHolder(context: Context, savedStateOwner: SavedStateRegistryOwner): MapViewHolder {
     val appContext = context.applicationContext
     val restoredState = remember(savedStateOwner) {
         savedStateOwner.savedStateRegistry.consumeRestoredStateForKey(MAP_VIEW_STATE_KEY)
@@ -173,10 +170,7 @@ internal fun rememberMapViewHolder(
 }
 
 @Composable
-internal fun BindMapViewLifecycle(
-    holder: MapViewHolder,
-    lifecycleOwner: LifecycleOwner,
-) {
+internal fun BindMapViewLifecycle(holder: MapViewHolder, lifecycleOwner: LifecycleOwner) {
     val mapView = holder.mapView
 
     DisposableEffect(lifecycleOwner, holder) {

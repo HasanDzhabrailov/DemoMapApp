@@ -6,15 +6,15 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
+import ru.tech.demomapapp.feature.map.api.MapPolygon
+import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
-import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapLine
-import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 
 class MapStoreReducerTest {
@@ -383,6 +383,5 @@ class MapStoreReducerTest {
     private fun reduce(state: MapStore.State, message: MapStoreMessage): MapStore.State =
         with(MapStoreReducer(DefaultShapeDrawingDraftUpdater())) { state.reduce(message) }
 
-    private fun vertex(latitude: Double, longitude: Double) =
-        MapVertex(latitude = latitude, longitude = longitude)
+    private fun vertex(latitude: Double, longitude: Double) = MapVertex(latitude = latitude, longitude = longitude)
 }

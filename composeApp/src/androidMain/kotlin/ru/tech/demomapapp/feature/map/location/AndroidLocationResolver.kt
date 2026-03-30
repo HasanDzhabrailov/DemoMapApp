@@ -6,9 +6,9 @@ import android.location.LocationManager
 import android.os.Build
 import android.os.CancellationSignal
 import android.os.Looper
+import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
 private const val LOCATION_REQUEST_TIMEOUT_MILLIS = 5_000L
 private const val FRESH_LOCATION_MAX_AGE_MILLIS = 30_000L
@@ -20,10 +20,7 @@ internal class AndroidLocationResolver(
         context.getSystemService(LocationManager::class.java)
     }
 
-    suspend fun resolveCurrentLocation(
-        hasFinePermission: Boolean,
-        hasCoarsePermission: Boolean,
-    ): LocationCoordinate? {
+    suspend fun resolveCurrentLocation(hasFinePermission: Boolean, hasCoarsePermission: Boolean): LocationCoordinate? {
         val manager = locationManager ?: return null
         val providers = manager.candidateProviders(
             hasFinePermission = hasFinePermission,
@@ -52,10 +49,7 @@ internal class AndroidLocationResolver(
     }
 }
 
-private suspend fun LocationManager.awaitCurrentLocationApi30(
-    provider: String,
-    context: Context,
-): Location? =
+private suspend fun LocationManager.awaitCurrentLocationApi30(provider: String, context: Context): Location? =
     suspendCancellableCoroutine { continuation ->
         val cancellationSignal = CancellationSignal()
         continuation.invokeOnCancellation { cancellationSignal.cancel() }
@@ -106,16 +100,14 @@ private fun LocationManager.bestLastKnownLocation(providers: List<String>): Loca
         runCatching { getLastKnownLocation(provider) }.getOrNull()
     }.maxByOrNull { it.time }
 
-private fun Location.isFreshEnough(): Boolean =
-    System.currentTimeMillis() - time <= FRESH_LOCATION_MAX_AGE_MILLIS
+private fun Location.isFreshEnough(): Boolean = System.currentTimeMillis() - time <= FRESH_LOCATION_MAX_AGE_MILLIS
 
 internal data class LocationCoordinate(
     val latitude: Double,
     val longitude: Double,
 )
 
-private fun Location.toCoordinate(): LocationCoordinate =
-    LocationCoordinate(
-        latitude = latitude,
-        longitude = longitude,
-    )
+private fun Location.toCoordinate(): LocationCoordinate = LocationCoordinate(
+    latitude = latitude,
+    longitude = longitude,
+)

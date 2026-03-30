@@ -37,7 +37,8 @@ internal class DefaultMapScreenComponent(
     override fun onMyLocationClick() = holder.accept(MapStore.Intent.Location.MyLocationClicked)
     override fun onCurrentLocationFocusClick() = holder.accept(MapStore.Intent.Location.CurrentLocationFocusClicked)
     override fun onLocationRequestConsumed() = holder.accept(MapStore.Intent.Location.LocationRequestConsumed)
-    override fun onLocationResult(result: LocationRequestResult) = holder.accept(MapStore.Intent.Location.LocationResultReceived(result))
+    override fun onLocationResult(result: LocationRequestResult) =
+        holder.accept(MapStore.Intent.Location.LocationResultReceived(result))
     override fun onRulerToggle() = holder.accept(MapStore.Intent.Ruler.Toggled)
     override fun onViewportCommandConsumed() = holder.accept(MapStore.Intent.Viewport.ViewportCommandConsumed)
     override fun onCenterMarkerClick() = holder.accept(MapStore.Intent.CenterMarker.Clicked)
@@ -45,9 +46,12 @@ internal class DefaultMapScreenComponent(
     override fun onCreatePointClick() = holder.accept(MapStore.Intent.CreatePoint.Clicked)
     override fun onCreateLineClick() = holder.accept(MapStore.Intent.Drawing.CreateLineClicked)
     override fun onCreatePolygonClick() = holder.accept(MapStore.Intent.Drawing.CreatePolygonClicked)
-    override fun onCreatePointLatitudeChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.LatitudeChanged(value))
-    override fun onCreatePointLongitudeChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.LongitudeChanged(value))
-    override fun onCreatePointTitleChange(value: String) = holder.accept(MapStore.Intent.CreatePoint.TitleChanged(value))
+    override fun onCreatePointLatitudeChange(value: String) =
+        holder.accept(MapStore.Intent.CreatePoint.LatitudeChanged(value))
+    override fun onCreatePointLongitudeChange(value: String) =
+        holder.accept(MapStore.Intent.CreatePoint.LongitudeChanged(value))
+    override fun onCreatePointTitleChange(value: String) =
+        holder.accept(MapStore.Intent.CreatePoint.TitleChanged(value))
     override fun onCreatePointConfirm() = holder.accept(MapStore.Intent.CreatePoint.Confirmed)
     override fun onCreatePointSheetDismiss() = holder.accept(MapStore.Intent.CreatePoint.SheetDismissed)
     override fun onDrawingAddPositionClick() = holder.accept(MapStore.Intent.Drawing.AddPositionClicked)
@@ -67,10 +71,12 @@ internal class DefaultMapScreenComponent(
             featureKey = featureKey,
             featureType = featureType.toStoreFeatureType(),
             anchor = anchor.toStoreAnchor(),
-        )
+        ),
     )
 
-    override fun onFeatureInfoWindowDismiss() = holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
+    override fun onFeatureInfoWindowDismiss() = holder.accept(
+        MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed,
+    )
 
     private companion object {
         const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"

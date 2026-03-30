@@ -7,10 +7,7 @@ import ru.tech.demomapapp.feature.map.ui.MapScreenContent
 import ru.tech.demomapapp.root.api.RootComponent
 
 @Composable
-fun RootContent(
-    component: RootComponent,
-    modifier: Modifier = Modifier,
-) {
+fun RootContent(component: RootComponent, modifier: Modifier = Modifier) {
     Children(
         stack = component.stack,
         modifier = modifier,

@@ -82,8 +82,7 @@ internal fun ShapeDrawingControlsOverlay(
     }
 }
 
-private fun minimumVertexCount(mode: MapScreenComponent.DrawingMode): Int =
-    when (mode) {
-        MapScreenComponent.DrawingMode.LINE -> 2
-        MapScreenComponent.DrawingMode.POLYGON -> 3
-    }
+private fun minimumVertexCount(mode: MapScreenComponent.DrawingMode): Int = when (mode) {
+    MapScreenComponent.DrawingMode.LINE -> 2
+    MapScreenComponent.DrawingMode.POLYGON -> 3
+}

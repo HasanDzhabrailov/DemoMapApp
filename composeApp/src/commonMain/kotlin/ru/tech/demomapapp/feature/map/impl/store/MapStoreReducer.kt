@@ -6,177 +6,176 @@ import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 internal class MapStoreReducer(
     private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
 ) : Reducer<MapStore.State, MapStoreMessage> {
-    override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State =
-        when (msg) {
-            is MapStoreMessage.CameraIdleReceived -> copy(
-                lastCameraSnapshot = msg.snapshot,
-                selectedFeatureInfoWindow = null,
-            )
+    override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State = when (msg) {
+        is MapStoreMessage.CameraIdleReceived -> copy(
+            lastCameraSnapshot = msg.snapshot,
+            selectedFeatureInfoWindow = null,
+        )
 
-            is MapStoreMessage.CenterMarkerMenuDismissed -> copy(
-                isCenterMarkerMenuVisible = false,
-            )
+        is MapStoreMessage.CenterMarkerMenuDismissed -> copy(
+            isCenterMarkerMenuVisible = false,
+        )
 
-            is MapStoreMessage.CenterMarkerMenuOpened -> {
-                if (drawingMode != null) {
-                    this
-                } else {
-                    copy(
-                        isMapToolsMenuVisible = false,
-                        isCenterMarkerMenuVisible = true,
-                        selectedFeatureInfoWindow = null,
-                    )
-                }
-            }
-
-            is MapStoreMessage.CreatePointLatitudeChanged -> updateCreatePointDraft {
-                copy(latitudeInput = msg.value)
-            }
-
-            is MapStoreMessage.CreatePointLongitudeChanged -> updateCreatePointDraft {
-                copy(longitudeInput = msg.value)
-            }
-
-            is MapStoreMessage.CreatePointSheetDismissed -> copy(
-                isCreatePointSheetVisible = false,
-                createPointDraft = null,
-            )
-
-            is MapStoreMessage.CreatePointSheetOpened -> copy(
-                isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
-                isCreatePointSheetVisible = lastCameraSnapshot != null,
-                createPointDraft = lastCameraSnapshot?.toCreatePointDraft(),
-                selectedFeatureInfoWindow = null,
-            )
-
-            is MapStoreMessage.CreatePointTitleChanged -> updateCreatePointDraft {
-                copy(titleInput = msg.value)
-            }
-
-            is MapStoreMessage.CreatePointCreated -> copy(
-                mapState = mapState.copy(points = mapState.points + msg.point),
-                isCreatePointSheetVisible = false,
-                createPointDraft = null,
-            )
-
-            is MapStoreMessage.DrawingDismissed -> copy(
-                drawingMode = null,
-                shapeDrawingDraft = null,
-                isCreateShapeSheetVisible = false,
-            )
-
-            is MapStoreMessage.DrawingStarted -> copy(
-                isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
-                isCreatePointSheetVisible = false,
-                createPointDraft = null,
-                drawingMode = msg.mode,
-                shapeDrawingDraft = MapStore.ShapeDrawingDraft(mode = msg.mode),
-                isCreateShapeSheetVisible = false,
-                selectedFeatureInfoWindow = null,
-            )
-
-            is MapStoreMessage.DrawingPositionAdded -> updateShapeDrawingDraft(
-                clearSelectedFeatureInfoWindow = true,
-            ) { draft ->
-                shapeDrawingDraftUpdater.addVertex(draft, msg.snapshot)
-            }
-
-            is MapStoreMessage.DrawingLastPositionRemoved -> updateShapeDrawingDraft { draft ->
-                shapeDrawingDraftUpdater.removeLastVertex(draft)
-            }
-
-            is MapStoreMessage.FeatureInfoWindowOpened -> copy(
-                isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
-                selectedFeatureInfoWindow = msg.infoWindow,
-            )
-
-            is MapStoreMessage.FeatureInfoWindowDismissed -> copy(
-                selectedFeatureInfoWindow = null,
-            )
-
-            is MapStoreMessage.LineCreated -> copy(
-                mapState = mapState.copy(lines = mapState.lines + msg.line),
-                drawingMode = null,
-                shapeDrawingDraft = null,
-                isCreateShapeSheetVisible = false,
-            )
-
-            is MapStoreMessage.CurrentLocationMarkerUpdated -> copy(
-                myLocationMode = msg.mode,
-                currentLocationMarker = msg.marker,
-            )
-
-            is MapStoreMessage.MapToolsMenuDismissed -> copy(
-                isMapToolsMenuVisible = false,
-            )
-
-            is MapStoreMessage.MapToolsMenuToggled -> {
-                val isMenuVisible = !isMapToolsMenuVisible
+        is MapStoreMessage.CenterMarkerMenuOpened -> {
+            if (drawingMode != null) {
+                this
+            } else {
                 copy(
-                    isMapToolsMenuVisible = isMenuVisible,
-                    isCenterMarkerMenuVisible = if (isMenuVisible) {
-                        false
-                    } else {
-                        isCenterMarkerMenuVisible
-                    },
-                    selectedFeatureInfoWindow = if (isMenuVisible) {
-                        null
-                    } else {
-                        selectedFeatureInfoWindow
-                    },
+                    isMapToolsMenuVisible = false,
+                    isCenterMarkerMenuVisible = true,
+                    selectedFeatureInfoWindow = null,
                 )
             }
-
-            is MapStoreMessage.ShapeSheetDismissed -> copy(
-                isCreateShapeSheetVisible = false,
-            )
-
-            is MapStoreMessage.ShapeSheetOpened -> {
-                val draft = shapeDrawingDraft
-                if (draft != null && draft.canOpenDetails()) {
-                    copy(isCreateShapeSheetVisible = true)
-                } else {
-                    this
-                }
-            }
-
-            is MapStoreMessage.ShapeTitleChanged -> {
-                val draft = shapeDrawingDraft ?: return this
-                copy(shapeDrawingDraft = draft.copy(titleInput = msg.value))
-            }
-
-            is MapStoreMessage.PolygonCreated -> copy(
-                mapState = mapState.copy(polygons = mapState.polygons + msg.polygon),
-                drawingMode = null,
-                shapeDrawingDraft = null,
-                isCreateShapeSheetVisible = false,
-            )
-
-            is MapStoreMessage.RulerCleared -> copy(
-                rulerMeasurement = null,
-                rulerInfoWindow = null,
-            )
-
-            is MapStoreMessage.RulerDisabled -> copy(
-                isRulerEnabled = false,
-                rulerMeasurement = null,
-                rulerInfoWindow = null,
-            )
-
-            is MapStoreMessage.RulerEnabled -> copy(
-                isRulerEnabled = true,
-            )
-
-            is MapStoreMessage.RulerMeasurementUpdated -> copy(
-                rulerMeasurement = msg.measurement,
-                rulerInfoWindow = msg.infoWindow,
-            )
-
-            is MapStoreMessage.StateSynced -> msg.state
         }
+
+        is MapStoreMessage.CreatePointLatitudeChanged -> updateCreatePointDraft {
+            copy(latitudeInput = msg.value)
+        }
+
+        is MapStoreMessage.CreatePointLongitudeChanged -> updateCreatePointDraft {
+            copy(longitudeInput = msg.value)
+        }
+
+        is MapStoreMessage.CreatePointSheetDismissed -> copy(
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+        )
+
+        is MapStoreMessage.CreatePointSheetOpened -> copy(
+            isMapToolsMenuVisible = false,
+            isCenterMarkerMenuVisible = false,
+            isCreatePointSheetVisible = lastCameraSnapshot != null,
+            createPointDraft = lastCameraSnapshot?.toCreatePointDraft(),
+            selectedFeatureInfoWindow = null,
+        )
+
+        is MapStoreMessage.CreatePointTitleChanged -> updateCreatePointDraft {
+            copy(titleInput = msg.value)
+        }
+
+        is MapStoreMessage.CreatePointCreated -> copy(
+            mapState = mapState.copy(points = mapState.points + msg.point),
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+        )
+
+        is MapStoreMessage.DrawingDismissed -> copy(
+            drawingMode = null,
+            shapeDrawingDraft = null,
+            isCreateShapeSheetVisible = false,
+        )
+
+        is MapStoreMessage.DrawingStarted -> copy(
+            isMapToolsMenuVisible = false,
+            isCenterMarkerMenuVisible = false,
+            isCreatePointSheetVisible = false,
+            createPointDraft = null,
+            drawingMode = msg.mode,
+            shapeDrawingDraft = MapStore.ShapeDrawingDraft(mode = msg.mode),
+            isCreateShapeSheetVisible = false,
+            selectedFeatureInfoWindow = null,
+        )
+
+        is MapStoreMessage.DrawingPositionAdded -> updateShapeDrawingDraft(
+            clearSelectedFeatureInfoWindow = true,
+        ) { draft ->
+            shapeDrawingDraftUpdater.addVertex(draft, msg.snapshot)
+        }
+
+        is MapStoreMessage.DrawingLastPositionRemoved -> updateShapeDrawingDraft { draft ->
+            shapeDrawingDraftUpdater.removeLastVertex(draft)
+        }
+
+        is MapStoreMessage.FeatureInfoWindowOpened -> copy(
+            isMapToolsMenuVisible = false,
+            isCenterMarkerMenuVisible = false,
+            selectedFeatureInfoWindow = msg.infoWindow,
+        )
+
+        is MapStoreMessage.FeatureInfoWindowDismissed -> copy(
+            selectedFeatureInfoWindow = null,
+        )
+
+        is MapStoreMessage.LineCreated -> copy(
+            mapState = mapState.copy(lines = mapState.lines + msg.line),
+            drawingMode = null,
+            shapeDrawingDraft = null,
+            isCreateShapeSheetVisible = false,
+        )
+
+        is MapStoreMessage.CurrentLocationMarkerUpdated -> copy(
+            myLocationMode = msg.mode,
+            currentLocationMarker = msg.marker,
+        )
+
+        is MapStoreMessage.MapToolsMenuDismissed -> copy(
+            isMapToolsMenuVisible = false,
+        )
+
+        is MapStoreMessage.MapToolsMenuToggled -> {
+            val isMenuVisible = !isMapToolsMenuVisible
+            copy(
+                isMapToolsMenuVisible = isMenuVisible,
+                isCenterMarkerMenuVisible = if (isMenuVisible) {
+                    false
+                } else {
+                    isCenterMarkerMenuVisible
+                },
+                selectedFeatureInfoWindow = if (isMenuVisible) {
+                    null
+                } else {
+                    selectedFeatureInfoWindow
+                },
+            )
+        }
+
+        is MapStoreMessage.ShapeSheetDismissed -> copy(
+            isCreateShapeSheetVisible = false,
+        )
+
+        is MapStoreMessage.ShapeSheetOpened -> {
+            val draft = shapeDrawingDraft
+            if (draft != null && draft.canOpenDetails()) {
+                copy(isCreateShapeSheetVisible = true)
+            } else {
+                this
+            }
+        }
+
+        is MapStoreMessage.ShapeTitleChanged -> {
+            val draft = shapeDrawingDraft ?: return this
+            copy(shapeDrawingDraft = draft.copy(titleInput = msg.value))
+        }
+
+        is MapStoreMessage.PolygonCreated -> copy(
+            mapState = mapState.copy(polygons = mapState.polygons + msg.polygon),
+            drawingMode = null,
+            shapeDrawingDraft = null,
+            isCreateShapeSheetVisible = false,
+        )
+
+        is MapStoreMessage.RulerCleared -> copy(
+            rulerMeasurement = null,
+            rulerInfoWindow = null,
+        )
+
+        is MapStoreMessage.RulerDisabled -> copy(
+            isRulerEnabled = false,
+            rulerMeasurement = null,
+            rulerInfoWindow = null,
+        )
+
+        is MapStoreMessage.RulerEnabled -> copy(
+            isRulerEnabled = true,
+        )
+
+        is MapStoreMessage.RulerMeasurementUpdated -> copy(
+            rulerMeasurement = msg.measurement,
+            rulerInfoWindow = msg.infoWindow,
+        )
+
+        is MapStoreMessage.StateSynced -> msg.state
+    }
 
     private fun MapStore.State.updateCreatePointDraft(
         transform: MapStore.CreatePointDraft.() -> MapStore.CreatePointDraft,
@@ -200,12 +199,10 @@ internal class MapStoreReducer(
         )
     }
 
-    private fun MapStore.ShapeDrawingDraft.canOpenDetails(): Boolean =
-        fixedVertices.size >= minimumVertexCount()
+    private fun MapStore.ShapeDrawingDraft.canOpenDetails(): Boolean = fixedVertices.size >= minimumVertexCount()
 
-    private fun MapStore.ShapeDrawingDraft.minimumVertexCount(): Int =
-        when (mode) {
-            MapStore.DrawingMode.LINE -> 2
-            MapStore.DrawingMode.POLYGON -> 3
-        }
+    private fun MapStore.ShapeDrawingDraft.minimumVertexCount(): Int = when (mode) {
+        MapStore.DrawingMode.LINE -> 2
+        MapStore.DrawingMode.POLYGON -> 3
+    }
 }

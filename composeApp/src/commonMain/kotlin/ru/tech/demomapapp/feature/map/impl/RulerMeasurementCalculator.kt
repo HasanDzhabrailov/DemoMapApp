@@ -26,25 +26,24 @@ internal object DefaultRulerMeasurementCalculator : RulerMeasurementCalculator {
         startLongitude: Double,
         endLatitude: Double,
         endLongitude: Double,
-    ): RulerMeasurement =
-        RulerMeasurement(
+    ): RulerMeasurement = RulerMeasurement(
+        startLatitude = startLatitude,
+        startLongitude = startLongitude,
+        endLatitude = endLatitude,
+        endLongitude = endLongitude,
+        distanceMeters = haversineDistanceMeters(
             startLatitude = startLatitude,
             startLongitude = startLongitude,
             endLatitude = endLatitude,
             endLongitude = endLongitude,
-            distanceMeters = haversineDistanceMeters(
-                startLatitude = startLatitude,
-                startLongitude = startLongitude,
-                endLatitude = endLatitude,
-                endLongitude = endLongitude,
-            ),
-            trueAzimuthDegrees = initialBearingDegrees(
-                startLatitude = startLatitude,
-                startLongitude = startLongitude,
-                endLatitude = endLatitude,
-                endLongitude = endLongitude,
-            ),
-        )
+        ),
+        trueAzimuthDegrees = initialBearingDegrees(
+            startLatitude = startLatitude,
+            startLongitude = startLongitude,
+            endLatitude = endLatitude,
+            endLongitude = endLongitude,
+        ),
+    )
 
     private fun haversineDistanceMeters(
         startLatitude: Double,
