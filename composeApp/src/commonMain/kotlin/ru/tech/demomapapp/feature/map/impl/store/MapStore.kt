@@ -110,11 +110,10 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         val isMapToolsMenuVisible: Boolean = false,
         val myLocationMode: MyLocationMode = MyLocationMode.OFF,
         val currentLocationMarker: MapLocationMarker? = null,
-        val pendingLocationRequest: MapLocationRequest? = null,
+        val activeLocationRequest: MapLocationRequest? = null,
         val isRulerEnabled: Boolean = false,
         val rulerMeasurement: RulerMeasurement? = null,
         val rulerInfoWindow: RulerInfoWindowState? = null,
-        val pendingViewportCommand: MapViewportCommand? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
@@ -130,11 +129,9 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
                 isMapToolsMenuVisible = isMapToolsMenuVisible,
                 myLocationMode = myLocationMode,
                 currentLocationMarker = currentLocationMarker,
-                pendingLocationRequest = pendingLocationRequest,
                 isRulerEnabled = isRulerEnabled,
                 rulerMeasurement = rulerMeasurement,
                 rulerInfoWindow = rulerInfoWindow,
-                pendingViewportCommand = pendingViewportCommand,
                 isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
                 isCreatePointSheetVisible = isCreatePointSheetVisible,
                 createPointDraft = createPointDraft?.toComponentDraft(),
@@ -145,18 +142,20 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             )
 
         companion object {
-            fun fromModel(model: MapScreenComponent.Model): State =
+            fun fromModel(
+                model: MapScreenComponent.Model,
+                activeLocationRequest: MapLocationRequest? = null,
+            ): State =
                 State(
                     mapState = model.mapState,
                     lastCameraSnapshot = model.lastCameraSnapshot,
                     isMapToolsMenuVisible = model.isMapToolsMenuVisible,
                     myLocationMode = model.myLocationMode,
                     currentLocationMarker = model.currentLocationMarker,
-                    pendingLocationRequest = model.pendingLocationRequest,
+                    activeLocationRequest = activeLocationRequest,
                     isRulerEnabled = model.isRulerEnabled,
                     rulerMeasurement = model.rulerMeasurement,
                     rulerInfoWindow = model.rulerInfoWindow,
-                    pendingViewportCommand = model.pendingViewportCommand,
                     isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
                     isCreatePointSheetVisible = model.isCreatePointSheetVisible,
                     createPointDraft = model.createPointDraft?.toStoreDraft(),

@@ -6,10 +6,8 @@ import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
-import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStore
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
@@ -28,7 +26,10 @@ internal class DefaultMapScreenComponent(
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
-    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
+    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(
+        rulerMeasurementCalculator = rulerMeasurementCalculator,
+        rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
+    ),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val mapStoreHolder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
         MapStoreHolder(
@@ -45,6 +46,8 @@ internal class DefaultMapScreenComponent(
                 lastCameraSnapshot = snapshot,
                 selectedFeatureInfoWindow = null,
             ),
+            rulerMeasurementCalculator = rulerMeasurementCalculator,
+            rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
         ))
     }
 
@@ -58,16 +61,10 @@ internal class DefaultMapScreenComponent(
 
     override fun onZoomInClick() {
         acceptIntent(MapStore.Intent.Viewport.ZoomInClicked)
-        setModel(currentModel().copy(
-            pendingViewportCommand = MapViewportCommand.ZoomIn,
-        ))
     }
 
     override fun onZoomOutClick() {
         acceptIntent(MapStore.Intent.Viewport.ZoomOutClicked)
-        setModel(currentModel().copy(
-            pendingViewportCommand = MapViewportCommand.ZoomOut,
-        ))
     }
 
     override fun onAvailableMapsClick() {
@@ -80,35 +77,6 @@ internal class DefaultMapScreenComponent(
 
     override fun onGpsToggle() {
         acceptIntent(MapStore.Intent.Location.GpsToggled)
-        val model = currentModel()
-        if (model.pendingLocationRequest == MapLocationRequest.EnableGpsLocationRequest) {
-            setModel(recalculateRulerState(
-                model.copy(
-                    myLocationMode = MyLocationMode.OFF,
-                    currentLocationMarker = null,
-                    pendingLocationRequest = null,
-                ),
-            ))
-            return
-        }
-
-        setModel(recalculateRulerState(
-            when (model.myLocationMode) {
-            MyLocationMode.GPS -> model.copy(
-                myLocationMode = MyLocationMode.OFF,
-                currentLocationMarker = null,
-                pendingLocationRequest = null,
-            )
-
-            MyLocationMode.OFF,
-            MyLocationMode.MANUAL_PLACEHOLDER,
-            -> model.copy(
-                myLocationMode = MyLocationMode.OFF,
-                currentLocationMarker = null,
-                pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
-            )
-            },
-        ))
     }
 
     override fun onMyLocationClick() {
@@ -133,83 +101,21 @@ internal class DefaultMapScreenComponent(
                 )
             }
             },
+            rulerMeasurementCalculator = rulerMeasurementCalculator,
+            rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
         ))
     }
 
     override fun onCurrentLocationFocusClick() {
         acceptIntent(MapStore.Intent.Location.CurrentLocationFocusClicked)
-        val model = currentModel()
-        val marker = model.currentLocationMarker
-        setModel(when {
-            marker != null -> {
-                model.copy(
-                    pendingViewportCommand = MapViewportCommand.MoveTo(
-                        latitude = marker.latitude,
-                        longitude = marker.longitude,
-                    ),
-                )
-            }
-
-            model.myLocationMode == MyLocationMode.GPS -> {
-                model.copy(
-                    pendingLocationRequest = MapLocationRequest.RecenterToGpsLocationRequest,
-                )
-            }
-
-            else -> model
-        })
     }
 
     override fun onLocationRequestConsumed() {
-        acceptIntent(MapStore.Intent.Location.LocationRequestConsumed)
-        setModel(currentModel().copy(
-            pendingLocationRequest = null,
-        ))
+        mapStoreHolder.consumeLocationRequest()
     }
 
     override fun onLocationResult(result: LocationRequestResult) {
         acceptIntent(MapStore.Intent.Location.LocationResultReceived(result))
-        val model = currentModel()
-        val request = model.pendingLocationRequest
-        setModel(recalculateRulerState(
-            when (result) {
-            LocationRequestResult.PermissionDenied -> {
-                model.copy(
-                    myLocationMode = MyLocationMode.OFF,
-                    currentLocationMarker = null,
-                    pendingLocationRequest = null,
-                )
-            }
-
-            LocationRequestResult.LocationUnavailable -> {
-                if (model.myLocationMode == MyLocationMode.GPS && request != MapLocationRequest.EnableGpsLocationRequest) {
-                    model.copy(
-                        pendingLocationRequest = null,
-                    )
-                } else {
-                    model.copy(
-                        myLocationMode = MyLocationMode.OFF,
-                        currentLocationMarker = null,
-                        pendingLocationRequest = null,
-                    )
-                }
-            }
-
-            is LocationRequestResult.LocationResolved -> model.copy(
-                myLocationMode = MyLocationMode.GPS,
-                currentLocationMarker = MapLocationMarker(
-                    latitude = result.latitude,
-                    longitude = result.longitude,
-                    isPlaceholder = false,
-                ),
-                pendingLocationRequest = null,
-                pendingViewportCommand = MapViewportCommand.MoveTo(
-                    latitude = result.latitude,
-                    longitude = result.longitude,
-                ),
-            )
-            },
-        ))
     }
 
     override fun onRulerToggle() {
@@ -222,15 +128,14 @@ internal class DefaultMapScreenComponent(
         } else {
             recalculateRulerState(
                 model.copy(isRulerEnabled = true),
+                rulerMeasurementCalculator = rulerMeasurementCalculator,
+                rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
             )
         })
     }
 
     override fun onViewportCommandConsumed() {
-        acceptIntent(MapStore.Intent.Viewport.ViewportCommandConsumed)
-        setModel(currentModel().copy(
-            pendingViewportCommand = null,
-        ))
+        mapStoreHolder.consumeViewportCommand()
     }
 
     override fun onCenterMarkerClick() {
@@ -400,41 +305,6 @@ internal class DefaultMapScreenComponent(
     private fun defaultModel(): MapScreenComponent.Model =
         MapScreenComponent.Model()
 
-    private fun recalculateRulerState(model: MapScreenComponent.Model): MapScreenComponent.Model {
-        if (!model.isRulerEnabled) {
-            return clearRulerState(model)
-        }
-
-        val snapshot = model.lastCameraSnapshot
-        val updatedModel = if (model.currentLocationMarker == null && snapshot != null) {
-            model.copy(
-                myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
-                currentLocationMarker = snapshot.toPlaceholderLocationMarker(),
-            )
-        } else {
-            model
-        }
-
-        val marker = updatedModel.currentLocationMarker ?: return clearRulerState(updatedModel)
-        val endSnapshot = updatedModel.lastCameraSnapshot ?: return clearRulerState(updatedModel)
-        val measurement = rulerMeasurementCalculator.calculate(
-            startLatitude = marker.latitude,
-            startLongitude = marker.longitude,
-            endLatitude = endSnapshot.latitude,
-            endLongitude = endSnapshot.longitude,
-        )
-        return updatedModel.copy(
-            rulerMeasurement = measurement,
-            rulerInfoWindow = rulerInfoWindowStateFormatter.format(measurement),
-        )
-    }
-
-    private fun clearRulerState(model: MapScreenComponent.Model): MapScreenComponent.Model =
-        model.copy(
-            rulerMeasurement = null,
-            rulerInfoWindow = null,
-        )
-
     private fun currentModel(): MapScreenComponent.Model = model.value
 
     private fun acceptIntent(intent: MapStore.Intent) {
@@ -444,13 +314,6 @@ internal class DefaultMapScreenComponent(
     private fun setModel(model: MapScreenComponent.Model) {
         mapStoreHolder.updateModel(model)
     }
-
-    private fun MapCameraSnapshot.toPlaceholderLocationMarker(): MapLocationMarker =
-        MapLocationMarker(
-            latitude = latitude,
-            longitude = longitude,
-            isPlaceholder = true,
-        )
 
     private companion object {
         const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"
