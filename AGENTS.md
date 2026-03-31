@@ -13,7 +13,27 @@ Before making changes, read:
 - `docs/tasklist/<ticket>.md`
 
 Work only within the current ticket and its business area.
+
 Changes in shared/core modules are allowed only when they are minimally required by the current ticket.
+
+Repository state is the source of truth.
+Documentation may be outdated.
+
+If docs and code differ:
+- report mismatch
+- do not assume docs are correct
+
+If a change is not required for the current task:
+- do not do it
+
+---
+
+## Operating Principle
+
+Assumptions are not evidence.
+Only verified facts can be used to declare completion.
+
+---
 
 ## Stack
 
@@ -24,106 +44,351 @@ Changes in shared/core modules are allowed only when they are minimally required
 - Room
 - MapLibre via `AndroidView`
 
+---
+
 ## Architecture Rules
 
 - KMP-first. Prefer `commonMain` whenever possible.
 - Keep Android-specific code only in `androidMain` / `android`.
 - Do not leak platform-specific code into business logic.
+
 - This is a modular super app. Each module owns one business area.
 - Use `feature/api/impl` structure.
 - There is no separate domain layer.
+
 - Design and refactor by responsibility ownership and reason to change, not by file size.
 - Split files only when responsibilities diverge or would otherwise create mixed ownership.
-- New screen logic must use Decompose component + MVIKotlin Store as the default structure.
-- Decompose component is a thin lifecycle holder, Store holder, and navigation bridge only.
-- MVIKotlin Store is the center of screen logic and state transitions.
-- Reducer must stay pure: no IO, time, randomness, platform calls, navigation, or mutation outside returned state.
-- Executor owns side effects and orchestration: use cases, clocks, ids, platform requests, and label publication.
-- Labels are one-shot outputs only; do not move persistent screen state into labels.
-- UI/composables render state and send intents only.
-- Do not put business decisions, data shaping for logic, or side effects into UI code.
-- Renderer/adapters are platform rendering only; keep MapLibre and Android view glue out of business logic.
-- Prefer introducing small focused collaborators over growing god components, god stores, or god renderers.
-- Do not add compatibility layers that duplicate Store state in component/UI unless a boundary strictly requires it.
-- Shared/core changes are allowed only when the current ticket cannot be completed cleanly without them.
-- Prefer composition, interfaces, delegation, adapters, and manual DI over inheritance.
-- Do not introduce `Base*` classes.
-- Do not introduce abstract base classes.
-- Do not introduce DI frameworks.
-- Respect SOLID.
-- Respect thread-safety and the Java Memory Model.
-- Use lifecycle-aware coroutines and avoid memory leaks.
 
-## UI Rules
+---
 
-- Compose is UI only.
-- State must be owned outside composables.
-- Composables must emit events only.
-- Do not launch side effects from the composable body.
-- Do not calculate business state in composables when the Store or a focused collaborator can own it.
-- Follow Compose best practices.
-- Avoid unnecessary recompositions, allocations, jank, and heavy work on the main thread.
+## MVI + Decompose Rules (STRICT)
 
-## Map Rules
+- All new screen logic must use:
+  - Decompose Component
+  - MVIKotlin Store
 
-- MapLibre is used for map rendering only.
-- Keep MapLibre integration Android-specific.
-- Do not place business logic inside map rendering code.
+### Responsibilities
+
+**Component**
+- Lifecycle holder
+- Store holder
+- Navigation bridge only
+- No business logic
+
+**Store (Single Source of Truth)**
+- Owns all screen state
+- Handles intents → messages → state
+
+**Reducer**
+- Must be PURE
+- Allowed:
+  - state transformation only
+- Forbidden:
+  - IO
+  - time access
+  - randomness
+  - platform calls
+  - logging
+  - navigation
+  - mutation outside returned state
+
+**Executor**
+- Owns ALL side effects:
+  - use cases
+  - repository calls
+  - time
+  - ids
+  - platform interactions
+  - dispatcher switching
+- Publishes:
+  - messages (state updates)
+  - labels (one-shot events)
+
+**Labels**
+- One-time events only
+- Must NOT contain persistent state
+
+---
+
+## State & Flow Rules
+
+- Store state must be exposed as `StateFlow`
+- StateFlow must be:
+  - immutable from outside
+  - updated only via reducer
+
+- One-off events MUST use Labels
+- Do NOT:
+  - use SharedFlow for UI events as state replacement
+  - expose mutable flows across layers
+
+- Avoid:
+  - global flows
+  - shared mutable streams
+  - uncontrolled replay behavior
+
+---
+
+## Concurrency & Threading Rules
+
+- Executor is responsible for dispatcher management
+- Reducer must be thread-safe and pure
+
+- Rules:
+  - No blocking calls on Main thread
+  - No dispatcher switching in UI or reducer
+  - IO must happen on appropriate dispatcher
+  - State updates must be deterministic
+
+- Respect Java Memory Model:
+  - no unsafe shared mutable state
+  - no race conditions
+
+---
+
+## UI Rules (Compose)
+
+- Compose is UI only
+- Composables:
+  - render state
+  - emit intents
+
+- Forbidden:
+  - business logic
+  - state ownership
+  - side effects in composable body
+  - coroutine launches without lifecycle awareness
+
+- Do NOT:
+  - calculate business state in UI
+  - access repositories directly
+  - mutate state
+
+- Optimize:
+  - avoid unnecessary recompositions
+  - avoid heavy work on Main thread
+
+---
+
+## Map Rules (MapLibre)
+
+- MapLibre is rendering only
+
+- Rules:
+  - No business logic in renderer
+  - No state decisions inside map code
+  - Map state must come from Store only
+  - Renderer must be a pure projection of state
+
+- Keep all MapLibre code Android-specific
+
+---
+
+## Data & Persistence
+
+- Use Room only when required by current task
+- Persistence must not leak into UI or reducer
+
+- Repository:
+  - hides data sources
+  - used only via Executor
+
+---
+
+## Error Handling Rules
+
+- Do NOT throw raw exceptions to UI
+
+- Errors must be:
+  - mapped to State (for persistent UI)
+  - or Labels (for one-shot events)
+
+- Follow existing project patterns
+- If no pattern exists:
+  - keep solution minimal
+  - do not introduce global frameworks
+
+---
 
 ## Feature Workflow Rules
 
-- Start new screen work from Store intent/state/label design, then wire component, then UI, then renderer/platform adapters.
-- Keep component APIs intent-shaped; avoid exposing business logic helpers from composables or renderers.
-- When adding behavior, first decide whether it belongs to reducer, executor, label handling, or renderer before editing files.
-- If a file starts owning multiple responsibilities, extract the narrower responsibility instead of adding more branches.
+- Always start from:
+  1. Store (State / Intent / Label design)
+  2. Executor logic
+  3. Component wiring
+  4. UI
+  5. Renderer / platform adapters
 
-## Anti-Patterns
+- Component API must be intent-driven
 
-- Fake-MVI: component or UI mutating screen state directly instead of going through Store intents/messages.
-- Reducer side effects: clocks, ids, logging, navigation, platform access, or use case execution in reducer code.
-- UI business logic: composables deciding feature behavior beyond trivial presentation concerns.
-- Renderer business logic: MapLibre click/render code deciding product rules or editing feature state.
-- God files created only because "it is easier here" when ownership clearly differs.
+- Before adding logic:
+  decide if it belongs to:
+  - reducer
+  - executor
+  - label handling
+  - renderer
+
+---
+
+## Anti-Patterns (STRICTLY FORBIDDEN)
+
+- Fake-MVI:
+  - UI or component mutating state directly
+
+- Reducer side effects:
+  - IO, time, logging, navigation, platform calls
+
+- UI business logic:
+  - decision making beyond rendering
+
+- Renderer business logic:
+  - map interactions changing feature rules
+
+- God classes:
+  - mixing multiple responsibilities
+
+- Base classes / inheritance abuse:
+  - DO NOT create `Base*`
+  - DO NOT create abstract hierarchies
+
+- DI frameworks:
+  - DO NOT introduce
+
+- Scope violations:
+  - modifying unrelated modules
+
+- False completion reporting
+
+---
 
 ## Background Work Rules
 
-- Use WorkManager / Foreground Service / Service only when clearly justified.
-- Keep business logic out of orchestration/background framework classes.
+Use only if clearly justified:
 
-## Persistence
+- WorkManager
+- Foreground Service
+- Android Service
 
-- Use Room only where persistence is required by the current task.
-- Keep persistence concerns out of UI code.
+- No business logic in orchestration layer
 
-## Formatting, Static Analysis, and Tests
+---
 
-Use the existing project setup for formatting and verification.
+## Formatting, Static Analysis, Tests
 
-Preferred commands, if configured in this repository:
+Use project tools if available:
 
-- `./gradlew ktlintFormat` — auto-format code to fix style violations
-- `./gradlew ktlintCheck` — verify code style compliance
+- `./gradlew ktlintFormat`
+- `./gradlew ktlintCheck`
 - `./gradlew detekt`
 - `./gradlew test`
 
-Before finishing a task, run the smallest relevant verification set for the changed code.
+Run ONLY relevant tasks.
 
-## Errors and Secrets
+---
 
-- Do not hardcode secrets, tokens, or credentials.
-- Follow existing project patterns for error handling and logging.
-- If there is no existing pattern, keep changes minimal and do not invent a new cross-project error framework.
+## Verification Rules (STRICT)
+
+- Never mark task as DONE without verification
+- Never claim success without:
+  - command
+  - result
+
+- Do not assume:
+  - command existence
+  - success
+
+- If verification not possible:
+  - explicitly state why
+
+- If partial:
+  - mark as PARTIALLY COMPLETE
+
+---
+
+## Definition of Done (DoD)
+
+Task is DONE only if:
+
+- Implementation matches ticket scope
+- Store logic is correct and complete
+- UI wired via intents only
+- No business logic leaks (UI / renderer / component)
+- Reducer is pure
+- Executor handles all side effects
+- Files changed are explainable
+- Verification executed and results reported
+
+If any condition fails → NOT DONE
+
+---
 
 ## Task Execution Rules
 
-- Make the smallest change that satisfies the current task.
-- Do not expand scope without explicit need.
-- Update `docs/tasklist/<ticket>.md` after completing a task step.
-- After changes, provide:
-  - a concise diff summary
-  - a suggested commit message
+- Make smallest change possible
+- Do not expand scope
+
+- After completion:
+  - update `docs/tasklist/<ticket>.md`
+
+- Provide:
+  - concise diff summary
+  - commit message
+
+- If extra files modified:
+  - explain why
+
+---
+
+## Completion Status
+
+- DONE
+- PARTIALLY COMPLETE
+- BLOCKED
+
+Code written ≠ task completed
+
+---
+
+## Required Report Format
+
+### Result
+What was implemented
+
+### Files Changed
+List with purpose
+
+### Verification
+For each command:
+- command
+- result (PASS / FAIL / NOT RUN / NOT AVAILABLE)
+- explanation
+
+### Limitations
+What is not verified
+
+### Risks
+Potential regressions
+
+### Suggested Commit Message
+
+Reports without verification are INVALID
+
+---
+
+## Errors and Secrets
+
+- Never hardcode:
+  - tokens
+  - credentials
+  - secrets
+
+- Follow project logging patterns
+
+---
 
 ## Output Preference
 
-Prefer compact, precise answers.
-Do not propose advanced workflow, custom agents, hooks, commands, or JSON config unless explicitly requested.
+- Be concise
+- Be precise
+- No speculative improvements
+- No workflow inventions unless requested
