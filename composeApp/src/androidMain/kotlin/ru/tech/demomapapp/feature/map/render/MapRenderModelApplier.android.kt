@@ -16,6 +16,7 @@ internal class MapRenderModelApplier {
         val map = holder.awaitMap()
         val style = map.loadStyle(model.style, lastAppliedStyle)
         lastAppliedStyle = model.style
+        style.applyRasterTileLayers(model.tileLayers)
         style.applyPoints(model.points)
         style.applyCurrentLocationMarker(model.currentLocationMarker)
         style.applyRulerMeasurement(model.rulerMeasurement)

@@ -1,6 +1,9 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import com.arkivanov.mvikotlin.core.store.Store
+import ru.tech.demomapapp.feature.map.api.MapCatalogItem
+import ru.tech.demomapapp.feature.map.api.MapLayerCatalog
+import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
@@ -32,7 +35,33 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
 
             object AvailableMapsClicked : Tools
 
+            object AvailableMapsDismissed : Tools
+
+            data class AvailableMapSelected(val mapId: String) : Tools
+
+            object AvailableMapConfirmed : Tools
+
+            object AvailableMapSelectionDismissed : Tools
+
             object MapsOnScreenClicked : Tools
+
+            object MapsOnScreenDismissed : Tools
+
+            data class OverlayLayerActionsClicked(val layerId: String) : Tools
+
+            object OverlayLayerActionsDismissed : Tools
+
+            object OverlayLayerMoveUpClicked : Tools
+
+            object OverlayLayerMoveDownClicked : Tools
+
+            object OverlayLayerRemoveClicked : Tools
+
+            object OverlayLayerOpacityClicked : Tools
+
+            data class OverlayLayerOpacityChanged(val value: Float) : Tools
+
+            object OverlayLayerOpacityDismissed : Tools
         }
 
         sealed interface Location : Intent {
@@ -104,8 +133,14 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
 
     data class State(
         val mapState: MapState = MapState(),
+        val availableMapCatalog: List<MapCatalogItem> = MapLayerCatalog.items(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
         val isMapToolsMenuVisible: Boolean = false,
+        val isAvailableMapsSheetVisible: Boolean = false,
+        val selectedAvailableMap: MapCatalogItem? = null,
+        val isMapsOnScreenSheetVisible: Boolean = false,
+        val selectedOverlayLayer: MapLayerEntry? = null,
+        val editingOverlayOpacityLayer: MapLayerEntry? = null,
         val myLocationMode: MyLocationMode = MyLocationMode.OFF,
         val currentLocationMarker: MapLocationMarker? = null,
         val activeLocationRequest: MapLocationRequest? = null,
@@ -122,8 +157,14 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
     ) {
         fun toModel(): MapScreenComponent.Model = MapScreenComponent.Model(
             mapState = mapState,
+            availableMapCatalog = availableMapCatalog,
             lastCameraSnapshot = lastCameraSnapshot,
             isMapToolsMenuVisible = isMapToolsMenuVisible,
+            isAvailableMapsSheetVisible = isAvailableMapsSheetVisible,
+            selectedAvailableMap = selectedAvailableMap,
+            isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
+            selectedOverlayLayer = selectedOverlayLayer,
+            editingOverlayOpacityLayer = editingOverlayOpacityLayer,
             myLocationMode = myLocationMode,
             currentLocationMarker = currentLocationMarker,
             isRulerEnabled = isRulerEnabled,
@@ -142,8 +183,14 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             fun fromModel(model: MapScreenComponent.Model, activeLocationRequest: MapLocationRequest? = null): State =
                 State(
                     mapState = model.mapState,
+                    availableMapCatalog = model.availableMapCatalog,
                     lastCameraSnapshot = model.lastCameraSnapshot,
                     isMapToolsMenuVisible = model.isMapToolsMenuVisible,
+                    isAvailableMapsSheetVisible = model.isAvailableMapsSheetVisible,
+                    selectedAvailableMap = model.selectedAvailableMap,
+                    isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
+                    selectedOverlayLayer = model.selectedOverlayLayer,
+                    editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
                     myLocationMode = model.myLocationMode,
                     currentLocationMarker = model.currentLocationMarker,
                     activeLocationRequest = activeLocationRequest,

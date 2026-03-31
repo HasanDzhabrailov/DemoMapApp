@@ -3,6 +3,7 @@ package ru.tech.demomapapp.feature.map.impl
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
@@ -18,6 +19,7 @@ import ru.tech.demomapapp.feature.map.render.RenderMapPoint
 import ru.tech.demomapapp.feature.map.render.RenderMapPolygon
 import ru.tech.demomapapp.feature.map.render.RenderMapStyle
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
+import ru.tech.demomapapp.feature.map.render.RenderRasterTileLayer
 import ru.tech.demomapapp.feature.map.render.RenderRulerMeasurement
 
 internal fun MapState.toRenderModel(
@@ -29,6 +31,7 @@ internal fun MapState.toRenderModel(
     rulerArrowGeometryCalculator: RulerArrowGeometryCalculator = DefaultRulerArrowGeometryCalculator,
 ): MapRenderModel = MapRenderModel(
     style = style.toRenderStyle(),
+    tileLayers = overlayLayers.map(MapLayerEntry::toRenderTileLayer),
     points = points.map(MapPoint::toRenderPoint),
     lines = lines.map(MapLine::toRenderLine),
     polygons = polygons.map(MapPolygon::toRenderPolygon),
@@ -42,7 +45,18 @@ internal fun MapState.toRenderModel(
 
 private fun MapStyle.toRenderStyle(): RenderMapStyle = when (this) {
     MapStyle.DEMO -> RenderMapStyle.DEFAULT
+    MapStyle.OPEN_STREET_MAP -> RenderMapStyle.OPEN_STREET_MAP
 }
+
+private fun MapLayerEntry.toRenderTileLayer(): RenderRasterTileLayer = RenderRasterTileLayer(
+    key = id,
+    title = title,
+    templateId = source.templateId,
+    tileSize = source.tileSize,
+    minZoom = source.minZoom,
+    maxZoom = source.maxZoom,
+    opacity = opacity,
+)
 
 private fun MapPoint.toRenderPoint(): RenderMapPoint = RenderMapPoint(
     key = id,

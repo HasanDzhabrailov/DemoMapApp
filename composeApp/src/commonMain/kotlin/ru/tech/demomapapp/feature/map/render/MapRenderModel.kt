@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.render
 
 data class MapRenderModel(
     val style: RenderMapStyle = RenderMapStyle.DEFAULT,
+    val tileLayers: List<RenderRasterTileLayer> = emptyList(),
     val points: List<RenderMapPoint> = emptyList(),
     val lines: List<RenderMapLine> = emptyList(),
     val polygons: List<RenderMapPolygon> = emptyList(),
@@ -65,6 +66,16 @@ data class RenderDrawingPreview(
     val fixedPolygonVertices: List<RenderMapVertex> = emptyList(),
 )
 
+data class RenderRasterTileLayer(
+    val key: String,
+    val title: String,
+    val templateId: String,
+    val tileSize: Int,
+    val minZoom: Float,
+    val maxZoom: Float,
+    val opacity: Float,
+)
+
 data class RenderFeatureClick(
     val featureKey: String,
     val featureType: RenderFeatureType,
@@ -84,4 +95,5 @@ enum class RenderFeatureType {
 
 enum class RenderMapStyle {
     DEFAULT,
+    OPEN_STREET_MAP,
 }

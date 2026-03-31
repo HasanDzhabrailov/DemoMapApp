@@ -6,12 +6,16 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import ru.tech.demomapapp.feature.map.api.MapCatalogItemKind
+import ru.tech.demomapapp.feature.map.api.MapLayerCatalog
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapVertex
+import ru.tech.demomapapp.feature.map.api.MapLayerEntry
+import ru.tech.demomapapp.feature.map.api.MapLayerSourceRef
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
@@ -157,6 +161,69 @@ class MapStoreReducerTest {
         assertFalse(updatedState.isMapToolsMenuVisible)
         assertFalse(updatedState.isCenterMarkerMenuVisible)
         assertEquals("Test", updatedState.selectedFeatureInfoWindow?.title)
+    }
+
+    @Test
+    fun `available map confirm adds overlay layer and opens loaded layers sheet`() {
+        val selectedMap = MapLayerCatalog.items().first { it.kind == MapCatalogItemKind.OVERLAY_LAYER }
+        val initialState = MapStore.State(
+            isAvailableMapsSheetVisible = true,
+            selectedAvailableMap = selectedMap,
+        )
+
+        val updatedState = reduce(initialState, MapStoreMessage.AvailableMapConfirmed)
+
+        assertEquals(1, updatedState.mapState.overlayLayers.size)
+        assertEquals(selectedMap.title, updatedState.mapState.overlayLayers.single().title)
+        assertTrue(updatedState.isMapsOnScreenSheetVisible)
+        assertFalse(updatedState.isAvailableMapsSheetVisible)
+    }
+
+    @Test
+    fun `overlay layer opacity change updates map state`() {
+        val layer = MapStore.State().availableMapCatalog.first { it.kind == MapCatalogItemKind.OVERLAY_LAYER }
+        val source = layer.source as MapLayerSourceRef.RasterTileTemplate
+        val initialState = MapStore.State(
+            mapState = MapStore.State().mapState.copy(
+                overlayLayers = listOf(
+                    MapLayerEntry(
+                        id = layer.id,
+                        title = layer.title,
+                        source = source,
+                        opacity = 0.5f,
+                    ),
+                ),
+            ),
+            editingOverlayOpacityLayer = MapLayerEntry(
+                id = layer.id,
+                title = layer.title,
+                source = source,
+                opacity = 0.5f,
+            ),
+        )
+
+        val updatedState = reduce(initialState, MapStoreMessage.OverlayLayerOpacityChanged(0.8f))
+
+        assertEquals(0.8f, updatedState.mapState.overlayLayers.single().opacity)
+        assertEquals(0.8f, updatedState.editingOverlayOpacityLayer?.opacity)
+    }
+
+    @Test
+    fun `overlay layer move up follows visible stack order`() {
+        val source = MapLayerSourceRef.RasterTileTemplate(templateId = "dem-overlay")
+        val bottomLayer = MapLayerEntry(id = "bottom", title = "Bottom", source = source)
+        val topLayer = MapLayerEntry(id = "top", title = "Top", source = source)
+        val initialState = MapStore.State(
+            mapState = MapStore.State().mapState.copy(
+                overlayLayers = listOf(bottomLayer, topLayer),
+            ),
+            selectedOverlayLayer = bottomLayer,
+        )
+
+        val updatedState = reduce(initialState, MapStoreMessage.OverlayLayerMovedUp)
+
+        assertEquals(listOf("top", "bottom"), updatedState.mapState.overlayLayers.map(MapLayerEntry::id))
+        assertEquals("bottom", updatedState.selectedOverlayLayer?.id)
     }
 
     @Test

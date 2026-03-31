@@ -18,6 +18,36 @@ internal sealed interface MapStoreMessage {
 
     object MapToolsMenuDismissed : MapStoreMessage
 
+    object AvailableMapsOpened : MapStoreMessage
+
+    object AvailableMapsDismissed : MapStoreMessage
+
+    data class AvailableMapSelected(val mapId: String) : MapStoreMessage
+
+    object AvailableMapSelectionDismissed : MapStoreMessage
+
+    object AvailableMapConfirmed : MapStoreMessage
+
+    object MapsOnScreenOpened : MapStoreMessage
+
+    object MapsOnScreenDismissed : MapStoreMessage
+
+    data class OverlayLayerActionsOpened(val layerId: String) : MapStoreMessage
+
+    object OverlayLayerActionsDismissed : MapStoreMessage
+
+    object OverlayLayerMovedUp : MapStoreMessage
+
+    object OverlayLayerMovedDown : MapStoreMessage
+
+    object OverlayLayerRemoved : MapStoreMessage
+
+    object OverlayLayerOpacityEditorOpened : MapStoreMessage
+
+    data class OverlayLayerOpacityChanged(val value: Float) : MapStoreMessage
+
+    object OverlayLayerOpacityEditorDismissed : MapStoreMessage
+
     object CenterMarkerMenuOpened : MapStoreMessage
 
     object CenterMarkerMenuDismissed : MapStoreMessage

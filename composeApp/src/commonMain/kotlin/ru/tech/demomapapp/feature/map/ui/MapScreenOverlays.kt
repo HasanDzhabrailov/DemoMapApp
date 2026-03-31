@@ -16,7 +16,20 @@ internal fun BoxScope.MapScreenOverlays(
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit,
     onAvailableMapsClick: () -> Unit,
+    onAvailableMapsDismiss: () -> Unit,
+    onAvailableMapSelect: (String) -> Unit,
+    onAvailableMapConfirm: () -> Unit,
+    onAvailableMapSelectionDismiss: () -> Unit,
     onMapsOnScreenClick: () -> Unit,
+    onMapsOnScreenDismiss: () -> Unit,
+    onMapLayerActionsClick: (String) -> Unit,
+    onMapLayerActionsDismiss: () -> Unit,
+    onMoveLayerUpClick: () -> Unit,
+    onMoveLayerDownClick: () -> Unit,
+    onRemoveLayerClick: () -> Unit,
+    onLayerOpacityClick: () -> Unit,
+    onLayerOpacityChange: (Float) -> Unit,
+    onLayerOpacityDismiss: () -> Unit,
     onGpsToggle: () -> Unit,
     onMyLocationClick: () -> Unit,
     onCurrentLocationFocusClick: () -> Unit,
@@ -64,6 +77,55 @@ internal fun BoxScope.MapScreenOverlays(
             onMapsOnScreenClick = onMapsOnScreenClick,
             onGpsToggle = onGpsToggle,
             onRulerToggle = onRulerToggle,
+        )
+    }
+
+    if (model.isAvailableMapsSheetVisible) {
+        AvailableMapsBottomSheet(
+            items = model.availableMapCatalog,
+            onSelect = onAvailableMapSelect,
+            onDismiss = onAvailableMapsDismiss,
+        )
+    }
+
+    model.selectedAvailableMap?.let { selectedMap ->
+        ConfirmAddMapDialog(
+            mapTitle = selectedMap.title,
+            onConfirm = onAvailableMapConfirm,
+            onDismiss = onAvailableMapSelectionDismiss,
+        )
+    }
+
+    if (model.isMapsOnScreenSheetVisible) {
+        MapsOnScreenBottomSheet(
+            baseMapTitle = model.mapState.style.displayName(),
+            layers = model.mapState.overlayLayers,
+            onLayerActionsClick = onMapLayerActionsClick,
+            onDismiss = onMapsOnScreenDismiss,
+        )
+    }
+
+    model.selectedOverlayLayer?.let { selectedLayer ->
+        val visibleLayers = model.mapState.overlayLayers.asReversed()
+        val selectedLayerIndex = visibleLayers.indexOfFirst { it.id == selectedLayer.id }
+        LayerActionsDialog(
+            layer = selectedLayer,
+            canMoveUp = selectedLayerIndex > 0,
+            canMoveDown = selectedLayerIndex in 0 until visibleLayers.lastIndex,
+            onMoveUp = onMoveLayerUpClick,
+            onMoveDown = onMoveLayerDownClick,
+            onChangeOpacity = onLayerOpacityClick,
+            onRemove = onRemoveLayerClick,
+            onDismiss = onMapLayerActionsDismiss,
+        )
+    }
+
+    model.editingOverlayOpacityLayer?.let { selectedLayer ->
+        LayerOpacityBottomSheet(
+            layerTitle = selectedLayer.title,
+            opacity = selectedLayer.opacity,
+            onOpacityChange = onLayerOpacityChange,
+            onDismiss = onLayerOpacityDismiss,
         )
     }
 
@@ -132,4 +194,9 @@ internal fun BoxScope.MapScreenOverlays(
             onDismiss = onFeatureInfoWindowDismiss,
         )
     }
+}
+
+private fun ru.tech.demomapapp.feature.map.api.MapStyle.displayName(): String = when (this) {
+    ru.tech.demomapapp.feature.map.api.MapStyle.DEMO -> "DEM Map"
+    ru.tech.demomapapp.feature.map.api.MapStyle.OPEN_STREET_MAP -> "OpenStreetMap"
 }

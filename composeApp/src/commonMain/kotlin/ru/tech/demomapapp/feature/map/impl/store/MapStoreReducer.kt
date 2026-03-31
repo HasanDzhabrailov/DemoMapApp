@@ -6,7 +6,9 @@ import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 internal class MapStoreReducer(
     private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
 ) : Reducer<MapStore.State, MapStoreMessage> {
-    override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State = when (msg) {
+    override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State {
+        reduceLayerManagementMessage(msg)?.let { return it }
+        return when (msg) {
         is MapStoreMessage.CameraIdleReceived -> copy(
             lastCameraSnapshot = msg.snapshot,
             selectedFeatureInfoWindow = null,
@@ -121,6 +123,11 @@ internal class MapStoreReducer(
                 } else {
                     isCenterMarkerMenuVisible
                 },
+                isAvailableMapsSheetVisible = false,
+                isMapsOnScreenSheetVisible = false,
+                selectedAvailableMap = null,
+                selectedOverlayLayer = null,
+                editingOverlayOpacityLayer = null,
                 selectedFeatureInfoWindow = if (isMenuVisible) {
                     null
                 } else {
@@ -175,6 +182,8 @@ internal class MapStoreReducer(
         )
 
         is MapStoreMessage.StateSynced -> msg.state
+        else -> this
+        }
     }
 
     private fun MapStore.State.updateCreatePointDraft(

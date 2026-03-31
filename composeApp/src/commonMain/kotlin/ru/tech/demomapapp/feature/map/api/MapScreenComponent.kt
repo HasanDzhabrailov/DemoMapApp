@@ -11,7 +11,20 @@ interface MapScreenComponent {
     fun onZoomInClick()
     fun onZoomOutClick()
     fun onAvailableMapsClick()
+    fun onAvailableMapsDismiss()
+    fun onAvailableMapSelect(mapId: String)
+    fun onAvailableMapConfirm()
+    fun onAvailableMapSelectionDismiss()
     fun onMapsOnScreenClick()
+    fun onMapsOnScreenDismiss()
+    fun onMapLayerActionsClick(layerId: String)
+    fun onMapLayerActionsDismiss()
+    fun onMoveLayerUpClick()
+    fun onMoveLayerDownClick()
+    fun onRemoveLayerClick()
+    fun onLayerOpacityClick()
+    fun onLayerOpacityChange(value: Float)
+    fun onLayerOpacityDismiss()
     fun onGpsToggle()
     fun onMyLocationClick()
     fun onCurrentLocationFocusClick()
@@ -41,8 +54,14 @@ interface MapScreenComponent {
 
     data class Model(
         val mapState: MapState = MapState(),
+        val availableMapCatalog: List<MapCatalogItem> = MapLayerCatalog.items(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
         val isMapToolsMenuVisible: Boolean = false,
+        val isAvailableMapsSheetVisible: Boolean = false,
+        val selectedAvailableMap: MapCatalogItem? = null,
+        val isMapsOnScreenSheetVisible: Boolean = false,
+        val selectedOverlayLayer: MapLayerEntry? = null,
+        val editingOverlayOpacityLayer: MapLayerEntry? = null,
         val myLocationMode: MyLocationMode = MyLocationMode.OFF,
         val currentLocationMarker: MapLocationMarker? = null,
         val pendingLocationRequest: MapLocationRequest? = null,

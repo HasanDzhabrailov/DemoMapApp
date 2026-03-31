@@ -33,7 +33,7 @@ actual fun MapRenderer(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Map rendering is available on Android only.\n${model.style}",
+            text = "Map rendering is available on Android only.\n${model.style}\nTile layers: ${model.tileLayers.size}",
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
         )

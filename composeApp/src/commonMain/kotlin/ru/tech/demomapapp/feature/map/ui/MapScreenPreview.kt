@@ -47,7 +47,33 @@ private class PreviewMapScreenComponent : MapScreenComponent {
 
     override fun onAvailableMapsClick() = Unit
 
+    override fun onAvailableMapsDismiss() = Unit
+
+    override fun onAvailableMapSelect(mapId: String) = Unit
+
+    override fun onAvailableMapConfirm() = Unit
+
+    override fun onAvailableMapSelectionDismiss() = Unit
+
     override fun onMapsOnScreenClick() = Unit
+
+    override fun onMapsOnScreenDismiss() = Unit
+
+    override fun onMapLayerActionsClick(layerId: String) = Unit
+
+    override fun onMapLayerActionsDismiss() = Unit
+
+    override fun onMoveLayerUpClick() = Unit
+
+    override fun onMoveLayerDownClick() = Unit
+
+    override fun onRemoveLayerClick() = Unit
+
+    override fun onLayerOpacityClick() = Unit
+
+    override fun onLayerOpacityChange(value: Float) = Unit
+
+    override fun onLayerOpacityDismiss() = Unit
 
     override fun onGpsToggle() = Unit
 

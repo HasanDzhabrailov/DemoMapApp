@@ -420,16 +420,24 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
-    fun `map tools placeholder actions close menu`() {
+    fun `map tools layer actions open new overlays`() {
         val component = createComponent()
 
         component.onMapToolsClick()
         component.onAvailableMapsClick()
         assertFalse(component.model.value.isMapToolsMenuVisible)
+        assertTrue(component.model.value.isAvailableMapsSheetVisible)
 
-        component.onMapToolsClick()
-        component.onMapsOnScreenClick()
-        assertFalse(component.model.value.isMapToolsMenuVisible)
+        component.onAvailableMapSelect("google-overlay")
+        assertEquals("Google Map", component.model.value.selectedAvailableMap?.title)
+
+        component.onAvailableMapConfirm()
+        assertTrue(component.model.value.isMapsOnScreenSheetVisible)
+        assertEquals(1, component.model.value.mapState.overlayLayers.size)
+
+        val layerId = component.model.value.mapState.overlayLayers.single().id
+        component.onMapLayerActionsClick(layerId)
+        assertEquals(layerId, component.model.value.selectedOverlayLayer?.id)
     }
 
     @Test
