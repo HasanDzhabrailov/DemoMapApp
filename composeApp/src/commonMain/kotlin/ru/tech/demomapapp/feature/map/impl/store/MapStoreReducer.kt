@@ -7,7 +7,6 @@ internal class MapStoreReducer(
     private val shapeDrawingDraftUpdater: ShapeDrawingDraftUpdater,
 ) : Reducer<MapStore.State, MapStoreMessage> {
     override fun MapStore.State.reduce(msg: MapStoreMessage): MapStore.State {
-        reduceLayerManagementMessage(msg)?.let { return it }
         return when (msg) {
             is MapStoreMessage.CameraIdleReceived -> copy(
                 lastCameraSnapshot = msg.snapshot,
@@ -28,7 +27,6 @@ internal class MapStoreReducer(
             )
 
             is MapStoreMessage.CreatePointSheetOpened -> copy(
-                isMapToolsMenuVisible = false,
                 isCreatePointSheetVisible = lastCameraSnapshot != null,
                 createPointDraft = lastCameraSnapshot?.toCreatePointDraft(),
                 selectedFeatureInfoWindow = null,
@@ -51,7 +49,6 @@ internal class MapStoreReducer(
             )
 
             is MapStoreMessage.DrawingStarted -> copy(
-                isMapToolsMenuVisible = false,
                 isCreatePointSheetVisible = false,
                 createPointDraft = null,
                 drawingMode = msg.mode,
@@ -71,7 +68,6 @@ internal class MapStoreReducer(
             }
 
             is MapStoreMessage.FeatureInfoWindowOpened -> copy(
-                isMapToolsMenuVisible = false,
                 selectedFeatureInfoWindow = msg.infoWindow,
             )
 
@@ -85,26 +81,6 @@ internal class MapStoreReducer(
                 shapeDrawingDraft = null,
                 isCreateShapeSheetVisible = false,
             )
-            is MapStoreMessage.MapToolsMenuDismissed -> copy(
-                isMapToolsMenuVisible = false,
-            )
-
-            is MapStoreMessage.MapToolsMenuToggled -> {
-                val isMenuVisible = !isMapToolsMenuVisible
-                copy(
-                    isMapToolsMenuVisible = isMenuVisible,
-                    isAvailableMapsSheetVisible = false,
-                    isMapsOnScreenSheetVisible = false,
-                    selectedAvailableMap = null,
-                    selectedOverlayLayer = null,
-                    editingOverlayOpacityLayer = null,
-                    selectedFeatureInfoWindow = if (isMenuVisible) {
-                        null
-                    } else {
-                        selectedFeatureInfoWindow
-                    },
-                )
-            }
 
             is MapStoreMessage.ShapeSheetDismissed -> copy(
                 isCreateShapeSheetVisible = false,
@@ -132,7 +108,6 @@ internal class MapStoreReducer(
             )
 
             is MapStoreMessage.StateSynced -> msg.state
-            else -> this
         }
     }
 

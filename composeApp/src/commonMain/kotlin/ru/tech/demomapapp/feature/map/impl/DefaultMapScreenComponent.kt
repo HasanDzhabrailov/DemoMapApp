@@ -6,6 +6,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
@@ -21,13 +22,18 @@ import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
 import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
 import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
+import ru.tech.demomapapp.feature.map.impl.tools.DefaultToolsComponent
+import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.impl.tools.ToolsStoreFactory
 import ru.tech.demomapapp.feature.map.impl.viewport.DefaultViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportStoreFactory
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
+    initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
+    private val toolsStoreFactory: ToolsStoreFactory = ToolsStoreFactory(),
     private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     private val viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
@@ -35,9 +41,15 @@ internal class DefaultMapScreenComponent(
     private val holder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
         MapStoreHolder(
             mapStoreFactory = mapStoreFactory,
-            initialModel = MapScreenComponent.Model(),
+            initialModel = initialModel,
         )
     }
+    private val toolsComponent: ToolsComponent = DefaultToolsComponent(
+        componentContext = componentContext,
+        toolsStoreFactory = toolsStoreFactory,
+        initialModel = initialModel,
+        output = ToolsComponent.Output(::handleToolsLayersChanged),
+    )
     private val rulerComponent: RulerComponent = DefaultRulerComponent(
         componentContext = componentContext,
         rulerStoreFactory = rulerStoreFactory,
@@ -85,33 +97,52 @@ internal class DefaultMapScreenComponent(
         refreshModel()
     }
 
-    override fun onMapToolsClick() = acceptMapIntent(MapStore.Intent.Tools.MapToolsClicked)
-    override fun onMapToolsDismiss() = acceptMapIntent(MapStore.Intent.Tools.MapToolsDismissed)
+    override fun onMapToolsClick() = acceptToolsUpdate(
+        clearSelectedFeatureInfoWindow = true,
+        action = toolsComponent::onMapToolsClick,
+    )
+    override fun onMapToolsDismiss() = acceptToolsUpdate(action = toolsComponent::onMapToolsDismiss)
     override fun onZoomInClick() = acceptViewportUpdate(viewportComponent::onZoomInClick)
     override fun onZoomOutClick() = acceptViewportUpdate(viewportComponent::onZoomOutClick)
-    override fun onAvailableMapsClick() = acceptMapIntent(MapStore.Intent.Tools.AvailableMapsClicked)
-    override fun onAvailableMapsDismiss() = acceptMapIntent(MapStore.Intent.Tools.AvailableMapsDismissed)
-    override fun onAvailableMapSelect(mapId: String) = acceptMapIntent(
-        MapStore.Intent.Tools.AvailableMapSelected(mapId),
+    override fun onAvailableMapsClick() = acceptToolsUpdate(
+        clearSelectedFeatureInfoWindow = true,
+        action = toolsComponent::onAvailableMapsClick,
     )
-    override fun onAvailableMapConfirm() = acceptMapIntent(MapStore.Intent.Tools.AvailableMapConfirmed)
-    override fun onAvailableMapSelectionDismiss() = acceptMapIntent(
-        MapStore.Intent.Tools.AvailableMapSelectionDismissed,
+    override fun onAvailableMapsDismiss() = acceptToolsUpdate(
+        action = toolsComponent::onAvailableMapsDismiss,
     )
-    override fun onMapsOnScreenClick() = acceptMapIntent(MapStore.Intent.Tools.MapsOnScreenClicked)
-    override fun onMapsOnScreenDismiss() = acceptMapIntent(MapStore.Intent.Tools.MapsOnScreenDismissed)
-    override fun onMapLayerActionsClick(layerId: String) = acceptMapIntent(
-        MapStore.Intent.Tools.OverlayLayerActionsClicked(layerId),
+    override fun onAvailableMapSelect(mapId: String) = acceptToolsUpdate {
+        toolsComponent.onAvailableMapSelect(mapId)
+    }
+    override fun onAvailableMapConfirm() = acceptToolsUpdate(
+        action = toolsComponent::onAvailableMapConfirm,
     )
-    override fun onMapLayerActionsDismiss() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerActionsDismissed)
-    override fun onMoveLayerUpClick() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerMoveUpClicked)
-    override fun onMoveLayerDownClick() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerMoveDownClicked)
-    override fun onRemoveLayerClick() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerRemoveClicked)
-    override fun onLayerOpacityClick() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerOpacityClicked)
-    override fun onLayerOpacityChange(value: Float) = acceptMapIntent(
-        MapStore.Intent.Tools.OverlayLayerOpacityChanged(value),
+    override fun onAvailableMapSelectionDismiss() = acceptToolsUpdate(
+        action = toolsComponent::onAvailableMapSelectionDismiss,
     )
-    override fun onLayerOpacityDismiss() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerOpacityDismissed)
+    override fun onMapsOnScreenClick() = acceptToolsUpdate(
+        clearSelectedFeatureInfoWindow = true,
+        action = toolsComponent::onMapsOnScreenClick,
+    )
+    override fun onMapsOnScreenDismiss() = acceptToolsUpdate(
+        action = toolsComponent::onMapsOnScreenDismiss,
+    )
+    override fun onMapLayerActionsClick(layerId: String) = acceptToolsUpdate {
+        toolsComponent.onLayerActionsClick(layerId)
+    }
+    override fun onMapLayerActionsDismiss() = acceptToolsUpdate(
+        action = toolsComponent::onLayerActionsDismiss,
+    )
+    override fun onMoveLayerUpClick() = acceptToolsUpdate(action = toolsComponent::onMoveLayerUpClick)
+    override fun onMoveLayerDownClick() = acceptToolsUpdate(action = toolsComponent::onMoveLayerDownClick)
+    override fun onRemoveLayerClick() = acceptToolsUpdate(action = toolsComponent::onRemoveLayerClick)
+    override fun onLayerOpacityClick() = acceptToolsUpdate(action = toolsComponent::onLayerOpacityClick)
+    override fun onLayerOpacityChange(value: Float) = acceptToolsUpdate {
+        toolsComponent.onLayerOpacityChange(value)
+    }
+    override fun onLayerOpacityDismiss() = acceptToolsUpdate(
+        action = toolsComponent::onLayerOpacityDismiss,
+    )
     override fun onGpsToggle() = acceptLocationUpdate(locationComponent::onGpsToggle)
     override fun onMyLocationClick() = acceptLocationUpdate(locationComponent::onMyLocationClick)
     override fun onCurrentLocationFocusClick() = acceptLocationUpdate(locationComponent::onCurrentLocationFocusClick)
@@ -140,8 +171,8 @@ internal class DefaultMapScreenComponent(
         if (holder.model.value.drawingMode != null) {
             return
         }
-        if (holder.model.value.isMapToolsMenuVisible) {
-            holder.accept(MapStore.Intent.Tools.MapToolsDismissed)
+        if (toolsComponent.model.value.isMenuVisible) {
+            toolsComponent.onMapToolsDismiss()
         }
         if (holder.model.value.selectedFeatureInfoWindow != null) {
             holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
@@ -149,9 +180,18 @@ internal class DefaultMapScreenComponent(
         acceptViewportUpdate(viewportComponent::onCenterMarkerClick)
     }
     override fun onCenterMarkerMenuDismiss() = acceptViewportUpdate(viewportComponent::onCenterMarkerMenuDismiss)
-    override fun onCreatePointClick() = acceptMapIntent(MapStore.Intent.CreatePoint.Clicked)
-    override fun onCreateLineClick() = acceptMapIntent(MapStore.Intent.Drawing.CreateLineClicked)
-    override fun onCreatePolygonClick() = acceptMapIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
+    override fun onCreatePointClick() {
+        dismissToolsMenuIfVisible()
+        acceptMapIntent(MapStore.Intent.CreatePoint.Clicked)
+    }
+    override fun onCreateLineClick() {
+        dismissToolsMenuIfVisible()
+        acceptMapIntent(MapStore.Intent.Drawing.CreateLineClicked)
+    }
+    override fun onCreatePolygonClick() {
+        dismissToolsMenuIfVisible()
+        acceptMapIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
+    }
     override fun onCreatePointLatitudeChange(value: String) = acceptMapIntent(
         MapStore.Intent.CreatePoint.LatitudeChanged(value),
     )
@@ -175,13 +215,16 @@ internal class DefaultMapScreenComponent(
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
-    ) = acceptMapIntent(
-        MapStore.Intent.FeatureSelection.FeatureClicked(
-            featureKey = featureKey,
-            featureType = featureType.toStoreFeatureType(),
-            anchor = anchor.toStoreAnchor(),
-        ),
-    )
+    ) {
+        dismissToolsMenuIfVisible()
+        acceptMapIntent(
+            MapStore.Intent.FeatureSelection.FeatureClicked(
+                featureKey = featureKey,
+                featureType = featureType.toStoreFeatureType(),
+                anchor = anchor.toStoreAnchor(),
+            ),
+        )
+    }
 
     override fun onFeatureInfoWindowDismiss() = acceptMapIntent(
         MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed,
@@ -193,6 +236,15 @@ internal class DefaultMapScreenComponent(
         }
         holder.accept(intent)
         syncRulerState()
+        refreshModel()
+    }
+
+    private fun acceptToolsUpdate(clearSelectedFeatureInfoWindow: Boolean = false, action: () -> Unit) {
+        dismissViewportMenuIfVisible()
+        if (clearSelectedFeatureInfoWindow && holder.model.value.selectedFeatureInfoWindow != null) {
+            holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
+        }
+        action()
         refreshModel()
     }
 
@@ -232,6 +284,7 @@ internal class DefaultMapScreenComponent(
 
     private fun mergeModels(): MapScreenComponent.Model {
         val mapModel = holder.model.value
+        val toolsModel = toolsComponent.model.value
         val locationModel = locationComponent.model.value
         val rulerModel = rulerComponent.model.value
         val viewportModel = viewportComponent.model.value
@@ -239,7 +292,18 @@ internal class DefaultMapScreenComponent(
             pendingViewportCommand ?: pendingLocationViewportCommand ?: pendingRulerViewportCommand
 
         return mapModel.copy(
+            mapState = mapModel.mapState.copy(
+                style = toolsModel.selectedStyle,
+                overlayLayers = toolsModel.layers,
+            ),
+            availableMapCatalog = toolsModel.availableMapCatalog,
             lastCameraSnapshot = viewportModel.cameraSnapshot ?: mapModel.lastCameraSnapshot,
+            isMapToolsMenuVisible = toolsModel.isMenuVisible,
+            isAvailableMapsSheetVisible = toolsModel.isAvailableMapsSheetVisible,
+            selectedAvailableMap = toolsModel.selectedAvailableMap,
+            isMapsOnScreenSheetVisible = toolsModel.isMapsOnScreenSheetVisible,
+            selectedOverlayLayer = toolsModel.selectedOverlayLayer,
+            editingOverlayOpacityLayer = toolsModel.editingOverlayOpacityLayer,
             myLocationMode = locationModel.mode,
             currentLocationMarker = locationModel.currentMarker,
             pendingLocationRequest = locationModel.pendingRequest,
@@ -272,6 +336,19 @@ internal class DefaultMapScreenComponent(
         refreshModel()
     }
 
+    private fun handleToolsLayersChanged(layers: List<MapLayerEntry>) {
+        if (layers != toolsComponent.model.value.layers) {
+            return
+        }
+        refreshModel()
+    }
+
+    private fun dismissToolsMenuIfVisible() {
+        if (toolsComponent.model.value.isMenuVisible) {
+            toolsComponent.onMapToolsDismiss()
+        }
+    }
+
     private fun dismissViewportMenuIfVisible() {
         if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
             viewportComponent.onCenterMarkerMenuDismiss()
@@ -280,7 +357,6 @@ internal class DefaultMapScreenComponent(
 
     private fun shouldDismissViewportMenu(intent: MapStore.Intent): Boolean = when (intent) {
         is MapStore.Intent.CameraIdle,
-        is MapStore.Intent.Tools,
         is MapStore.Intent.CreatePoint,
         is MapStore.Intent.Drawing,
         is MapStore.Intent.FeatureSelection,

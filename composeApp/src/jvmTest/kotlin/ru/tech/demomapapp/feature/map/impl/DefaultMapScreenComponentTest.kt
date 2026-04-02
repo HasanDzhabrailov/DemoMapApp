@@ -10,8 +10,12 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLayerEntry
+import ru.tech.demomapapp.feature.map.api.MapLayerSourceRef
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapState
+import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
@@ -695,10 +699,35 @@ class DefaultMapScreenComponentTest {
         )
     }
 
-    private fun createComponent(): DefaultMapScreenComponent {
+    @Test
+    fun `initial style and overlay layers are preserved`() {
+        val overlay = MapLayerEntry(
+            id = "overlay-1",
+            title = "Overlay",
+            source = MapLayerSourceRef.RasterTileTemplate(templateId = "overlay-template"),
+            opacity = 0.6f,
+        )
+
+        val component = createComponent(
+            initialModel = MapScreenComponent.Model(
+                mapState = MapState(
+                    style = MapStyle.OPEN_STREET_MAP,
+                    overlayLayers = listOf(overlay),
+                ),
+            ),
+        )
+
+        assertEquals(MapStyle.OPEN_STREET_MAP, component.model.value.mapState.style)
+        assertEquals(listOf(overlay), component.model.value.mapState.overlayLayers)
+    }
+
+    private fun createComponent(
+        initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
+    ): DefaultMapScreenComponent {
         var nextId = 0
         return DefaultMapScreenComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
+            initialModel = initialModel,
             mapStoreFactory = MapStoreFactory(
                 createMapPointUseCase = DefaultCreateMapPointUseCase(),
                 createMapLineUseCase = DefaultCreateMapLineUseCase(),

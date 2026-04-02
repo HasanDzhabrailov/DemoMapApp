@@ -2,9 +2,6 @@ package ru.tech.demomapapp.feature.map.impl.store
 
 import com.arkivanov.mvikotlin.core.store.Store
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapCatalogItem
-import ru.tech.demomapapp.feature.map.api.MapLayerCatalog
-import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
@@ -12,42 +9,6 @@ import ru.tech.demomapapp.feature.map.api.MapVertex
 internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.Label> {
     sealed interface Intent {
         data class CameraIdle(val snapshot: MapCameraSnapshot) : Intent
-
-        sealed interface Tools : Intent {
-            object MapToolsClicked : Tools
-
-            object MapToolsDismissed : Tools
-
-            object AvailableMapsClicked : Tools
-
-            object AvailableMapsDismissed : Tools
-
-            data class AvailableMapSelected(val mapId: String) : Tools
-
-            object AvailableMapConfirmed : Tools
-
-            object AvailableMapSelectionDismissed : Tools
-
-            object MapsOnScreenClicked : Tools
-
-            object MapsOnScreenDismissed : Tools
-
-            data class OverlayLayerActionsClicked(val layerId: String) : Tools
-
-            object OverlayLayerActionsDismissed : Tools
-
-            object OverlayLayerMoveUpClicked : Tools
-
-            object OverlayLayerMoveDownClicked : Tools
-
-            object OverlayLayerRemoveClicked : Tools
-
-            object OverlayLayerOpacityClicked : Tools
-
-            data class OverlayLayerOpacityChanged(val value: Float) : Tools
-
-            object OverlayLayerOpacityDismissed : Tools
-        }
 
         sealed interface CreatePoint : Intent {
             object Clicked : CreatePoint
@@ -96,14 +57,7 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
 
     data class State(
         val mapState: MapState = MapState(),
-        val availableMapCatalog: List<MapCatalogItem> = MapLayerCatalog.items(),
         val lastCameraSnapshot: MapCameraSnapshot? = null,
-        val isMapToolsMenuVisible: Boolean = false,
-        val isAvailableMapsSheetVisible: Boolean = false,
-        val selectedAvailableMap: MapCatalogItem? = null,
-        val isMapsOnScreenSheetVisible: Boolean = false,
-        val selectedOverlayLayer: MapLayerEntry? = null,
-        val editingOverlayOpacityLayer: MapLayerEntry? = null,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
         val drawingMode: DrawingMode? = null,
@@ -113,14 +67,7 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
     ) {
         fun toModel(): MapScreenComponent.Model = MapScreenComponent.Model(
             mapState = mapState,
-            availableMapCatalog = availableMapCatalog,
             lastCameraSnapshot = lastCameraSnapshot,
-            isMapToolsMenuVisible = isMapToolsMenuVisible,
-            isAvailableMapsSheetVisible = isAvailableMapsSheetVisible,
-            selectedAvailableMap = selectedAvailableMap,
-            isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
-            selectedOverlayLayer = selectedOverlayLayer,
-            editingOverlayOpacityLayer = editingOverlayOpacityLayer,
             isCreatePointSheetVisible = isCreatePointSheetVisible,
             createPointDraft = createPointDraft?.toComponentDraft(),
             drawingMode = drawingMode?.toComponentDrawingMode(),
@@ -132,14 +79,7 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         companion object {
             fun fromModel(model: MapScreenComponent.Model): State = State(
                 mapState = model.mapState,
-                availableMapCatalog = model.availableMapCatalog,
                 lastCameraSnapshot = model.lastCameraSnapshot,
-                isMapToolsMenuVisible = model.isMapToolsMenuVisible,
-                isAvailableMapsSheetVisible = model.isAvailableMapsSheetVisible,
-                selectedAvailableMap = model.selectedAvailableMap,
-                isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
-                selectedOverlayLayer = model.selectedOverlayLayer,
-                editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
                 isCreatePointSheetVisible = model.isCreatePointSheetVisible,
                 createPointDraft = model.createPointDraft?.toStoreDraft(),
                 drawingMode = model.drawingMode?.toStoreDrawingMode(),

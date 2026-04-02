@@ -333,28 +333,6 @@ class MapStoreExecutorTest {
         assertTrue(callbacks.messages.isEmpty())
     }
 
-    @Test
-    fun `available maps click emits open sheet message`() {
-        val executor = createExecutor()
-        val callbacks = TestExecutorCallbacks(state = MapStore.State())
-
-        executor.init(callbacks)
-        executor.executeIntent(MapStore.Intent.Tools.AvailableMapsClicked)
-
-        assertEquals(listOf<MapStoreMessage>(MapStoreMessage.AvailableMapsOpened), callbacks.messages)
-    }
-
-    @Test
-    fun `maps on screen click emits open sheet message`() {
-        val executor = createExecutor()
-        val callbacks = TestExecutorCallbacks(state = MapStore.State())
-
-        executor.init(callbacks)
-        executor.executeIntent(MapStore.Intent.Tools.MapsOnScreenClicked)
-
-        assertEquals(listOf<MapStoreMessage>(MapStoreMessage.MapsOnScreenOpened), callbacks.messages)
-    }
-
     private fun createExecutor(): MapStoreExecutor = MapStoreExecutor(
         createPointHandler = CreatePointHandler(
             createMapPointUseCase = CreateMapPointUseCase { _: CreateMapPointInput -> null },

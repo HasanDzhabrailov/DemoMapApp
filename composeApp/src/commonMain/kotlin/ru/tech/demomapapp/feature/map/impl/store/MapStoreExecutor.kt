@@ -73,45 +73,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> callbacks.onMessage(
                 MapStoreMessage.FeatureInfoWindowDismissed,
             )
-            is MapStore.Intent.Tools.AvailableMapsClicked -> callbacks.onMessage(MapStoreMessage.AvailableMapsOpened)
-            is MapStore.Intent.Tools.AvailableMapsDismissed -> callbacks.onMessage(
-                MapStoreMessage.AvailableMapsDismissed,
-            )
-            is MapStore.Intent.Tools.AvailableMapSelected -> callbacks.onMessage(
-                MapStoreMessage.AvailableMapSelected(intent.mapId),
-            )
-            is MapStore.Intent.Tools.AvailableMapConfirmed -> callbacks.onMessage(MapStoreMessage.AvailableMapConfirmed)
-            is MapStore.Intent.Tools.AvailableMapSelectionDismissed -> callbacks.onMessage(
-                MapStoreMessage.AvailableMapSelectionDismissed,
-            )
-            is MapStore.Intent.Tools.MapsOnScreenClicked -> callbacks.onMessage(MapStoreMessage.MapsOnScreenOpened)
-            is MapStore.Intent.Tools.MapsOnScreenDismissed -> callbacks.onMessage(MapStoreMessage.MapsOnScreenDismissed)
-            is MapStore.Intent.Tools.OverlayLayerActionsClicked -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerActionsOpened(intent.layerId),
-            )
-            is MapStore.Intent.Tools.OverlayLayerActionsDismissed -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerActionsDismissed,
-            )
-            is MapStore.Intent.Tools.OverlayLayerMoveUpClicked -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerMovedUp,
-            )
-            is MapStore.Intent.Tools.OverlayLayerMoveDownClicked -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerMovedDown,
-            )
-            is MapStore.Intent.Tools.OverlayLayerRemoveClicked -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerRemoved,
-            )
-            is MapStore.Intent.Tools.OverlayLayerOpacityClicked -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerOpacityEditorOpened,
-            )
-            is MapStore.Intent.Tools.OverlayLayerOpacityChanged -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerOpacityChanged(intent.value),
-            )
-            is MapStore.Intent.Tools.OverlayLayerOpacityDismissed -> callbacks.onMessage(
-                MapStoreMessage.OverlayLayerOpacityEditorDismissed,
-            )
-            is MapStore.Intent.Tools.MapToolsDismissed -> callbacks.onMessage(MapStoreMessage.MapToolsMenuDismissed)
-            is MapStore.Intent.Tools.MapToolsClicked -> callbacks.onMessage(MapStoreMessage.MapToolsMenuToggled)
         }
     }
 
