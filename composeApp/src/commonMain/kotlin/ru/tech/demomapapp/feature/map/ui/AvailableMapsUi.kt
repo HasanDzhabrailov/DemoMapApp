@@ -69,11 +69,7 @@ internal fun AvailableMapsBottomSheet(
 }
 
 @Composable
-internal fun ConfirmAddMapDialog(
-    mapTitle: String,
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-) {
+internal fun ConfirmAddMapDialog(mapTitle: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(mapTitle) },

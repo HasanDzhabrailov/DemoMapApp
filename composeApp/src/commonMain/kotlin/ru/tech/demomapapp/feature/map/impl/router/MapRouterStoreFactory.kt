@@ -7,16 +7,16 @@ internal class MapRouterStoreFactory(
     private val storeFactory: StoreFactory,
 ) {
 
-    fun create(): MapRouterStore =
-        object : MapRouterStore,
-            Store<
-                MapRouterStore.Intent,
-                MapRouterStore.State,
-                MapRouterStore.Label
-                > by storeFactory.create(
-                name = "MapRouterStore",
-                initialState = MapRouterStore.State(),
-                executorFactory = { MapRouterExecutor() },
-                reducer = MapRouterReducer(),
-            ) {}
+    fun create(): MapRouterStore = object :
+        MapRouterStore,
+        Store<
+            MapRouterStore.Intent,
+            MapRouterStore.State,
+            MapRouterStore.Label,
+            > by storeFactory.create(
+            name = "MapRouterStore",
+            initialState = MapRouterStore.State(),
+            executorFactory = { MapRouterExecutor() },
+            reducer = MapRouterReducer(),
+        ) {}
 }

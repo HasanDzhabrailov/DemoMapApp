@@ -96,7 +96,9 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
             is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Tools.AvailableMapsClicked -> callbacks.onMessage(MapStoreMessage.AvailableMapsOpened)
-            is MapStore.Intent.Tools.AvailableMapsDismissed -> callbacks.onMessage(MapStoreMessage.AvailableMapsDismissed)
+            is MapStore.Intent.Tools.AvailableMapsDismissed -> callbacks.onMessage(
+                MapStoreMessage.AvailableMapsDismissed,
+            )
             is MapStore.Intent.Tools.AvailableMapSelected -> callbacks.onMessage(
                 MapStoreMessage.AvailableMapSelected(intent.mapId),
             )
@@ -112,11 +114,15 @@ internal class MapStoreExecutor(
             is MapStore.Intent.Tools.OverlayLayerActionsDismissed -> callbacks.onMessage(
                 MapStoreMessage.OverlayLayerActionsDismissed,
             )
-            is MapStore.Intent.Tools.OverlayLayerMoveUpClicked -> callbacks.onMessage(MapStoreMessage.OverlayLayerMovedUp)
+            is MapStore.Intent.Tools.OverlayLayerMoveUpClicked -> callbacks.onMessage(
+                MapStoreMessage.OverlayLayerMovedUp,
+            )
             is MapStore.Intent.Tools.OverlayLayerMoveDownClicked -> callbacks.onMessage(
                 MapStoreMessage.OverlayLayerMovedDown,
             )
-            is MapStore.Intent.Tools.OverlayLayerRemoveClicked -> callbacks.onMessage(MapStoreMessage.OverlayLayerRemoved)
+            is MapStore.Intent.Tools.OverlayLayerRemoveClicked -> callbacks.onMessage(
+                MapStoreMessage.OverlayLayerRemoved,
+            )
             is MapStore.Intent.Tools.OverlayLayerOpacityClicked -> callbacks.onMessage(
                 MapStoreMessage.OverlayLayerOpacityEditorOpened,
             )

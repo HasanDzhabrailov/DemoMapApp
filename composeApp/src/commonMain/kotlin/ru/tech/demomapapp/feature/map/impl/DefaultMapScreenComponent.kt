@@ -46,7 +46,8 @@ internal class DefaultMapScreenComponent(
     override fun onMoveLayerDownClick() = holder.accept(MapStore.Intent.Tools.OverlayLayerMoveDownClicked)
     override fun onRemoveLayerClick() = holder.accept(MapStore.Intent.Tools.OverlayLayerRemoveClicked)
     override fun onLayerOpacityClick() = holder.accept(MapStore.Intent.Tools.OverlayLayerOpacityClicked)
-    override fun onLayerOpacityChange(value: Float) = holder.accept(MapStore.Intent.Tools.OverlayLayerOpacityChanged(value))
+    override fun onLayerOpacityChange(value: Float) =
+        holder.accept(MapStore.Intent.Tools.OverlayLayerOpacityChanged(value))
     override fun onLayerOpacityDismiss() = holder.accept(MapStore.Intent.Tools.OverlayLayerOpacityDismissed)
     override fun onGpsToggle() = holder.accept(MapStore.Intent.Location.GpsToggled)
     override fun onMyLocationClick() = holder.accept(MapStore.Intent.Location.MyLocationClicked)

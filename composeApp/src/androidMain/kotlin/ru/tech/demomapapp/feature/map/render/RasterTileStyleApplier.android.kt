@@ -1,8 +1,8 @@
 package ru.tech.demomapapp.feature.map.render
 
 import org.maplibre.android.maps.Style
-import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.layers.PropertyFactory.rasterOpacity
+import org.maplibre.android.style.layers.RasterLayer
 import org.maplibre.android.style.sources.RasterSource
 import org.maplibre.android.style.sources.TileSet
 
