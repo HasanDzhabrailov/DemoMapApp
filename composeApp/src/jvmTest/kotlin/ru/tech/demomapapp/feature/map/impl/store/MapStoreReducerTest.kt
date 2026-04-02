@@ -20,9 +20,8 @@ import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 class MapStoreReducerTest {
 
     @Test
-    fun `map tools toggle closes center marker menu and info window when opening`() {
+    fun `map tools toggle closes info window when opening`() {
         val initialState = MapStore.State(
-            isCenterMarkerMenuVisible = true,
             selectedFeatureInfoWindow = MapStore.FeatureInfoWindow(
                 title = "Test",
                 createdAtText = "26.03.2026 10:00",
@@ -33,7 +32,6 @@ class MapStoreReducerTest {
         val updatedState = reduce(initialState, MapStoreMessage.MapToolsMenuToggled)
 
         assertTrue(updatedState.isMapToolsMenuVisible)
-        assertFalse(updatedState.isCenterMarkerMenuVisible)
         assertNull(updatedState.selectedFeatureInfoWindow)
     }
 
@@ -47,13 +45,11 @@ class MapStoreReducerTest {
                 bearing = 0.0,
             ),
             isMapToolsMenuVisible = true,
-            isCenterMarkerMenuVisible = true,
         )
 
         val updatedState = reduce(initialState, MapStoreMessage.CreatePointSheetOpened)
 
         assertFalse(updatedState.isMapToolsMenuVisible)
-        assertFalse(updatedState.isCenterMarkerMenuVisible)
         assertTrue(updatedState.isCreatePointSheetVisible)
         assertEquals("55.75", updatedState.createPointDraft?.latitudeInput)
         assertEquals("37.61", updatedState.createPointDraft?.longitudeInput)
@@ -140,7 +136,6 @@ class MapStoreReducerTest {
     fun `feature info window open closes conflicting overlays in reducer`() {
         val initialState = MapStore.State(
             isMapToolsMenuVisible = true,
-            isCenterMarkerMenuVisible = true,
         )
 
         val updatedState = reduce(
@@ -155,7 +150,6 @@ class MapStoreReducerTest {
         )
 
         assertFalse(updatedState.isMapToolsMenuVisible)
-        assertFalse(updatedState.isCenterMarkerMenuVisible)
         assertEquals("Test", updatedState.selectedFeatureInfoWindow?.title)
     }
 

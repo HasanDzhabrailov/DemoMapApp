@@ -1,38 +1,44 @@
 # Tasklist - MAP-REFACTOR-005
 
-- [ ] Read PRD
-- [ ] Read plan
-- [ ] Confirm scope
+- [x] Read PRD
+- [x] Read plan
+- [x] Confirm scope
 
-- [ ] Create `feature/map/impl/viewport/` package structure
-- [ ] Create `ViewportComponent` interface with Output
-- [ ] Create `ViewportModel` data class
-- [ ] Create `ViewportStore` interface
-- [ ] Create `ViewportStore.State`
-- [ ] Create `ViewportStore.Intent`
-- [ ] Create `ViewportStore.Label` (ViewportCommand)
-- [ ] Create `ViewportExecutor`
-- [ ] Create `ViewportReducer`
-- [ ] Create `ViewportStoreFactory`
-- [ ] Create `DefaultViewportComponent`
+- [x] Create `feature/map/impl/viewport/` package structure
+- [x] Create `ViewportComponent` interface with Output
+- [x] Create `ViewportModel` data class
+- [x] Create `ViewportStore` interface
+- [x] Create `ViewportStore.State`
+- [x] Create `ViewportStore.Intent`
+- [x] Create `ViewportStore.Label` (ViewportCommand)
+- [x] Create `ViewportExecutor`
+- [x] Create `ViewportReducer`
+- [x] Create `ViewportStoreFactory`
+- [x] Create `DefaultViewportComponent`
 
-- [ ] Unit test: Zoom in генерирует ViewportCommand
-- [ ] Unit test: Zoom out генерирует ViewportCommand
-- [ ] Unit test: Camera idle сохраняет snapshot
-- [ ] Unit test: Center marker menu open/close
+- [x] Unit test: Zoom in генерирует ViewportCommand
+- [x] Unit test: Zoom out генерирует ViewportCommand
+- [x] Unit test: Camera idle сохраняет snapshot
+- [x] Unit test: Center marker menu open/close
 
-- [ ] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
-- [ ] Run `ktlintCheck`
+- [x] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
+- [x] Run `ktlintCheck`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| ViewportComponent created | PENDING |
-| ViewportStore works | PENDING |
-| Commands via Output | PENDING |
-| Tests pass | PENDING |
+| ViewportComponent created | DONE |
+| ViewportStore works | DONE |
+| Commands via Output | DONE |
+| Tests pass | DONE |
+
+## Notes
+- Doc/code mismatch: план указывает только `feature/map/impl/viewport/`, но для подключения нового компонента также изменен `composeApp/src/commonMain/kotlin/ru/tech/demomapapp/feature/map/impl/DefaultMapScreenComponent.kt`.
+- Legacy viewport branches removed from `MapStore`; zoom command and center marker menu ownership now live in the dedicated viewport component.
+- Implementation-detail map tests moved from `composeApp/src/commonTest/kotlin/ru/tech/demomapapp/feature/map/impl/` to `composeApp/src/jvmTest/kotlin/ru/tech/demomapapp/feature/map/impl/` so full `:composeApp:test` no longer breaks Android unit test compilation.
+- Suggested commit message: `refactor map viewport into dedicated component`

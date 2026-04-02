@@ -8,19 +8,10 @@ import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.Label> {
     sealed interface Intent {
-        sealed interface Viewport : Intent {
-            data class CameraIdle(val snapshot: MapCameraSnapshot) : Viewport
-
-            object ZoomInClicked : Viewport
-
-            object ZoomOutClicked : Viewport
-
-            object ViewportCommandConsumed : Viewport
-        }
+        data class CameraIdle(val snapshot: MapCameraSnapshot) : Intent
 
         sealed interface Tools : Intent {
             object MapToolsClicked : Tools
@@ -56,12 +47,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             data class OverlayLayerOpacityChanged(val value: Float) : Tools
 
             object OverlayLayerOpacityDismissed : Tools
-        }
-
-        sealed interface CenterMarker : Intent {
-            object Clicked : CenterMarker
-
-            object MenuDismissed : CenterMarker
         }
 
         sealed interface CreatePoint : Intent {
@@ -119,7 +104,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         val isMapsOnScreenSheetVisible: Boolean = false,
         val selectedOverlayLayer: MapLayerEntry? = null,
         val editingOverlayOpacityLayer: MapLayerEntry? = null,
-        val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
         val drawingMode: DrawingMode? = null,
@@ -137,7 +121,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
             selectedOverlayLayer = selectedOverlayLayer,
             editingOverlayOpacityLayer = editingOverlayOpacityLayer,
-            isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
             isCreatePointSheetVisible = isCreatePointSheetVisible,
             createPointDraft = createPointDraft?.toComponentDraft(),
             drawingMode = drawingMode?.toComponentDrawingMode(),
@@ -157,7 +140,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
                 isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
                 selectedOverlayLayer = model.selectedOverlayLayer,
                 editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
-                isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
                 isCreatePointSheetVisible = model.isCreatePointSheetVisible,
                 createPointDraft = model.createPointDraft?.toStoreDraft(),
                 drawingMode = model.drawingMode?.toStoreDrawingMode(),
@@ -203,10 +185,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
     )
 
     sealed interface Label {
-        sealed interface Viewport : Label {
-            data class CommandRequested(val command: MapViewportCommand) : Viewport
-        }
-
         data class NotificationRequested(val message: String) : Label
     }
 }

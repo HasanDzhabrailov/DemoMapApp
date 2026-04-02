@@ -14,22 +14,6 @@ internal class MapStoreReducer(
                 selectedFeatureInfoWindow = null,
             )
 
-            is MapStoreMessage.CenterMarkerMenuDismissed -> copy(
-                isCenterMarkerMenuVisible = false,
-            )
-
-            is MapStoreMessage.CenterMarkerMenuOpened -> {
-                if (drawingMode != null) {
-                    this
-                } else {
-                    copy(
-                        isMapToolsMenuVisible = false,
-                        isCenterMarkerMenuVisible = true,
-                        selectedFeatureInfoWindow = null,
-                    )
-                }
-            }
-
             is MapStoreMessage.CreatePointLatitudeChanged -> updateCreatePointDraft {
                 copy(latitudeInput = msg.value)
             }
@@ -45,7 +29,6 @@ internal class MapStoreReducer(
 
             is MapStoreMessage.CreatePointSheetOpened -> copy(
                 isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
                 isCreatePointSheetVisible = lastCameraSnapshot != null,
                 createPointDraft = lastCameraSnapshot?.toCreatePointDraft(),
                 selectedFeatureInfoWindow = null,
@@ -69,7 +52,6 @@ internal class MapStoreReducer(
 
             is MapStoreMessage.DrawingStarted -> copy(
                 isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
                 isCreatePointSheetVisible = false,
                 createPointDraft = null,
                 drawingMode = msg.mode,
@@ -90,7 +72,6 @@ internal class MapStoreReducer(
 
             is MapStoreMessage.FeatureInfoWindowOpened -> copy(
                 isMapToolsMenuVisible = false,
-                isCenterMarkerMenuVisible = false,
                 selectedFeatureInfoWindow = msg.infoWindow,
             )
 
@@ -112,11 +93,6 @@ internal class MapStoreReducer(
                 val isMenuVisible = !isMapToolsMenuVisible
                 copy(
                     isMapToolsMenuVisible = isMenuVisible,
-                    isCenterMarkerMenuVisible = if (isMenuVisible) {
-                        false
-                    } else {
-                        isCenterMarkerMenuVisible
-                    },
                     isAvailableMapsSheetVisible = false,
                     isMapsOnScreenSheetVisible = false,
                     selectedAvailableMap = null,

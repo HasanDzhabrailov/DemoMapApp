@@ -21,12 +21,16 @@ import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
 import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
 import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
 import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
+import ru.tech.demomapapp.feature.map.impl.viewport.DefaultViewportComponent
+import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
+import ru.tech.demomapapp.feature.map.impl.viewport.ViewportStoreFactory
 
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
     private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
+    private val viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val holder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
         MapStoreHolder(
@@ -38,6 +42,11 @@ internal class DefaultMapScreenComponent(
         componentContext = componentContext,
         rulerStoreFactory = rulerStoreFactory,
         output = RulerComponent.Output(::handleRulerViewportCommand),
+    )
+    private val viewportComponent: ViewportComponent = DefaultViewportComponent(
+        componentContext = componentContext,
+        viewportStoreFactory = viewportStoreFactory,
+        output = ViewportComponent.Output(::handleViewportCommandRequested),
     )
     private val locationComponent: LocationComponent = DefaultLocationComponent(
         componentContext = componentContext,
@@ -56,9 +65,10 @@ internal class DefaultMapScreenComponent(
     )
     private val mutableModel = MutableValue(mergeModels())
     private var pendingLocationViewportCommand: MapViewportCommand? = null
+    private var pendingViewportCommand: MapViewportCommand? = null
     private var pendingRulerViewportCommand: MapViewportCommand? = null
     private var syncedRulerLocation = locationComponent.model.value.currentMarker
-    private var syncedRulerSnapshot = holder.model.value.lastCameraSnapshot
+    private var syncedRulerSnapshot = viewportComponent.model.value.cameraSnapshot
 
     override val model: Value<MapScreenComponent.Model> = mutableModel
 
@@ -68,7 +78,8 @@ internal class DefaultMapScreenComponent(
     }
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
-        holder.accept(MapStore.Intent.Viewport.CameraIdle(snapshot))
+        viewportComponent.onCameraIdle(snapshot)
+        holder.accept(MapStore.Intent.CameraIdle(snapshot))
         locationComponent.onCameraSnapshotReceived(snapshot)
         syncRulerState()
         refreshModel()
@@ -76,8 +87,8 @@ internal class DefaultMapScreenComponent(
 
     override fun onMapToolsClick() = acceptMapIntent(MapStore.Intent.Tools.MapToolsClicked)
     override fun onMapToolsDismiss() = acceptMapIntent(MapStore.Intent.Tools.MapToolsDismissed)
-    override fun onZoomInClick() = acceptMapIntent(MapStore.Intent.Viewport.ZoomInClicked)
-    override fun onZoomOutClick() = acceptMapIntent(MapStore.Intent.Viewport.ZoomOutClicked)
+    override fun onZoomInClick() = acceptViewportUpdate(viewportComponent::onZoomInClick)
+    override fun onZoomOutClick() = acceptViewportUpdate(viewportComponent::onZoomOutClick)
     override fun onAvailableMapsClick() = acceptMapIntent(MapStore.Intent.Tools.AvailableMapsClicked)
     override fun onAvailableMapsDismiss() = acceptMapIntent(MapStore.Intent.Tools.AvailableMapsDismissed)
     override fun onAvailableMapSelect(mapId: String) = acceptMapIntent(
@@ -109,13 +120,15 @@ internal class DefaultMapScreenComponent(
         locationComponent.onLocationResult(result)
     }
     override fun onRulerToggle() {
+        dismissViewportMenuIfVisible()
         rulerComponent.onToggleClicked()
         syncRulerState()
         refreshModel()
     }
     override fun onViewportCommandConsumed() {
-        if (holder.model.value.pendingViewportCommand != null) {
-            holder.accept(MapStore.Intent.Viewport.ViewportCommandConsumed)
+        if (pendingViewportCommand != null) {
+            pendingViewportCommand = null
+            viewportComponent.onViewportCommandConsumed()
         } else if (pendingLocationViewportCommand != null) {
             pendingLocationViewportCommand = null
         } else {
@@ -123,8 +136,19 @@ internal class DefaultMapScreenComponent(
         }
         refreshModel()
     }
-    override fun onCenterMarkerClick() = acceptMapIntent(MapStore.Intent.CenterMarker.Clicked)
-    override fun onCenterMarkerMenuDismiss() = acceptMapIntent(MapStore.Intent.CenterMarker.MenuDismissed)
+    override fun onCenterMarkerClick() {
+        if (holder.model.value.drawingMode != null) {
+            return
+        }
+        if (holder.model.value.isMapToolsMenuVisible) {
+            holder.accept(MapStore.Intent.Tools.MapToolsDismissed)
+        }
+        if (holder.model.value.selectedFeatureInfoWindow != null) {
+            holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
+        }
+        acceptViewportUpdate(viewportComponent::onCenterMarkerClick)
+    }
+    override fun onCenterMarkerMenuDismiss() = acceptViewportUpdate(viewportComponent::onCenterMarkerMenuDismiss)
     override fun onCreatePointClick() = acceptMapIntent(MapStore.Intent.CreatePoint.Clicked)
     override fun onCreateLineClick() = acceptMapIntent(MapStore.Intent.Drawing.CreateLineClicked)
     override fun onCreatePolygonClick() = acceptMapIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
@@ -164,8 +188,16 @@ internal class DefaultMapScreenComponent(
     )
 
     private fun acceptMapIntent(intent: MapStore.Intent) {
+        if (shouldDismissViewportMenu(intent)) {
+            dismissViewportMenuIfVisible()
+        }
         holder.accept(intent)
         syncRulerState()
+        refreshModel()
+    }
+
+    private fun acceptViewportUpdate(action: () -> Unit) {
+        action()
         refreshModel()
     }
 
@@ -176,10 +208,10 @@ internal class DefaultMapScreenComponent(
     }
 
     private fun syncRulerState() {
-        val mapModel = holder.model.value
-        if (mapModel.lastCameraSnapshot != syncedRulerSnapshot) {
-            mapModel.lastCameraSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
-            syncedRulerSnapshot = mapModel.lastCameraSnapshot
+        val viewportSnapshot = viewportComponent.model.value.cameraSnapshot
+        if (viewportSnapshot != syncedRulerSnapshot) {
+            viewportSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
+            syncedRulerSnapshot = viewportSnapshot
         }
         val locationMarker = locationComponent.model.value.currentMarker
         if (locationMarker != syncedRulerLocation) {
@@ -189,7 +221,7 @@ internal class DefaultMapScreenComponent(
     }
 
     private fun refreshModel() {
-        if (holder.model.value.pendingViewportCommand != null) {
+        if (pendingViewportCommand != null) {
             pendingLocationViewportCommand = null
             pendingRulerViewportCommand = null
         } else if (pendingLocationViewportCommand != null) {
@@ -202,10 +234,12 @@ internal class DefaultMapScreenComponent(
         val mapModel = holder.model.value
         val locationModel = locationComponent.model.value
         val rulerModel = rulerComponent.model.value
+        val viewportModel = viewportComponent.model.value
         val pendingViewportCommand =
-            mapModel.pendingViewportCommand ?: pendingLocationViewportCommand ?: pendingRulerViewportCommand
+            pendingViewportCommand ?: pendingLocationViewportCommand ?: pendingRulerViewportCommand
 
         return mapModel.copy(
+            lastCameraSnapshot = viewportModel.cameraSnapshot ?: mapModel.lastCameraSnapshot,
             myLocationMode = locationModel.mode,
             currentLocationMarker = locationModel.currentMarker,
             pendingLocationRequest = locationModel.pendingRequest,
@@ -213,6 +247,7 @@ internal class DefaultMapScreenComponent(
             rulerMeasurement = rulerModel.measurement,
             rulerInfoWindow = rulerModel.infoWindow,
             pendingViewportCommand = pendingViewportCommand,
+            isCenterMarkerMenuVisible = viewportModel.isCenterMarkerMenuVisible,
         )
     }
 
@@ -230,6 +265,26 @@ internal class DefaultMapScreenComponent(
     private fun handleRulerViewportCommand(command: MapViewportCommand) {
         pendingRulerViewportCommand = command
         refreshModel()
+    }
+
+    private fun handleViewportCommandRequested(command: MapViewportCommand) {
+        pendingViewportCommand = command
+        refreshModel()
+    }
+
+    private fun dismissViewportMenuIfVisible() {
+        if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
+            viewportComponent.onCenterMarkerMenuDismiss()
+        }
+    }
+
+    private fun shouldDismissViewportMenu(intent: MapStore.Intent): Boolean = when (intent) {
+        is MapStore.Intent.CameraIdle,
+        is MapStore.Intent.Tools,
+        is MapStore.Intent.CreatePoint,
+        is MapStore.Intent.Drawing,
+        is MapStore.Intent.FeatureSelection,
+        -> true
     }
 
     private companion object {

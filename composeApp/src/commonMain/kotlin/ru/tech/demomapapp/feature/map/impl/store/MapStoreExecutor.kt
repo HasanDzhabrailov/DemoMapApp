@@ -1,7 +1,6 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
@@ -38,10 +37,7 @@ internal class MapStoreExecutor(
 
     override fun executeIntent(intent: MapStore.Intent) {
         when (intent) {
-            is MapStore.Intent.CenterMarker.Clicked -> callbacks.onMessage(MapStoreMessage.CenterMarkerMenuOpened)
-            is MapStore.Intent.CenterMarker.MenuDismissed -> callbacks.onMessage(
-                MapStoreMessage.CenterMarkerMenuDismissed,
-            )
+            is MapStore.Intent.CameraIdle -> handleCameraIdle(intent.snapshot)
             is MapStore.Intent.CreatePoint.Clicked -> callbacks.onMessage(MapStoreMessage.CreatePointSheetOpened)
             is MapStore.Intent.CreatePoint.LatitudeChanged -> callbacks.onMessage(
                 MapStoreMessage.CreatePointLatitudeChanged(intent.value),
@@ -77,10 +73,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> callbacks.onMessage(
                 MapStoreMessage.FeatureInfoWindowDismissed,
             )
-            is MapStore.Intent.Viewport.CameraIdle -> handleCameraIdle(intent.snapshot)
-            is MapStore.Intent.Viewport.ViewportCommandConsumed -> Unit
-            is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
-            is MapStore.Intent.Viewport.ZoomOutClicked -> emitViewportCommand(MapViewportCommand.ZoomOut)
             is MapStore.Intent.Tools.AvailableMapsClicked -> callbacks.onMessage(MapStoreMessage.AvailableMapsOpened)
             is MapStore.Intent.Tools.AvailableMapsDismissed -> callbacks.onMessage(
                 MapStoreMessage.AvailableMapsDismissed,
@@ -163,13 +155,5 @@ internal class MapStoreExecutor(
         callbacks.onMessage(MapStoreMessage.CameraIdleReceived(snapshot))
     }
 
-    private fun emitViewportCommand(command: MapViewportCommand) {
-        callbacks.onLabel(MapStore.Label.Viewport.CommandRequested(command))
-    }
-
     private fun currentState() = callbacks.state
-
-    private fun syncState(state: MapStore.State) {
-        callbacks.onMessage(MapStoreMessage.StateSynced(state))
-    }
 }

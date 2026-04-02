@@ -6,7 +6,6 @@ import com.arkivanov.essenty.instancekeeper.InstanceKeeper
 import com.arkivanov.mvikotlin.core.rx.Disposable
 import com.arkivanov.mvikotlin.core.rx.observer
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 internal class MapStoreHolder(
     mapStoreFactory: MapStoreFactory,
@@ -15,24 +14,15 @@ internal class MapStoreHolder(
     private val store: MapStore = mapStoreFactory.create(
         initialState = MapStore.State.fromModel(model = initialModel.withoutTransientOutputs()),
     )
-    private var pendingViewportCommand: MapViewportCommand? = initialModel.pendingViewportCommand
-    private val mutableModel = MutableValue(store.state.toModel().withTransientOutputs())
+    private val mutableModel = MutableValue(store.state.toModel())
     private val stateDisposable: Disposable =
-        store.states(observer(onNext = { state -> mutableModel.value = state.toModel().withTransientOutputs() }))
+        store.states(observer(onNext = { state -> mutableModel.value = state.toModel() }))
     private val labelDisposable: Disposable =
         store.labels(observer(onNext = ::handleLabel))
 
     val model: Value<MapScreenComponent.Model> = mutableModel
 
     fun accept(intent: MapStore.Intent) {
-        when (intent) {
-            MapStore.Intent.Viewport.ViewportCommandConsumed -> {
-                pendingViewportCommand = null
-                mutableModel.value = mutableModel.value.copy(pendingViewportCommand = null)
-            }
-
-            else -> Unit
-        }
         store.accept(intent)
     }
 
@@ -44,21 +34,11 @@ internal class MapStoreHolder(
 
     private fun handleLabel(label: MapStore.Label) {
         when (label) {
-            is MapStore.Label.Viewport.CommandRequested -> {
-                pendingViewportCommand = label.command
-                mutableModel.value = mutableModel.value.copy(pendingViewportCommand = label.command)
-            }
-
             is MapStore.Label.NotificationRequested -> Unit
         }
     }
 
-    private fun MapScreenComponent.Model.withTransientOutputs(): MapScreenComponent.Model = copy(
-        pendingViewportCommand = pendingViewportCommand,
-    )
-
     private fun MapScreenComponent.Model.withoutTransientOutputs(): MapScreenComponent.Model = copy(
         pendingLocationRequest = null,
-        pendingViewportCommand = null,
     )
 }

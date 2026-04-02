@@ -44,10 +44,6 @@ internal sealed interface MapStoreMessage {
 
     object OverlayLayerOpacityEditorDismissed : MapStoreMessage
 
-    object CenterMarkerMenuOpened : MapStoreMessage
-
-    object CenterMarkerMenuDismissed : MapStoreMessage
-
     object CreatePointSheetOpened : MapStoreMessage
 
     data class CreatePointLatitudeChanged(val value: String) : MapStoreMessage
