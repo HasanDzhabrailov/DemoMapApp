@@ -46,7 +46,8 @@ internal object MapLayerSourceConverter {
             attribution = "Google",
         ),
         "yandex-overlay" to TileDefinition(
-            urlTemplate = "https://core-renderer-tiles.maps.yandex.net/tiles?l=map&x={x}&y={y}&z={z}&scale=1&lang=ru_RU",
+            urlTemplate = "https://core-renderer-tiles.maps.yandex.net/tiles?" +
+                "l=map&x={x}&y={y}&z={z}&scale=1&lang=ru_RU",
             attribution = "Yandex",
         ),
     )

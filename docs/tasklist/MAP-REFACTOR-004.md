@@ -1,39 +1,39 @@
 # Tasklist - MAP-REFACTOR-004
 
-- [ ] Read PRD
-- [ ] Read plan
-- [ ] Confirm scope
+- [x] Read PRD
+- [x] Read plan
+- [x] Confirm scope
 
-- [ ] Create `feature/map/impl/location/` package structure
-- [ ] Create `LocationComponent` interface with Output
-- [ ] Create `LocationModel` data class
-- [ ] Create `LocationStore` interface
-- [ ] Create `LocationStore.State` с mode/marker/request
-- [ ] Create `LocationStore.Intent` (GpsToggle, MyLocation, etc.)
-- [ ] Create `LocationStore.Label` (LocationUpdated, ViewportCommand, LocationRequest)
-- [ ] Create `LocationExecutor`
-- [ ] Create `LocationReducer`
-- [ ] Create `LocationStoreFactory`
-- [ ] Create `DefaultLocationComponent`
-- [ ] Migrate logic from `LocationHandler`
+- [x] Create `feature/map/impl/location/` package structure
+- [x] Create `LocationComponent` interface with Output
+- [x] Create `LocationModel` data class
+- [x] Create `LocationStore` interface
+- [x] Create `LocationStore.State` с mode/marker/request
+- [x] Create `LocationStore.Intent` (GpsToggle, MyLocation, etc.)
+- [x] Create `LocationStore.Label` (LocationUpdated, ViewportCommand, LocationRequest)
+- [x] Create `LocationExecutor`
+- [x] Create `LocationReducer`
+- [x] Create `LocationStoreFactory`
+- [x] Create `DefaultLocationComponent`
+- [x] Migrate logic from `LocationHandler`
 
-- [ ] Unit test: GPS toggle переключает режимы
-- [ ] Unit test: My Location запрашивает permission
-- [ ] Unit test: LocationResult обновляет marker
-- [ ] Unit test: Output callbacks работают
+- [x] Unit test: GPS toggle переключает режимы
+- [x] Unit test: My Location behavior covered (docs mismatch: repo keeps manual placeholder behavior)
+- [x] Unit test: LocationResult обновляет marker
+- [x] Unit test: Output callbacks работают
 
-- [ ] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
-- [ ] Run `ktlintCheck`
+- [x] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
+- [x] Run `ktlintCheck`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| LocationComponent created | PENDING |
-| LocationStore works | PENDING |
-| All modes work | PENDING |
-| Tests pass | PENDING |
+| LocationComponent created | DONE |
+| LocationStore works | DONE |
+| All modes work | DONE |
+| Tests pass | DONE |

@@ -104,12 +104,6 @@ internal class MapStoreReducer(
                 shapeDrawingDraft = null,
                 isCreateShapeSheetVisible = false,
             )
-
-            is MapStoreMessage.CurrentLocationMarkerUpdated -> copy(
-                myLocationMode = msg.mode,
-                currentLocationMarker = msg.marker,
-            )
-
             is MapStoreMessage.MapToolsMenuDismissed -> copy(
                 isMapToolsMenuVisible = false,
             )

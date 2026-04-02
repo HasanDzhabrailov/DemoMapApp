@@ -6,8 +6,13 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.impl.location.DefaultLocationComponent
+import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
+import ru.tech.demomapapp.feature.map.impl.location.LocationStoreFactory
 import ru.tech.demomapapp.feature.map.impl.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerStoreFactory
@@ -20,6 +25,7 @@ import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
+    private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
     private val holder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
@@ -33,9 +39,25 @@ internal class DefaultMapScreenComponent(
         rulerStoreFactory = rulerStoreFactory,
         output = RulerComponent.Output(::handleRulerViewportCommand),
     )
+    private val locationComponent: LocationComponent = DefaultLocationComponent(
+        componentContext = componentContext,
+        locationStoreFactory = locationStoreFactory,
+        output = object : LocationComponent.Output {
+            override fun onLocationUpdated(location: MapLocationMarker?) {
+                handleLocationUpdated(location)
+            }
+
+            override fun onViewportCommandRequested(command: MapViewportCommand) {
+                handleLocationViewportCommand(command)
+            }
+
+            override fun onLocationRequestIssued(request: MapLocationRequest) = Unit
+        },
+    )
     private val mutableModel = MutableValue(mergeModels())
+    private var pendingLocationViewportCommand: MapViewportCommand? = null
     private var pendingRulerViewportCommand: MapViewportCommand? = null
-    private var syncedRulerLocation = holder.model.value.currentLocationMarker
+    private var syncedRulerLocation = locationComponent.model.value.currentMarker
     private var syncedRulerSnapshot = holder.model.value.lastCameraSnapshot
 
     override val model: Value<MapScreenComponent.Model> = mutableModel
@@ -47,6 +69,7 @@ internal class DefaultMapScreenComponent(
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         holder.accept(MapStore.Intent.Viewport.CameraIdle(snapshot))
+        locationComponent.onCameraSnapshotReceived(snapshot)
         syncRulerState()
         refreshModel()
     }
@@ -78,13 +101,13 @@ internal class DefaultMapScreenComponent(
         MapStore.Intent.Tools.OverlayLayerOpacityChanged(value),
     )
     override fun onLayerOpacityDismiss() = acceptMapIntent(MapStore.Intent.Tools.OverlayLayerOpacityDismissed)
-    override fun onGpsToggle() = acceptMapIntent(MapStore.Intent.Location.GpsToggled)
-    override fun onMyLocationClick() = acceptMapIntent(MapStore.Intent.Location.MyLocationClicked)
-    override fun onCurrentLocationFocusClick() = acceptMapIntent(MapStore.Intent.Location.CurrentLocationFocusClicked)
-    override fun onLocationRequestConsumed() = acceptMapIntent(MapStore.Intent.Location.LocationRequestConsumed)
-    override fun onLocationResult(result: LocationRequestResult) = acceptMapIntent(
-        MapStore.Intent.Location.LocationResultReceived(result),
-    )
+    override fun onGpsToggle() = acceptLocationUpdate(locationComponent::onGpsToggle)
+    override fun onMyLocationClick() = acceptLocationUpdate(locationComponent::onMyLocationClick)
+    override fun onCurrentLocationFocusClick() = acceptLocationUpdate(locationComponent::onCurrentLocationFocusClick)
+    override fun onLocationRequestConsumed() = acceptLocationUpdate(locationComponent::onLocationRequestConsumed)
+    override fun onLocationResult(result: LocationRequestResult) = acceptLocationUpdate {
+        locationComponent.onLocationResult(result)
+    }
     override fun onRulerToggle() {
         rulerComponent.onToggleClicked()
         syncRulerState()
@@ -93,6 +116,8 @@ internal class DefaultMapScreenComponent(
     override fun onViewportCommandConsumed() {
         if (holder.model.value.pendingViewportCommand != null) {
             holder.accept(MapStore.Intent.Viewport.ViewportCommandConsumed)
+        } else if (pendingLocationViewportCommand != null) {
+            pendingLocationViewportCommand = null
         } else {
             pendingRulerViewportCommand = null
         }
@@ -144,20 +169,30 @@ internal class DefaultMapScreenComponent(
         refreshModel()
     }
 
+    private fun acceptLocationUpdate(action: () -> Unit) {
+        action()
+        syncRulerState()
+        refreshModel()
+    }
+
     private fun syncRulerState() {
         val mapModel = holder.model.value
         if (mapModel.lastCameraSnapshot != syncedRulerSnapshot) {
             mapModel.lastCameraSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
             syncedRulerSnapshot = mapModel.lastCameraSnapshot
         }
-        if (mapModel.currentLocationMarker != syncedRulerLocation) {
-            rulerComponent.onLocationUpdated(mapModel.currentLocationMarker)
-            syncedRulerLocation = mapModel.currentLocationMarker
+        val locationMarker = locationComponent.model.value.currentMarker
+        if (locationMarker != syncedRulerLocation) {
+            rulerComponent.onLocationUpdated(locationMarker)
+            syncedRulerLocation = locationMarker
         }
     }
 
     private fun refreshModel() {
         if (holder.model.value.pendingViewportCommand != null) {
+            pendingLocationViewportCommand = null
+            pendingRulerViewportCommand = null
+        } else if (pendingLocationViewportCommand != null) {
             pendingRulerViewportCommand = null
         }
         mutableModel.value = mergeModels()
@@ -165,13 +200,31 @@ internal class DefaultMapScreenComponent(
 
     private fun mergeModels(): MapScreenComponent.Model {
         val mapModel = holder.model.value
+        val locationModel = locationComponent.model.value
         val rulerModel = rulerComponent.model.value
+        val pendingViewportCommand =
+            mapModel.pendingViewportCommand ?: pendingLocationViewportCommand ?: pendingRulerViewportCommand
+
         return mapModel.copy(
+            myLocationMode = locationModel.mode,
+            currentLocationMarker = locationModel.currentMarker,
+            pendingLocationRequest = locationModel.pendingRequest,
             isRulerEnabled = rulerModel.isEnabled,
             rulerMeasurement = rulerModel.measurement,
             rulerInfoWindow = rulerModel.infoWindow,
-            pendingViewportCommand = mapModel.pendingViewportCommand ?: pendingRulerViewportCommand,
+            pendingViewportCommand = pendingViewportCommand,
         )
+    }
+
+    private fun handleLocationUpdated(location: MapLocationMarker?) {
+        if (location != syncedRulerLocation) {
+            rulerComponent.onLocationUpdated(location)
+            syncedRulerLocation = location
+        }
+    }
+
+    private fun handleLocationViewportCommand(command: MapViewportCommand) {
+        pendingLocationViewportCommand = command
     }
 
     private fun handleRulerViewportCommand(command: MapViewportCommand) {

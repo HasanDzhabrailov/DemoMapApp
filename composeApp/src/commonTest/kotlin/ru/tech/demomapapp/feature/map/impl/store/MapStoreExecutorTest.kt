@@ -23,7 +23,6 @@ import ru.tech.demomapapp.feature.map.impl.TimeProvider
 import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
-import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
 
 class MapStoreExecutorTest {
 
@@ -49,7 +48,6 @@ class MapStoreExecutorTest {
                 timeProvider = TimeProvider { 123L },
                 featureIdProvider = FeatureIdProvider { "feature-1" },
             ),
-            locationHandler = LocationHandler(),
             featureClickHandler = FeatureClickHandler(
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
@@ -100,7 +98,6 @@ class MapStoreExecutorTest {
                 timeProvider = TimeProvider { 123L },
                 featureIdProvider = FeatureIdProvider { "feature-1" },
             ),
-            locationHandler = LocationHandler(),
             featureClickHandler = FeatureClickHandler(
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
@@ -176,7 +173,6 @@ class MapStoreExecutorTest {
                 timeProvider = TimeProvider { 123L },
                 featureIdProvider = FeatureIdProvider { "line-1" },
             ),
-            locationHandler = LocationHandler(),
             featureClickHandler = FeatureClickHandler(
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
@@ -237,7 +233,6 @@ class MapStoreExecutorTest {
                 timeProvider = TimeProvider { 123L },
                 featureIdProvider = FeatureIdProvider { "polygon-1" },
             ),
-            locationHandler = LocationHandler(),
             featureClickHandler = FeatureClickHandler(
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
@@ -372,7 +367,6 @@ class MapStoreExecutorTest {
             timeProvider = TimeProvider { 123L },
             featureIdProvider = FeatureIdProvider { "feature-1" },
         ),
-        locationHandler = LocationHandler(),
         featureClickHandler = FeatureClickHandler(
             featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
             featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(

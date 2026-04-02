@@ -1,17 +1,14 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
-import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
-import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
 
 internal class MapStoreExecutor(
     private val createPointHandler: CreatePointHandler,
     private val drawingHandler: DrawingHandler,
-    private val locationHandler: LocationHandler,
     private val featureClickHandler: FeatureClickHandler,
 ) : com.arkivanov.mvikotlin.core.store.Executor<
     MapStore.Intent,
@@ -80,11 +77,6 @@ internal class MapStoreExecutor(
             is MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed -> callbacks.onMessage(
                 MapStoreMessage.FeatureInfoWindowDismissed,
             )
-            is MapStore.Intent.Location.GpsToggled -> handleGpsToggle()
-            is MapStore.Intent.Location.MyLocationClicked -> handleMyLocationClick()
-            is MapStore.Intent.Location.CurrentLocationFocusClicked -> handleCurrentLocationFocusClick()
-            is MapStore.Intent.Location.LocationRequestConsumed -> Unit
-            is MapStore.Intent.Location.LocationResultReceived -> handleLocationResult(intent.result)
             is MapStore.Intent.Viewport.CameraIdle -> handleCameraIdle(intent.snapshot)
             is MapStore.Intent.Viewport.ViewportCommandConsumed -> Unit
             is MapStore.Intent.Viewport.ZoomInClicked -> emitViewportCommand(MapViewportCommand.ZoomIn)
@@ -165,43 +157,6 @@ internal class MapStoreExecutor(
             anchor = intent.anchor,
             onInfoWindowOpened = { message -> callbacks.onMessage(message) },
         )
-    }
-
-    private fun handleGpsToggle() {
-        val result = locationHandler.handleGpsToggle(currentState())
-        syncState(result.state)
-        result.locationRequest?.let { request ->
-            callbacks.onLabel(MapStore.Label.Location.RequestIssued(request))
-        }
-    }
-
-    private fun handleMyLocationClick() {
-        val result = locationHandler.handleMyLocationClick(currentState()) ?: return
-        syncState(result.state)
-    }
-
-    private fun handleCurrentLocationFocusClick() {
-        val result = locationHandler.handleCurrentLocationFocusClick(currentState()) ?: return
-        result.viewportCommand?.let { command ->
-            emitViewportCommand(command)
-        }
-        if (result.state != currentState()) {
-            syncState(result.state)
-        }
-        result.locationRequest?.let { request ->
-            callbacks.onLabel(MapStore.Label.Location.RequestIssued(request))
-        }
-    }
-
-    private fun handleLocationResult(result: LocationRequestResult) {
-        val locationResult = locationHandler.handleLocationResult(
-            state = currentState(),
-            result = result,
-        )
-        syncState(locationResult.state)
-        locationResult.viewportCommand?.let { command ->
-            callbacks.onLabel(MapStore.Label.Viewport.CommandRequested(command))
-        }
     }
 
     private fun handleCameraIdle(snapshot: MapCameraSnapshot) {

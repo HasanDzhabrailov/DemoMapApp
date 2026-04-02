@@ -1,18 +1,14 @@
 package ru.tech.demomapapp.feature.map.impl.store
 
 import com.arkivanov.mvikotlin.core.store.Store
-import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapCatalogItem
 import ru.tech.demomapapp.feature.map.api.MapLayerCatalog
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
-import ru.tech.demomapapp.feature.map.api.MapLocationMarker
-import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-import ru.tech.demomapapp.feature.map.api.MyLocationMode
 
 internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.Label> {
     sealed interface Intent {
@@ -60,18 +56,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             data class OverlayLayerOpacityChanged(val value: Float) : Tools
 
             object OverlayLayerOpacityDismissed : Tools
-        }
-
-        sealed interface Location : Intent {
-            object GpsToggled : Location
-
-            object MyLocationClicked : Location
-
-            object CurrentLocationFocusClicked : Location
-
-            object LocationRequestConsumed : Location
-
-            data class LocationResultReceived(val result: LocationRequestResult) : Location
         }
 
         sealed interface CenterMarker : Intent {
@@ -135,9 +119,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         val isMapsOnScreenSheetVisible: Boolean = false,
         val selectedOverlayLayer: MapLayerEntry? = null,
         val editingOverlayOpacityLayer: MapLayerEntry? = null,
-        val myLocationMode: MyLocationMode = MyLocationMode.OFF,
-        val currentLocationMarker: MapLocationMarker? = null,
-        val activeLocationRequest: MapLocationRequest? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
@@ -156,8 +137,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
             selectedOverlayLayer = selectedOverlayLayer,
             editingOverlayOpacityLayer = editingOverlayOpacityLayer,
-            myLocationMode = myLocationMode,
-            currentLocationMarker = currentLocationMarker,
             isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
             isCreatePointSheetVisible = isCreatePointSheetVisible,
             createPointDraft = createPointDraft?.toComponentDraft(),
@@ -168,28 +147,24 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         )
 
         companion object {
-            fun fromModel(model: MapScreenComponent.Model, activeLocationRequest: MapLocationRequest? = null): State =
-                State(
-                    mapState = model.mapState,
-                    availableMapCatalog = model.availableMapCatalog,
-                    lastCameraSnapshot = model.lastCameraSnapshot,
-                    isMapToolsMenuVisible = model.isMapToolsMenuVisible,
-                    isAvailableMapsSheetVisible = model.isAvailableMapsSheetVisible,
-                    selectedAvailableMap = model.selectedAvailableMap,
-                    isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
-                    selectedOverlayLayer = model.selectedOverlayLayer,
-                    editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
-                    myLocationMode = model.myLocationMode,
-                    currentLocationMarker = model.currentLocationMarker,
-                    activeLocationRequest = activeLocationRequest,
-                    isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
-                    isCreatePointSheetVisible = model.isCreatePointSheetVisible,
-                    createPointDraft = model.createPointDraft?.toStoreDraft(),
-                    drawingMode = model.drawingMode?.toStoreDrawingMode(),
-                    shapeDrawingDraft = model.shapeDrawingDraft?.toStoreDraft(),
-                    isCreateShapeSheetVisible = model.isCreateShapeSheetVisible,
-                    selectedFeatureInfoWindow = model.selectedFeatureInfoWindow?.toStoreInfoWindow(),
-                )
+            fun fromModel(model: MapScreenComponent.Model): State = State(
+                mapState = model.mapState,
+                availableMapCatalog = model.availableMapCatalog,
+                lastCameraSnapshot = model.lastCameraSnapshot,
+                isMapToolsMenuVisible = model.isMapToolsMenuVisible,
+                isAvailableMapsSheetVisible = model.isAvailableMapsSheetVisible,
+                selectedAvailableMap = model.selectedAvailableMap,
+                isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
+                selectedOverlayLayer = model.selectedOverlayLayer,
+                editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
+                isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
+                isCreatePointSheetVisible = model.isCreatePointSheetVisible,
+                createPointDraft = model.createPointDraft?.toStoreDraft(),
+                drawingMode = model.drawingMode?.toStoreDrawingMode(),
+                shapeDrawingDraft = model.shapeDrawingDraft?.toStoreDraft(),
+                isCreateShapeSheetVisible = model.isCreateShapeSheetVisible,
+                selectedFeatureInfoWindow = model.selectedFeatureInfoWindow?.toStoreInfoWindow(),
+            )
         }
     }
 
@@ -230,10 +205,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
     sealed interface Label {
         sealed interface Viewport : Label {
             data class CommandRequested(val command: MapViewportCommand) : Viewport
-        }
-
-        sealed interface Location : Label {
-            data class RequestIssued(val request: MapLocationRequest) : Location
         }
 
         data class NotificationRequested(val message: String) : Label

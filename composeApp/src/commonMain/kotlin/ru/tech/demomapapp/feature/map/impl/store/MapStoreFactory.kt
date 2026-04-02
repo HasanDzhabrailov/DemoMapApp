@@ -22,7 +22,6 @@ import ru.tech.demomapapp.feature.map.impl.UuidFeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.store.handler.CreatePointHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.DrawingHandler
 import ru.tech.demomapapp.feature.map.impl.store.handler.FeatureClickHandler
-import ru.tech.demomapapp.feature.map.impl.store.handler.LocationHandler
 
 internal class MapStoreFactory(
     private val storeFactory: StoreFactory = DefaultStoreFactory(),
@@ -53,10 +52,6 @@ internal class MapStoreFactory(
         )
     }
 
-    private val locationHandler: LocationHandler by lazy {
-        LocationHandler()
-    }
-
     private val featureClickHandler: FeatureClickHandler by lazy {
         FeatureClickHandler(
             featureSelectionResolver = featureSelectionResolver,
@@ -74,7 +69,6 @@ internal class MapStoreFactory(
                 MapStoreExecutor(
                     createPointHandler = createPointHandler,
                     drawingHandler = drawingHandler,
-                    locationHandler = locationHandler,
                     featureClickHandler = featureClickHandler,
                 )
             },

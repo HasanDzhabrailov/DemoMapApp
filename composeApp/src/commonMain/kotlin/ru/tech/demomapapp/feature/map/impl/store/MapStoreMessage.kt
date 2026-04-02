@@ -2,10 +2,8 @@ package ru.tech.demomapapp.feature.map.impl.store
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
-import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.api.MyLocationMode
 
 internal sealed interface MapStoreMessage {
     data class StateSynced(val state: MapStore.State) : MapStoreMessage
@@ -85,9 +83,4 @@ internal sealed interface MapStoreMessage {
     ) : MapStoreMessage
 
     object FeatureInfoWindowDismissed : MapStoreMessage
-
-    data class CurrentLocationMarkerUpdated(
-        val mode: MyLocationMode,
-        val marker: MapLocationMarker,
-    ) : MapStoreMessage
 }
