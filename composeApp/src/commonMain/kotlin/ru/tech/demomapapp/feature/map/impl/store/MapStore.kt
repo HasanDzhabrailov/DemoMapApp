@@ -13,8 +13,6 @@ import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
-import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 
 internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.Label> {
     sealed interface Intent {
@@ -74,10 +72,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             object LocationRequestConsumed : Location
 
             data class LocationResultReceived(val result: LocationRequestResult) : Location
-        }
-
-        sealed interface Ruler : Intent {
-            object Toggled : Ruler
         }
 
         sealed interface CenterMarker : Intent {
@@ -144,9 +138,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
         val myLocationMode: MyLocationMode = MyLocationMode.OFF,
         val currentLocationMarker: MapLocationMarker? = null,
         val activeLocationRequest: MapLocationRequest? = null,
-        val isRulerEnabled: Boolean = false,
-        val rulerMeasurement: RulerMeasurement? = null,
-        val rulerInfoWindow: RulerInfoWindowState? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
@@ -167,9 +158,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
             editingOverlayOpacityLayer = editingOverlayOpacityLayer,
             myLocationMode = myLocationMode,
             currentLocationMarker = currentLocationMarker,
-            isRulerEnabled = isRulerEnabled,
-            rulerMeasurement = rulerMeasurement,
-            rulerInfoWindow = rulerInfoWindow,
             isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
             isCreatePointSheetVisible = isCreatePointSheetVisible,
             createPointDraft = createPointDraft?.toComponentDraft(),
@@ -194,9 +182,6 @@ internal interface MapStore : Store<MapStore.Intent, MapStore.State, MapStore.La
                     myLocationMode = model.myLocationMode,
                     currentLocationMarker = model.currentLocationMarker,
                     activeLocationRequest = activeLocationRequest,
-                    isRulerEnabled = model.isRulerEnabled,
-                    rulerMeasurement = model.rulerMeasurement,
-                    rulerInfoWindow = model.rulerInfoWindow,
                     isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
                     isCreatePointSheetVisible = model.isCreatePointSheetVisible,
                     createPointDraft = model.createPointDraft?.toStoreDraft(),

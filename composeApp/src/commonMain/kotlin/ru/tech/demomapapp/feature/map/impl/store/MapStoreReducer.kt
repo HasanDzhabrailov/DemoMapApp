@@ -161,26 +161,6 @@ internal class MapStoreReducer(
                 isCreateShapeSheetVisible = false,
             )
 
-            is MapStoreMessage.RulerCleared -> copy(
-                rulerMeasurement = null,
-                rulerInfoWindow = null,
-            )
-
-            is MapStoreMessage.RulerDisabled -> copy(
-                isRulerEnabled = false,
-                rulerMeasurement = null,
-                rulerInfoWindow = null,
-            )
-
-            is MapStoreMessage.RulerEnabled -> copy(
-                isRulerEnabled = true,
-            )
-
-            is MapStoreMessage.RulerMeasurementUpdated -> copy(
-                rulerMeasurement = msg.measurement,
-                rulerInfoWindow = msg.infoWindow,
-            )
-
             is MapStoreMessage.StateSynced -> msg.state
             else -> this
         }

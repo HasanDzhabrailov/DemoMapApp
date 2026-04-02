@@ -12,13 +12,9 @@ import ru.tech.demomapapp.feature.map.api.MapLayerCatalog
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLayerSourceRef
 import ru.tech.demomapapp.feature.map.api.MapLine
-import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapVertex
-import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
-import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 
 class MapStoreReducerTest {
@@ -400,51 +396,6 @@ class MapStoreReducerTest {
         assertNull(updatedState.shapeDrawingDraft)
         assertNull(updatedState.drawingMode)
         assertFalse(updatedState.isCreateShapeSheetVisible)
-    }
-
-    @Test
-    fun `ruler messages update dedicated ruler state`() {
-        val enabledState = reduce(MapStore.State(), MapStoreMessage.RulerEnabled)
-        assertTrue(enabledState.isRulerEnabled)
-
-        val markerState = reduce(
-            enabledState,
-            MapStoreMessage.CurrentLocationMarkerUpdated(
-                mode = MyLocationMode.MANUAL_PLACEHOLDER,
-                marker = MapLocationMarker(
-                    latitude = 59.0,
-                    longitude = 30.0,
-                    isPlaceholder = true,
-                ),
-            ),
-        )
-        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, markerState.myLocationMode)
-        assertNotNull(markerState.currentLocationMarker)
-
-        val measuredState = reduce(
-            markerState,
-            MapStoreMessage.RulerMeasurementUpdated(
-                measurement = RulerMeasurement(
-                    startLatitude = 59.0,
-                    startLongitude = 30.0,
-                    endLatitude = 59.1,
-                    endLongitude = 30.1,
-                    distanceMeters = 100.0,
-                    trueAzimuthDegrees = 42.0,
-                ),
-                infoWindow = RulerInfoWindowState(
-                    distanceText = "100 м",
-                    trueAzimuthText = "A = 42°",
-                    magneticAzimuthText = "Am = 40°",
-                ),
-            ),
-        )
-        assertEquals("100 м", measuredState.rulerInfoWindow?.distanceText)
-
-        val disabledState = reduce(measuredState, MapStoreMessage.RulerDisabled)
-        assertFalse(disabledState.isRulerEnabled)
-        assertNull(disabledState.rulerMeasurement)
-        assertNull(disabledState.rulerInfoWindow)
     }
 
     private fun reduce(state: MapStore.State, message: MapStoreMessage): MapStore.State =

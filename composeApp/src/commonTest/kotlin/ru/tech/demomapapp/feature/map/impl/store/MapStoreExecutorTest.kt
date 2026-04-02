@@ -17,8 +17,6 @@ import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonInput
 import ru.tech.demomapapp.feature.map.impl.CreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.MapPointCreatedAtFormatter
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
@@ -56,8 +54,6 @@ class MapStoreExecutorTest {
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             ),
-            rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
         val callbacks = TestExecutorCallbacks(
             state = MapStore.State(
@@ -109,8 +105,6 @@ class MapStoreExecutorTest {
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             ),
-            rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
         val callbacks = TestExecutorCallbacks(
             state = MapStore.State(
@@ -187,8 +181,6 @@ class MapStoreExecutorTest {
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             ),
-            rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
         val callbacks = TestExecutorCallbacks(
             state = MapStore.State(
@@ -250,8 +242,6 @@ class MapStoreExecutorTest {
                 featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
             ),
-            rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-            rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
         )
         val callbacks = TestExecutorCallbacks(
             state = MapStore.State(
@@ -389,8 +379,6 @@ class MapStoreExecutorTest {
                 createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
             ),
         ),
-        rulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-        rulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
     )
 
     private class TestExecutorCallbacks(

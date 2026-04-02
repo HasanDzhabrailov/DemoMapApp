@@ -6,8 +6,6 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
-import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 
 internal sealed interface MapStoreMessage {
     data class StateSynced(val state: MapStore.State) : MapStoreMessage
@@ -92,15 +90,4 @@ internal sealed interface MapStoreMessage {
         val mode: MyLocationMode,
         val marker: MapLocationMarker,
     ) : MapStoreMessage
-
-    object RulerEnabled : MapStoreMessage
-
-    object RulerDisabled : MapStoreMessage
-
-    data class RulerMeasurementUpdated(
-        val measurement: RulerMeasurement,
-        val infoWindow: RulerInfoWindowState,
-    ) : MapStoreMessage
-
-    object RulerCleared : MapStoreMessage
 }

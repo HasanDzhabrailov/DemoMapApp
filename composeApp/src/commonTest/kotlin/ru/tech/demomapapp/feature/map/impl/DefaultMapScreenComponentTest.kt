@@ -313,21 +313,19 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
-    fun `ruler enable creates fallback manual marker from current snapshot`() {
+    fun `ruler enable uses internal fallback without mutating shared location state`() {
         val component = createComponent()
 
         component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
         component.onRulerToggle()
 
-        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
-        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
-        assertEquals(30.0, component.model.value.currentLocationMarker?.longitude)
-        assertTrue(component.model.value.currentLocationMarker?.isPlaceholder == true)
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
         assertEquals("0 м", component.model.value.rulerInfoWindow?.distanceText)
     }
 
     @Test
-    fun `ruler waits for first snapshot before creating fallback manual marker`() {
+    fun `ruler waits for first snapshot before creating fallback measurement`() {
         val component = createComponent()
 
         component.onRulerToggle()
@@ -338,8 +336,8 @@ class DefaultMapScreenComponentTest {
 
         component.onCameraIdle(defaultSnapshot(latitude = 59.0, longitude = 30.0))
 
-        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
-        assertEquals(59.0, component.model.value.currentLocationMarker?.latitude)
+        assertEquals(MyLocationMode.OFF, component.model.value.myLocationMode)
+        assertNull(component.model.value.currentLocationMarker)
         assertNotNull(component.model.value.rulerMeasurement)
     }
 

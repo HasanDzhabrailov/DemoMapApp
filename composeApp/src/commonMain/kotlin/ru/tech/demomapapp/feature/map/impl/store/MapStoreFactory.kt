@@ -11,14 +11,10 @@ import ru.tech.demomapapp.feature.map.impl.DefaultCreateMapPointUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultCreateMapPolygonUseCase
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingDraftUpdater
 import ru.tech.demomapapp.feature.map.impl.FeatureIdProvider
 import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
-import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 import ru.tech.demomapapp.feature.map.impl.ShapeDrawingDraftUpdater
 import ru.tech.demomapapp.feature.map.impl.SystemTimeProvider
 import ru.tech.demomapapp.feature.map.impl.TimeProvider
@@ -39,8 +35,6 @@ internal class MapStoreFactory(
     private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
     private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper =
         DefaultMapFeatureInfoWindowStateMapper(),
-    private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
-    private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
 ) {
     private val createPointHandler: CreatePointHandler by lazy {
         CreatePointHandler(
@@ -82,8 +76,6 @@ internal class MapStoreFactory(
                     drawingHandler = drawingHandler,
                     locationHandler = locationHandler,
                     featureClickHandler = featureClickHandler,
-                    rulerMeasurementCalculator = rulerMeasurementCalculator,
-                    rulerInfoWindowStateFormatter = rulerInfoWindowStateFormatter,
                 )
             },
             reducer = MapStoreReducer(shapeDrawingDraftUpdater),
