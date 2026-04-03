@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl
+package ru.tech.demomapapp.feature.map.host
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.Value

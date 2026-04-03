@@ -20,6 +20,7 @@ import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
+import ru.tech.demomapapp.feature.map.host.DefaultMapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 

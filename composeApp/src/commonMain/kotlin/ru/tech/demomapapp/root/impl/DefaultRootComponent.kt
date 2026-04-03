@@ -6,7 +6,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import kotlinx.serialization.Serializable
-import ru.tech.demomapapp.feature.map.impl.DefaultMapScreenComponent
+import ru.tech.demomapapp.feature.map.host.DefaultMapScreenComponent
 import ru.tech.demomapapp.root.api.RootComponent
 
 class DefaultRootComponent(
