@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.location
+package ru.tech.demomapapp.feature.map.location
 
 import com.arkivanov.mvikotlin.core.store.Executor
 import kotlin.test.Test

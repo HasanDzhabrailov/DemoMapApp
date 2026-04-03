@@ -5,7 +5,7 @@ import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft as DrawingCreateP
 import ru.tech.demomapapp.feature.map.drawing.DrawingMode as InternalDrawingMode
 import ru.tech.demomapapp.feature.map.drawing.DrawingModel
 import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
-import ru.tech.demomapapp.feature.map.impl.location.LocationModel
+import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.ToolsModel

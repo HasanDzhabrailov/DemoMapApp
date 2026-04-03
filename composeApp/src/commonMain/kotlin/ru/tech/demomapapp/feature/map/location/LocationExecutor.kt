@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.location
+package ru.tech.demomapapp.feature.map.location
 
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker

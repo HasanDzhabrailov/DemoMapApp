@@ -1,6 +1,6 @@
 @file:Suppress("ktlint:standard:function-naming")
 
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.location.ui
 
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult

@@ -2,20 +2,20 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: package-move only
+- [x] Confirm scope: package-move only
 
-- [ ] Identify location-owned files
-- [ ] Move location files to location package
-- [ ] Fix imports
+- [x] Identify location-owned files
+- [x] Move location files to location package
+- [x] Fix imports
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Location package exists | PENDING |
-| Behavior preserved | PENDING |
+| Location package exists | DONE |
+| Behavior preserved | DONE |

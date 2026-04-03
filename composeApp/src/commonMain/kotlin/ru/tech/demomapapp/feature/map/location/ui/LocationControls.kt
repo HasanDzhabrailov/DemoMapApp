@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.location.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -11,8 +11,10 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
-import ru.tech.demomapapp.feature.map.impl.location.LocationModel
+import ru.tech.demomapapp.feature.map.location.LocationComponent
+import ru.tech.demomapapp.feature.map.location.LocationModel
+import ru.tech.demomapapp.feature.map.ui.CurrentLocationFocusButton
+import ru.tech.demomapapp.feature.map.ui.MyLocationButton
 
 @Composable
 internal fun LocationControls(component: LocationComponent, modifier: Modifier = Modifier) {

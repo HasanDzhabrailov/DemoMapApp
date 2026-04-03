@@ -13,9 +13,9 @@ import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
-import ru.tech.demomapapp.feature.map.impl.location.DefaultLocationComponent
-import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
-import ru.tech.demomapapp.feature.map.impl.location.LocationStoreFactory
+import ru.tech.demomapapp.feature.map.location.DefaultLocationComponent
+import ru.tech.demomapapp.feature.map.location.LocationComponent
+import ru.tech.demomapapp.feature.map.location.LocationStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder

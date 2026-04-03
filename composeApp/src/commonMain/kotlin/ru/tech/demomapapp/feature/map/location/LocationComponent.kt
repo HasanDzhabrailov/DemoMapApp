@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.location
+package ru.tech.demomapapp.feature.map.location
 
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
