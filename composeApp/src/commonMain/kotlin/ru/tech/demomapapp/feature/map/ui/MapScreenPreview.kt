@@ -7,8 +7,21 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
+import ru.tech.demomapapp.feature.map.impl.MapScreenUiComponent
+import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent
+import ru.tech.demomapapp.feature.map.impl.drawing.DrawingModel
+import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
+import ru.tech.demomapapp.feature.map.impl.location.LocationModel
+import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
+import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
+import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.impl.tools.ToolsModel
+import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
+import ru.tech.demomapapp.feature.map.impl.viewport.ViewportModel
 
 @Preview
 @Composable
@@ -19,7 +32,7 @@ internal fun MapScreenContentPreview() {
 }
 
 @Suppress("TooManyFunctions")
-private class PreviewMapScreenComponent : MapScreenComponent {
+private class PreviewMapScreenComponent : MapScreenUiComponent {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(
             MapScreenComponent.Model(
@@ -35,6 +48,93 @@ private class PreviewMapScreenComponent : MapScreenComponent {
                 ),
             ),
         )
+
+    override val drawingComponent: DrawingComponent = object : DrawingComponent {
+        override val model: Value<DrawingModel> = MutableValue(DrawingModel())
+
+        override fun onCreatePointClick() = Unit
+        override fun onCreateLineClick() = Unit
+        override fun onCreatePolygonClick() = Unit
+        override fun onCreatePointLatitudeChange(value: String) = Unit
+        override fun onCreatePointLongitudeChange(value: String) = Unit
+        override fun onCreatePointTitleChange(value: String) = Unit
+        override fun onCreatePointConfirm() = Unit
+        override fun onCreatePointSheetDismiss() = Unit
+        override fun onDrawingAddPositionClick() = Unit
+        override fun onDrawingRemoveLastPositionClick() = Unit
+        override fun onDrawingDetailsClick() = Unit
+        override fun onDrawingDismiss() = Unit
+        override fun onCreateShapeTitleChange(value: String) = Unit
+        override fun onCreateShapeConfirm() = Unit
+        override fun onCreateShapeSheetDismiss() = Unit
+        override fun onCameraPositionUpdated(snapshot: MapCameraSnapshot) = Unit
+    }
+
+    override val locationComponent: LocationComponent = object : LocationComponent {
+        override val model: Value<LocationModel> = MutableValue(
+            LocationModel(
+                mode = MyLocationMode.MANUAL_PLACEHOLDER,
+                currentMarker = MapLocationMarker(latitude = 55.75, longitude = 37.61, isPlaceholder = true),
+                pendingRequest = null,
+            ),
+        )
+
+        override fun onGpsToggle() = Unit
+        override fun onMyLocationClick() = Unit
+        override fun onCurrentLocationFocusClick() = Unit
+        override fun onLocationResult(result: LocationRequestResult) = Unit
+        override fun onLocationRequestConsumed() = Unit
+        override fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot) = Unit
+    }
+
+    override val rulerComponent: RulerComponent = object : RulerComponent {
+        override val model: Value<RulerModel> = MutableValue(
+            RulerModel(
+                isEnabled = true,
+                infoWindow = RulerInfoWindowState(
+                    distanceText = "12,9 км",
+                    trueAzimuthText = "A = 97° 33' 29\"",
+                ),
+            ),
+        )
+
+        override fun onToggleClicked() = Unit
+        override fun onLocationUpdated(location: MapLocationMarker?) = Unit
+        override fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot) = Unit
+    }
+
+    override val toolsComponent: ToolsComponent = object : ToolsComponent {
+        override val model: Value<ToolsModel> = MutableValue(ToolsModel())
+
+        override fun onMapToolsClick() = Unit
+        override fun onMapToolsDismiss() = Unit
+        override fun onAvailableMapsClick() = Unit
+        override fun onAvailableMapsDismiss() = Unit
+        override fun onAvailableMapSelect(mapId: String) = Unit
+        override fun onAvailableMapConfirm() = Unit
+        override fun onAvailableMapSelectionDismiss() = Unit
+        override fun onMapsOnScreenClick() = Unit
+        override fun onMapsOnScreenDismiss() = Unit
+        override fun onLayerActionsClick(layerId: String) = Unit
+        override fun onLayerActionsDismiss() = Unit
+        override fun onMoveLayerUpClick() = Unit
+        override fun onMoveLayerDownClick() = Unit
+        override fun onRemoveLayerClick() = Unit
+        override fun onLayerOpacityClick() = Unit
+        override fun onLayerOpacityChange(value: Float) = Unit
+        override fun onLayerOpacityDismiss() = Unit
+    }
+
+    override val viewportComponent: ViewportComponent = object : ViewportComponent {
+        override val model: Value<ViewportModel> = MutableValue(ViewportModel())
+
+        override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+        override fun onZoomInClick() = Unit
+        override fun onZoomOutClick() = Unit
+        override fun onViewportCommandConsumed() = Unit
+        override fun onCenterMarkerClick() = Unit
+        override fun onCenterMarkerMenuDismiss() = Unit
+    }
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
 

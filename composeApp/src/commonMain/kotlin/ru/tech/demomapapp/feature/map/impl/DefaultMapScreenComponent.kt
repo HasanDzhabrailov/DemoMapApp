@@ -39,7 +39,7 @@ internal class DefaultMapScreenComponent(
     private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     private val viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
-) : MapScreenComponent, ComponentContext by componentContext {
+) : MapScreenUiComponent, ComponentContext by componentContext {
     private val routerHolder = instanceKeeper.getOrCreate(key = MAP_ROUTER_STORE_HOLDER_KEY) {
         MapRouterStoreHolder(
             mapRouterStoreFactory = mapRouterStoreFactory,
@@ -47,7 +47,7 @@ internal class DefaultMapScreenComponent(
         )
     }
     private var bridge: MapScreenRouterBridge? = null
-    private val toolsComponent: ToolsComponent = DefaultToolsComponent(
+    override val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = componentContext,
         toolsStoreFactory = toolsStoreFactory,
         initialModel = initialModel,
@@ -59,7 +59,7 @@ internal class DefaultMapScreenComponent(
             override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
         },
     )
-    private val drawingComponent: DrawingComponent = DefaultDrawingComponent(
+    override val drawingComponent: DrawingComponent = DefaultDrawingComponent(
         componentContext = componentContext,
         drawingStoreFactory = drawingStoreFactory,
         initialModel = initialModel.toDrawingModel(),
@@ -71,7 +71,7 @@ internal class DefaultMapScreenComponent(
             override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
         },
     )
-    private val rulerComponent: RulerComponent = DefaultRulerComponent(
+    override val rulerComponent: RulerComponent = DefaultRulerComponent(
         componentContext = componentContext,
         rulerStoreFactory = rulerStoreFactory,
         initialModel = initialModel.toRulerModel(),
@@ -88,7 +88,7 @@ internal class DefaultMapScreenComponent(
             }
         },
     )
-    private val viewportComponent: ViewportComponent = DefaultViewportComponent(
+    override val viewportComponent: ViewportComponent = DefaultViewportComponent(
         componentContext = componentContext,
         viewportStoreFactory = viewportStoreFactory,
         initialModel = initialModel.toViewportModel(),
@@ -105,7 +105,7 @@ internal class DefaultMapScreenComponent(
             }
         },
     )
-    private val locationComponent: LocationComponent = DefaultLocationComponent(
+    override val locationComponent: LocationComponent = DefaultLocationComponent(
         componentContext = componentContext,
         locationStoreFactory = locationStoreFactory,
         initialModel = initialModel.toLocationModel(),
