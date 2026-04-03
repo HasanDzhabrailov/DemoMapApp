@@ -15,6 +15,8 @@ import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft
 @Composable
 internal fun BoxScope.DrawingContent(component: DrawingComponent, modifier: Modifier = Modifier) {
     val model by component.model.subscribeAsState()
+    val pointSheetSlot by component.pointSheetSlot.subscribeAsState()
+    val shapeSheetSlot by component.shapeSheetSlot.subscribeAsState()
 
     model.shapeDrawingDraft?.let { draft ->
         ShapeDrawingControlsOverlay(
@@ -28,7 +30,7 @@ internal fun BoxScope.DrawingContent(component: DrawingComponent, modifier: Modi
         )
     }
 
-    if (model.isCreatePointSheetVisible) {
+    if (pointSheetSlot.child != null) {
         model.createPointDraft?.let { draft ->
             CreatePointBottomSheet(
                 draft = draft.toUiDraft(),
@@ -41,7 +43,7 @@ internal fun BoxScope.DrawingContent(component: DrawingComponent, modifier: Modi
         }
     }
 
-    if (model.isCreateShapeSheetVisible) {
+    if (shapeSheetSlot.child != null) {
         model.shapeDrawingDraft?.let { draft ->
             CreateShapeBottomSheet(
                 draft = draft.toUiDraft(),

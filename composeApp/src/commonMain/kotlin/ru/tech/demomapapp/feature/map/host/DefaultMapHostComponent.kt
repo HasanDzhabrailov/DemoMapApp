@@ -325,7 +325,12 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncDrawingState() {
-        screenComponent.onDrawingStateUpdated(drawingComponent.model.value.toRouterState())
+        screenComponent.onDrawingStateUpdated(
+            drawingComponent.model.value.toRouterState(
+                activePointSheetChild = drawingComponent.pointSheetSlot.value.child?.instance,
+                activeShapeSheetChild = drawingComponent.shapeSheetSlot.value.child?.instance,
+            ),
+        )
     }
 
     private fun syncLocationState() {

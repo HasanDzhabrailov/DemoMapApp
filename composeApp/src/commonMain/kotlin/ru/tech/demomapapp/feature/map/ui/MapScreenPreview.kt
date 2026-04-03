@@ -14,8 +14,9 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
+import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.drawing.DrawingModel
+import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
@@ -49,26 +50,15 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
             ),
         )
 
-    override val drawingComponent: DrawingComponent = object : DrawingComponent {
-        override val model: Value<DrawingModel> = MutableValue(DrawingModel())
+    override val drawingComponent: DrawingComponent = DefaultDrawingComponent(
+        componentContext = DefaultComponentContext(LifecycleRegistry()),
+        drawingStoreFactory = DrawingStoreFactory(),
+        output = object : DrawingComponent.Output {
+            override fun onStateChanged() = Unit
 
-        override fun onCreatePointClick() = Unit
-        override fun onCreateLineClick() = Unit
-        override fun onCreatePolygonClick() = Unit
-        override fun onCreatePointLatitudeChange(value: String) = Unit
-        override fun onCreatePointLongitudeChange(value: String) = Unit
-        override fun onCreatePointTitleChange(value: String) = Unit
-        override fun onCreatePointConfirm() = Unit
-        override fun onCreatePointSheetDismiss() = Unit
-        override fun onDrawingAddPositionClick() = Unit
-        override fun onDrawingRemoveLastPositionClick() = Unit
-        override fun onDrawingDetailsClick() = Unit
-        override fun onDrawingDismiss() = Unit
-        override fun onCreateShapeTitleChange(value: String) = Unit
-        override fun onCreateShapeConfirm() = Unit
-        override fun onCreateShapeSheetDismiss() = Unit
-        override fun onCameraPositionUpdated(snapshot: MapCameraSnapshot) = Unit
-    }
+            override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
+        },
+    )
 
     override val locationComponent: LocationComponent = object : LocationComponent {
         override val model: Value<LocationModel> = MutableValue(

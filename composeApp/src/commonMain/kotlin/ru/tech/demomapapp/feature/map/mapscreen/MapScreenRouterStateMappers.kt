@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft as DrawingCreatePointDraft
+import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingMode as InternalDrawingMode
 import ru.tech.demomapapp.feature.map.drawing.DrawingModel
 import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
@@ -29,11 +30,14 @@ internal fun ToolsModel.toRouterState(activeChild: ToolsComponent.Child?): MapRo
     editingOverlayOpacityLayer = editingOverlayOpacityLayer,
 )
 
-internal fun DrawingModel.toRouterState(): MapRouterStore.ChildState.Drawing = MapRouterStore.ChildState.Drawing(
+internal fun DrawingModel.toRouterState(
+    activePointSheetChild: DrawingComponent.PointSheetChild?,
+    activeShapeSheetChild: DrawingComponent.ShapeSheetChild?,
+): MapRouterStore.ChildState.Drawing = MapRouterStore.ChildState.Drawing(
     points = points,
     lines = lines,
     polygons = polygons,
-    isCreatePointSheetVisible = isCreatePointSheetVisible,
+    isCreatePointSheetVisible = activePointSheetChild is DrawingComponent.PointSheetChild.Content,
     createPointDraft = createPointDraft?.let { draft ->
         MapRouterStore.CreatePointDraft(
             latitudeInput = draft.latitudeInput,
@@ -57,7 +61,7 @@ internal fun DrawingModel.toRouterState(): MapRouterStore.ChildState.Drawing = M
             titleInput = draft.titleInput,
         )
     },
-    isCreateShapeSheetVisible = isCreateShapeSheetVisible,
+    isCreateShapeSheetVisible = activeShapeSheetChild is DrawingComponent.ShapeSheetChild.Content,
 )
 
 internal fun LocationModel.toRouterState(): MapRouterStore.ChildState.Location {

@@ -1,5 +1,6 @@
 package ru.tech.demomapapp.feature.map.drawing
 
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
@@ -8,6 +9,8 @@ import ru.tech.demomapapp.feature.map.api.MapPolygon
 
 interface DrawingComponent {
     val model: Value<DrawingModel>
+    val pointSheetSlot: Value<ChildSlot<*, PointSheetChild>>
+    val shapeSheetSlot: Value<ChildSlot<*, ShapeSheetChild>>
 
     fun onCreatePointClick()
     fun onCreateLineClick()
@@ -25,6 +28,14 @@ interface DrawingComponent {
     fun onCreateShapeConfirm()
     fun onCreateShapeSheetDismiss()
     fun onCameraPositionUpdated(snapshot: MapCameraSnapshot)
+
+    sealed interface PointSheetChild {
+        data object Content : PointSheetChild
+    }
+
+    sealed interface ShapeSheetChild {
+        data object Content : ShapeSheetChild
+    }
 
     interface Output {
         fun onStateChanged()
