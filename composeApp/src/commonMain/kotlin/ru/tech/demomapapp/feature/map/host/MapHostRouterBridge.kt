@@ -1,8 +1,6 @@
 package ru.tech.demomapapp.feature.map.host
 
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
 import ru.tech.demomapapp.feature.map.mapscreen.toCenterMarkerRouterState
@@ -98,30 +96,6 @@ internal class MapHostRouterBridge(
 
     fun onLocationRequestIssued() {
         syncLocationState()
-    }
-
-    fun requestViewportCommand(source: MapRouterStore.ViewportCommandSource, command: MapViewportCommand) {
-        screenComponent.onViewportCommandUpdated(source = source, command = command)
-    }
-
-    fun consumeViewportCommand() {
-        when (screenComponent.currentViewportCommandSource()) {
-            MapRouterStore.ViewportCommandSource.VIEWPORT -> {
-                viewportComponent.onViewportCommandConsumed()
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT)
-            }
-
-            MapRouterStore.ViewportCommandSource.LOCATION -> {
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION)
-            }
-
-            MapRouterStore.ViewportCommandSource.RULER -> {
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER)
-            }
-
-            null -> Unit
-        }
-        syncViewportState()
     }
 
     fun dismissToolsMenuIfVisible() {

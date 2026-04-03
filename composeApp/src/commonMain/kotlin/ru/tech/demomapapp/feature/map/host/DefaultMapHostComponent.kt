@@ -83,7 +83,7 @@ internal class DefaultMapHostComponent(
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.RULER, command)
+                onViewportCommandRequested(MapRouterStore.ViewportCommandSource.RULER, command)
             }
         },
     )
@@ -98,7 +98,7 @@ internal class DefaultMapHostComponent(
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.VIEWPORT, command)
+                onViewportCommandRequested(MapRouterStore.ViewportCommandSource.VIEWPORT, command)
             }
         },
     )
@@ -115,7 +115,7 @@ internal class DefaultMapHostComponent(
             override fun onLocationUpdated(location: MapLocationMarker?) = Unit
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.LOCATION, command)
+                onViewportCommandRequested(MapRouterStore.ViewportCommandSource.LOCATION, command)
             }
 
             override fun onLocationRequestIssued(request: MapLocationRequest) {
@@ -213,7 +213,23 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onViewportCommandConsumed() {
-        bridge?.consumeViewportCommand()
+        when (screenComponent.currentViewportCommandSource()) {
+            MapRouterStore.ViewportCommandSource.VIEWPORT -> {
+                viewportComponent.onViewportCommandConsumed()
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT)
+                bridge?.syncViewportState()
+            }
+
+            MapRouterStore.ViewportCommandSource.LOCATION -> {
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION)
+            }
+
+            MapRouterStore.ViewportCommandSource.RULER -> {
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER)
+            }
+
+            null -> Unit
+        }
     }
 
     override fun onCenterMarkerClick() {
@@ -283,6 +299,13 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onFeatureInfoWindowDismiss() = screenComponent.onFeatureInfoWindowDismiss()
+
+    private fun onViewportCommandRequested(
+        source: MapRouterStore.ViewportCommandSource,
+        command: MapViewportCommand,
+    ) {
+        screenComponent.onViewportCommandUpdated(source = source, command = command)
+    }
 
     private companion object {
         const val SCREEN_CHILD_CONTEXT_KEY = "map_screen"
