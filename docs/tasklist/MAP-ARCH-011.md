@@ -2,20 +2,20 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: responsibility-split only
+- [x] Confirm scope: responsibility-split only
 
-- [ ] Identify map-only responsibilities
-- [ ] Move non-map responsibilities out of `DefaultMapScreenComponent`
-- [ ] Fix wiring
+- [x] Identify map-only responsibilities
+- [x] Move non-map responsibilities out of `DefaultMapScreenComponent`
+- [x] Fix wiring
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| `DefaultMapScreenComponent` is map-only | PENDING |
-| Non-map orchestration moved out | PENDING |
+| `DefaultMapScreenComponent` is map-only | DONE |
+| Non-map orchestration moved out | DONE |

@@ -1,16 +1,19 @@
-package ru.tech.demomapapp.feature.map.mapscreen
+package ru.tech.demomapapp.feature.map.host
 
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
-import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder
+import ru.tech.demomapapp.feature.map.location.LocationComponent
+import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
+import ru.tech.demomapapp.feature.map.mapscreen.toCenterMarkerRouterState
+import ru.tech.demomapapp.feature.map.mapscreen.toRouterState
+import ru.tech.demomapapp.feature.map.mapscreen.toViewportRouterState
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
 
-internal class MapScreenRouterBridge(
-    private val routerHolder: MapRouterStoreHolder,
+internal class MapHostRouterBridge(
+    private val screenComponent: DefaultMapScreenComponent,
     private val toolsComponent: ToolsComponent,
     private val drawingComponent: DrawingComponent,
     private val locationComponent: LocationComponent,
@@ -31,31 +34,27 @@ internal class MapScreenRouterBridge(
     }
 
     fun syncToolsState() {
-        routerHolder.accept(MapRouterStore.Intent.ToolsStateUpdated(toolsComponent.model.value.toRouterState()))
+        screenComponent.onToolsStateUpdated(toolsComponent.model.value.toRouterState())
     }
 
     fun syncDrawingState() {
-        routerHolder.accept(MapRouterStore.Intent.DrawingStateUpdated(drawingComponent.model.value.toRouterState()))
+        screenComponent.onDrawingStateUpdated(drawingComponent.model.value.toRouterState())
     }
 
     fun syncLocationState() {
-        routerHolder.accept(MapRouterStore.Intent.LocationStateUpdated(locationComponent.model.value.toRouterState()))
+        screenComponent.onLocationStateUpdated(locationComponent.model.value.toRouterState())
     }
 
     fun syncRulerState() {
-        routerHolder.accept(MapRouterStore.Intent.RulerStateUpdated(rulerComponent.model.value.toRouterState()))
+        screenComponent.onRulerStateUpdated(rulerComponent.model.value.toRouterState())
     }
 
     fun syncViewportState() {
-        routerHolder.accept(
-            MapRouterStore.Intent.ViewportStateUpdated(viewportComponent.model.value.toViewportRouterState()),
-        )
+        screenComponent.onViewportStateUpdated(viewportComponent.model.value.toViewportRouterState())
     }
 
     fun syncCenterMarkerState() {
-        routerHolder.accept(
-            MapRouterStore.Intent.CenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState()),
-        )
+        screenComponent.onCenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState())
     }
 
     fun syncRulerInputs() {
@@ -102,28 +101,22 @@ internal class MapScreenRouterBridge(
     }
 
     fun requestViewportCommand(source: MapRouterStore.ViewportCommandSource, command: MapViewportCommand) {
-        routerHolder.accept(MapRouterStore.Intent.ViewportCommandUpdated(source = source, command = command))
+        screenComponent.onViewportCommandUpdated(source = source, command = command)
     }
 
     fun consumeViewportCommand() {
-        when (currentViewportCommandSource()) {
+        when (screenComponent.currentViewportCommandSource()) {
             MapRouterStore.ViewportCommandSource.VIEWPORT -> {
                 viewportComponent.onViewportCommandConsumed()
-                routerHolder.accept(
-                    MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT),
-                )
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT)
             }
 
             MapRouterStore.ViewportCommandSource.LOCATION -> {
-                routerHolder.accept(
-                    MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION),
-                )
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION)
             }
 
             MapRouterStore.ViewportCommandSource.RULER -> {
-                routerHolder.accept(
-                    MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER),
-                )
+                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER)
             }
 
             null -> Unit
@@ -146,15 +139,8 @@ internal class MapScreenRouterBridge(
     }
 
     fun dismissFeatureInfoWindowIfVisible() {
-        if (routerHolder.model.value.selectedFeatureInfoWindow != null) {
-            routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
+        if (screenComponent.hasSelectedFeatureInfoWindow()) {
+            screenComponent.dismissFeatureInfoWindow()
         }
-    }
-
-    private fun currentViewportCommandSource(): MapRouterStore.ViewportCommandSource? = when {
-        routerHolder.state.viewportPendingCommand != null -> MapRouterStore.ViewportCommandSource.VIEWPORT
-        routerHolder.state.locationPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.LOCATION
-        routerHolder.state.rulerPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.RULER
-        else -> null
     }
 }

@@ -3,11 +3,11 @@ package ru.tech.demomapapp.feature.map.host
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.LocationRequestResult
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
-import ru.tech.demomapapp.feature.map.api.LocationRequestResult
-import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
@@ -45,7 +45,7 @@ internal class DefaultMapHostComponent(
     rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
 ) : MapScreenUiComponent, ComponentContext by componentContext {
-    private var screenCallbacks: ScreenCallbacks? = null
+    private var bridge: MapHostRouterBridge? = null
 
     override val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = childContext(key = TOOLS_CHILD_CONTEXT_KEY),
@@ -53,7 +53,7 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel,
         output = object : ToolsComponent.Output {
             override fun onStateChanged() {
-                screenCallbacks?.onToolsStateChanged()
+                bridge?.onToolsStateChanged()
             }
 
             override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
@@ -66,7 +66,7 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toDrawingModel(),
         output = object : DrawingComponent.Output {
             override fun onStateChanged() {
-                screenCallbacks?.onDrawingStateChanged()
+                bridge?.onDrawingStateChanged()
             }
 
             override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
@@ -79,11 +79,11 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toRulerModel(),
         output = object : RulerComponent.Output {
             override fun onStateChanged() {
-                screenCallbacks?.onRulerStateChanged()
+                bridge?.onRulerStateChanged()
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                screenCallbacks?.requestViewportCommand(command, ScreenCallbacks.ViewportCommandSource.RULER)
+                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.RULER, command)
             }
         },
     )
@@ -94,11 +94,11 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toViewportModel(),
         output = object : ViewportComponent.Output {
             override fun onStateChanged() {
-                screenCallbacks?.onViewportStateChanged()
+                bridge?.onViewportStateChanged()
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                screenCallbacks?.requestViewportCommand(command, ScreenCallbacks.ViewportCommandSource.VIEWPORT)
+                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.VIEWPORT, command)
             }
         },
     )
@@ -109,17 +109,17 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toLocationModel(),
         output = object : LocationComponent.Output {
             override fun onStateChanged() {
-                screenCallbacks?.onLocationStateChanged()
+                bridge?.onLocationStateChanged()
             }
 
             override fun onLocationUpdated(location: MapLocationMarker?) = Unit
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                screenCallbacks?.requestViewportCommand(command, ScreenCallbacks.ViewportCommandSource.LOCATION)
+                bridge?.requestViewportCommand(MapRouterStore.ViewportCommandSource.LOCATION, command)
             }
 
             override fun onLocationRequestIssued(request: MapLocationRequest) {
-                screenCallbacks?.onLocationRequestIssued()
+                bridge?.onLocationRequestIssued()
             }
         },
     )
@@ -128,110 +128,159 @@ internal class DefaultMapHostComponent(
         componentContext = childContext(key = SCREEN_CHILD_CONTEXT_KEY),
         initialModel = initialModel,
         mapRouterStoreFactory = mapRouterStoreFactory,
-        toolsComponent = toolsComponent,
-        drawingComponent = drawingComponent,
-        locationComponent = locationComponent,
-        rulerComponent = rulerComponent,
-        viewportComponent = viewportComponent,
-    ).also { screen ->
-        screenCallbacks = ScreenCallbacks(screen)
+    )
+
+    init {
+        bridge = MapHostRouterBridge(
+            screenComponent = screenComponent,
+            toolsComponent = toolsComponent,
+            drawingComponent = drawingComponent,
+            locationComponent = locationComponent,
+            rulerComponent = rulerComponent,
+            viewportComponent = viewportComponent,
+        )
+        bridge?.syncAllStates()
     }
 
     override val model: Value<MapScreenComponent.Model> = screenComponent.model
 
-    override fun onCameraIdle(snapshot: MapCameraSnapshot) = screenComponent.onCameraIdle(snapshot)
+    override fun onCameraIdle(snapshot: MapCameraSnapshot) {
+        viewportComponent.onCameraIdle(snapshot)
+        drawingComponent.onCameraPositionUpdated(snapshot)
+        locationComponent.onCameraSnapshotReceived(snapshot)
+    }
 
-    override fun onMapToolsClick() = screenComponent.onMapToolsClick()
+    override fun onMapToolsClick() {
+        bridge?.dismissViewportMenuIfVisible()
+        toolsComponent.onMapToolsClick()
+    }
 
-    override fun onMapToolsDismiss() = screenComponent.onMapToolsDismiss()
+    override fun onMapToolsDismiss() = toolsComponent.onMapToolsDismiss()
 
-    override fun onZoomInClick() = screenComponent.onZoomInClick()
+    override fun onZoomInClick() = viewportComponent.onZoomInClick()
 
-    override fun onZoomOutClick() = screenComponent.onZoomOutClick()
+    override fun onZoomOutClick() = viewportComponent.onZoomOutClick()
 
-    override fun onAvailableMapsClick() = screenComponent.onAvailableMapsClick()
+    override fun onAvailableMapsClick() {
+        bridge?.dismissViewportMenuIfVisible()
+        toolsComponent.onAvailableMapsClick()
+    }
 
-    override fun onAvailableMapsDismiss() = screenComponent.onAvailableMapsDismiss()
+    override fun onAvailableMapsDismiss() = toolsComponent.onAvailableMapsDismiss()
 
-    override fun onAvailableMapSelect(mapId: String) = screenComponent.onAvailableMapSelect(mapId)
+    override fun onAvailableMapSelect(mapId: String) = toolsComponent.onAvailableMapSelect(mapId)
 
-    override fun onAvailableMapConfirm() = screenComponent.onAvailableMapConfirm()
+    override fun onAvailableMapConfirm() = toolsComponent.onAvailableMapConfirm()
 
-    override fun onAvailableMapSelectionDismiss() = screenComponent.onAvailableMapSelectionDismiss()
+    override fun onAvailableMapSelectionDismiss() = toolsComponent.onAvailableMapSelectionDismiss()
 
-    override fun onMapsOnScreenClick() = screenComponent.onMapsOnScreenClick()
+    override fun onMapsOnScreenClick() {
+        bridge?.dismissViewportMenuIfVisible()
+        toolsComponent.onMapsOnScreenClick()
+    }
 
-    override fun onMapsOnScreenDismiss() = screenComponent.onMapsOnScreenDismiss()
+    override fun onMapsOnScreenDismiss() = toolsComponent.onMapsOnScreenDismiss()
 
-    override fun onMapLayerActionsClick(layerId: String) = screenComponent.onMapLayerActionsClick(layerId)
+    override fun onMapLayerActionsClick(layerId: String) = toolsComponent.onLayerActionsClick(layerId)
 
-    override fun onMapLayerActionsDismiss() = screenComponent.onMapLayerActionsDismiss()
+    override fun onMapLayerActionsDismiss() = toolsComponent.onLayerActionsDismiss()
 
-    override fun onMoveLayerUpClick() = screenComponent.onMoveLayerUpClick()
+    override fun onMoveLayerUpClick() = toolsComponent.onMoveLayerUpClick()
 
-    override fun onMoveLayerDownClick() = screenComponent.onMoveLayerDownClick()
+    override fun onMoveLayerDownClick() = toolsComponent.onMoveLayerDownClick()
 
-    override fun onRemoveLayerClick() = screenComponent.onRemoveLayerClick()
+    override fun onRemoveLayerClick() = toolsComponent.onRemoveLayerClick()
 
-    override fun onLayerOpacityClick() = screenComponent.onLayerOpacityClick()
+    override fun onLayerOpacityClick() = toolsComponent.onLayerOpacityClick()
 
-    override fun onLayerOpacityChange(value: Float) = screenComponent.onLayerOpacityChange(value)
+    override fun onLayerOpacityChange(value: Float) = toolsComponent.onLayerOpacityChange(value)
 
-    override fun onLayerOpacityDismiss() = screenComponent.onLayerOpacityDismiss()
+    override fun onLayerOpacityDismiss() = toolsComponent.onLayerOpacityDismiss()
 
-    override fun onGpsToggle() = screenComponent.onGpsToggle()
+    override fun onGpsToggle() = locationComponent.onGpsToggle()
 
-    override fun onMyLocationClick() = screenComponent.onMyLocationClick()
+    override fun onMyLocationClick() = locationComponent.onMyLocationClick()
 
-    override fun onCurrentLocationFocusClick() = screenComponent.onCurrentLocationFocusClick()
+    override fun onCurrentLocationFocusClick() = locationComponent.onCurrentLocationFocusClick()
 
-    override fun onLocationRequestConsumed() = screenComponent.onLocationRequestConsumed()
+    override fun onLocationRequestConsumed() = locationComponent.onLocationRequestConsumed()
 
-    override fun onLocationResult(result: LocationRequestResult) = screenComponent.onLocationResult(result)
+    override fun onLocationResult(result: LocationRequestResult) = locationComponent.onLocationResult(result)
 
-    override fun onRulerToggle() = screenComponent.onRulerToggle()
+    override fun onRulerToggle() {
+        bridge?.dismissViewportMenuIfVisible()
+        rulerComponent.onToggleClicked()
+    }
 
-    override fun onViewportCommandConsumed() = screenComponent.onViewportCommandConsumed()
+    override fun onViewportCommandConsumed() {
+        bridge?.consumeViewportCommand()
+    }
 
-    override fun onCenterMarkerClick() = screenComponent.onCenterMarkerClick()
+    override fun onCenterMarkerClick() {
+        if (model.value.drawingMode != null) {
+            return
+        }
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissFeatureInfoWindowIfVisible()
+        viewportComponent.onCenterMarkerClick()
+    }
 
-    override fun onCenterMarkerMenuDismiss() = screenComponent.onCenterMarkerMenuDismiss()
+    override fun onCenterMarkerMenuDismiss() = viewportComponent.onCenterMarkerMenuDismiss()
 
-    override fun onCreatePointClick() = screenComponent.onCreatePointClick()
+    override fun onCreatePointClick() {
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissViewportMenuIfVisible()
+        drawingComponent.onCreatePointClick()
+    }
 
-    override fun onCreateLineClick() = screenComponent.onCreateLineClick()
+    override fun onCreateLineClick() {
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissViewportMenuIfVisible()
+        drawingComponent.onCreateLineClick()
+    }
 
-    override fun onCreatePolygonClick() = screenComponent.onCreatePolygonClick()
+    override fun onCreatePolygonClick() {
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissViewportMenuIfVisible()
+        drawingComponent.onCreatePolygonClick()
+    }
 
-    override fun onCreatePointLatitudeChange(value: String) = screenComponent.onCreatePointLatitudeChange(value)
+    override fun onCreatePointLatitudeChange(value: String) = drawingComponent.onCreatePointLatitudeChange(value)
 
-    override fun onCreatePointLongitudeChange(value: String) = screenComponent.onCreatePointLongitudeChange(value)
+    override fun onCreatePointLongitudeChange(value: String) = drawingComponent.onCreatePointLongitudeChange(value)
 
-    override fun onCreatePointTitleChange(value: String) = screenComponent.onCreatePointTitleChange(value)
+    override fun onCreatePointTitleChange(value: String) = drawingComponent.onCreatePointTitleChange(value)
 
-    override fun onCreatePointConfirm() = screenComponent.onCreatePointConfirm()
+    override fun onCreatePointConfirm() = drawingComponent.onCreatePointConfirm()
 
-    override fun onCreatePointSheetDismiss() = screenComponent.onCreatePointSheetDismiss()
+    override fun onCreatePointSheetDismiss() = drawingComponent.onCreatePointSheetDismiss()
 
-    override fun onDrawingAddPositionClick() = screenComponent.onDrawingAddPositionClick()
+    override fun onDrawingAddPositionClick() {
+        bridge?.dismissViewportMenuIfVisible()
+        drawingComponent.onDrawingAddPositionClick()
+    }
 
-    override fun onDrawingRemoveLastPositionClick() = screenComponent.onDrawingRemoveLastPositionClick()
+    override fun onDrawingRemoveLastPositionClick() = drawingComponent.onDrawingRemoveLastPositionClick()
 
-    override fun onDrawingDetailsClick() = screenComponent.onDrawingDetailsClick()
+    override fun onDrawingDetailsClick() = drawingComponent.onDrawingDetailsClick()
 
-    override fun onDrawingDismiss() = screenComponent.onDrawingDismiss()
+    override fun onDrawingDismiss() = drawingComponent.onDrawingDismiss()
 
-    override fun onCreateShapeTitleChange(value: String) = screenComponent.onCreateShapeTitleChange(value)
+    override fun onCreateShapeTitleChange(value: String) = drawingComponent.onCreateShapeTitleChange(value)
 
-    override fun onCreateShapeConfirm() = screenComponent.onCreateShapeConfirm()
+    override fun onCreateShapeConfirm() = drawingComponent.onCreateShapeConfirm()
 
-    override fun onCreateShapeSheetDismiss() = screenComponent.onCreateShapeSheetDismiss()
+    override fun onCreateShapeSheetDismiss() = drawingComponent.onCreateShapeSheetDismiss()
 
     override fun onFeatureClick(
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
-    ) = screenComponent.onFeatureClick(featureKey, featureType, anchor)
+    ) {
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissViewportMenuIfVisible()
+        screenComponent.onFeatureClick(featureKey, featureType, anchor)
+    }
 
     override fun onFeatureInfoWindowDismiss() = screenComponent.onFeatureInfoWindowDismiss()
 
@@ -242,50 +291,5 @@ internal class DefaultMapHostComponent(
         const val LOCATION_CHILD_CONTEXT_KEY = "location"
         const val RULER_CHILD_CONTEXT_KEY = "ruler"
         const val VIEWPORT_CHILD_CONTEXT_KEY = "viewport"
-    }
-
-    private class ScreenCallbacks(
-        private val screenComponent: DefaultMapScreenComponent,
-    ) {
-        fun onToolsStateChanged() {
-            screenComponent.onToolsStateChanged()
-        }
-
-        fun onDrawingStateChanged() {
-            screenComponent.onDrawingStateChanged()
-        }
-
-        fun onLocationStateChanged() {
-            screenComponent.onLocationStateChanged()
-        }
-
-        fun onLocationRequestIssued() {
-            screenComponent.onLocationRequestIssued()
-        }
-
-        fun onRulerStateChanged() {
-            screenComponent.onRulerStateChanged()
-        }
-
-        fun onViewportStateChanged() {
-            screenComponent.onViewportStateChanged()
-        }
-
-        fun requestViewportCommand(command: MapViewportCommand, source: ViewportCommandSource) {
-            screenComponent.requestViewportCommand(
-                source = when (source) {
-                    ViewportCommandSource.LOCATION -> MapRouterStore.ViewportCommandSource.LOCATION
-                    ViewportCommandSource.RULER -> MapRouterStore.ViewportCommandSource.RULER
-                    ViewportCommandSource.VIEWPORT -> MapRouterStore.ViewportCommandSource.VIEWPORT
-                },
-                command = command,
-            )
-        }
-
-        enum class ViewportCommandSource {
-            LOCATION,
-            RULER,
-            VIEWPORT,
-        }
     }
 }
