@@ -20,8 +20,8 @@ import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
+import ru.tech.demomapapp.feature.map.host.DefaultMapHostComponent
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 
 class DefaultMapScreenComponentTest {
@@ -794,9 +794,9 @@ class DefaultMapScreenComponentTest {
 
     private fun createComponent(
         initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
-    ): DefaultMapScreenComponent {
+    ): MapScreenComponent {
         var nextId = 0
-        return DefaultMapScreenComponent(
+        return DefaultMapHostComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
             initialModel = initialModel,
             mapRouterStoreFactory = MapRouterStoreFactory(

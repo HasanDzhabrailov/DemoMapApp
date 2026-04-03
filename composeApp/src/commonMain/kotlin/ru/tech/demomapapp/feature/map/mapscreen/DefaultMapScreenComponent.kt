@@ -10,35 +10,25 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
-import ru.tech.demomapapp.feature.map.location.DefaultLocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationComponent
-import ru.tech.demomapapp.feature.map.location.LocationStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder
-import ru.tech.demomapapp.feature.map.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
-import ru.tech.demomapapp.feature.map.ruler.RulerStoreFactory
-import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
-import ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory
-import ru.tech.demomapapp.feature.map.viewport.DefaultViewportComponent
 import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
-import ru.tech.demomapapp.feature.map.viewport.ViewportStoreFactory
 
 @Suppress("TooManyFunctions")
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
     private val mapRouterStoreFactory: MapRouterStoreFactory = MapRouterStoreFactory(),
-    private val drawingStoreFactory: DrawingStoreFactory = DrawingStoreFactory(),
-    private val toolsStoreFactory: ToolsStoreFactory = ToolsStoreFactory(),
-    private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
-    private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
-    private val viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
+    override val toolsComponent: ToolsComponent,
+    override val drawingComponent: DrawingComponent,
+    override val locationComponent: LocationComponent,
+    override val rulerComponent: RulerComponent,
+    override val viewportComponent: ViewportComponent,
 ) : MapScreenUiComponent, ComponentContext by componentContext {
     private val routerHolder = instanceKeeper.getOrCreate(key = MAP_ROUTER_STORE_HOLDER_KEY) {
         MapRouterStoreHolder(
@@ -47,87 +37,6 @@ internal class DefaultMapScreenComponent(
         )
     }
     private var bridge: MapScreenRouterBridge? = null
-    override val toolsComponent: ToolsComponent = DefaultToolsComponent(
-        componentContext = componentContext,
-        toolsStoreFactory = toolsStoreFactory,
-        initialModel = initialModel,
-        output = object : ToolsComponent.Output {
-            override fun onStateChanged() {
-                bridge?.onToolsStateChanged()
-            }
-
-            override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
-        },
-    )
-    override val drawingComponent: DrawingComponent = DefaultDrawingComponent(
-        componentContext = componentContext,
-        drawingStoreFactory = drawingStoreFactory,
-        initialModel = initialModel.toDrawingModel(),
-        output = object : DrawingComponent.Output {
-            override fun onStateChanged() {
-                bridge?.onDrawingStateChanged()
-            }
-
-            override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
-        },
-    )
-    override val rulerComponent: RulerComponent = DefaultRulerComponent(
-        componentContext = componentContext,
-        rulerStoreFactory = rulerStoreFactory,
-        initialModel = initialModel.toRulerModel(),
-        output = object : RulerComponent.Output {
-            override fun onStateChanged() {
-                bridge?.onRulerStateChanged()
-            }
-
-            override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(
-                    source = MapRouterStore.ViewportCommandSource.RULER,
-                    command = command,
-                )
-            }
-        },
-    )
-    override val viewportComponent: ViewportComponent = DefaultViewportComponent(
-        componentContext = componentContext,
-        viewportStoreFactory = viewportStoreFactory,
-        initialModel = initialModel.toViewportModel(),
-        output = object : ViewportComponent.Output {
-            override fun onStateChanged() {
-                bridge?.onViewportStateChanged()
-            }
-
-            override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(
-                    source = MapRouterStore.ViewportCommandSource.VIEWPORT,
-                    command = command,
-                )
-            }
-        },
-    )
-    override val locationComponent: LocationComponent = DefaultLocationComponent(
-        componentContext = componentContext,
-        locationStoreFactory = locationStoreFactory,
-        initialModel = initialModel.toLocationModel(),
-        output = object : LocationComponent.Output {
-            override fun onStateChanged() {
-                bridge?.onLocationStateChanged()
-            }
-
-            override fun onLocationUpdated(location: MapLocationMarker?) = Unit
-
-            override fun onViewportCommandRequested(command: MapViewportCommand) {
-                bridge?.requestViewportCommand(
-                    source = MapRouterStore.ViewportCommandSource.LOCATION,
-                    command = command,
-                )
-            }
-
-            override fun onLocationRequestIssued(request: MapLocationRequest) {
-                bridge?.onLocationRequestIssued()
-            }
-        },
-    )
 
     override val model: Value<MapScreenComponent.Model> = routerHolder.model
 
@@ -289,6 +198,37 @@ internal class DefaultMapScreenComponent(
 
     override fun onFeatureInfoWindowDismiss() {
         routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
+    }
+
+    internal fun onLocationStateChanged() {
+        bridge?.onLocationStateChanged()
+    }
+
+    internal fun onToolsStateChanged() {
+        bridge?.onToolsStateChanged()
+    }
+
+    internal fun onDrawingStateChanged() {
+        bridge?.onDrawingStateChanged()
+    }
+
+    internal fun onRulerStateChanged() {
+        bridge?.onRulerStateChanged()
+    }
+
+    internal fun onViewportStateChanged() {
+        bridge?.onViewportStateChanged()
+    }
+
+    internal fun onLocationRequestIssued() {
+        bridge?.onLocationRequestIssued()
+    }
+
+    internal fun requestViewportCommand(
+        source: MapRouterStore.ViewportCommandSource,
+        command: MapViewportCommand,
+    ) {
+        bridge?.requestViewportCommand(source, command)
     }
 
     private inline fun runToolsAction(dismissViewportMenu: Boolean = false, action: () -> Unit) {
