@@ -71,5 +71,12 @@ internal class MapRouterReducer : Reducer<MapRouterStore.State, MapRouterMessage
                 rulerPendingViewportCommand = msg.command,
             )
         }
+
+        MapRouterMessage.ViewportCommandConsumed -> when (currentViewportCommandSource) {
+            MapRouterStore.ViewportCommandSource.VIEWPORT -> copy(viewportPendingCommand = null)
+            MapRouterStore.ViewportCommandSource.LOCATION -> copy(locationPendingViewportCommand = null)
+            MapRouterStore.ViewportCommandSource.RULER -> copy(rulerPendingViewportCommand = null)
+            null -> this
+        }
     }
 }

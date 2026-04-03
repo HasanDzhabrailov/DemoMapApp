@@ -14,4 +14,5 @@ internal sealed interface MapRouterMessage {
         val source: MapRouterStore.ViewportCommandSource,
         val command: ru.tech.demomapapp.feature.map.api.MapViewportCommand?,
     ) : MapRouterMessage
+    data object ViewportCommandConsumed : MapRouterMessage
 }

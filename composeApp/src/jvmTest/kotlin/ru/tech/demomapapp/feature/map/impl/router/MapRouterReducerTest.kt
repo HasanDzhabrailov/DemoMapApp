@@ -83,6 +83,34 @@ class MapRouterReducerTest {
         assertEquals(MapViewportCommand.ZoomIn, withViewport.pendingViewportCommand)
     }
 
+    @Test
+    fun `viewport command consumed clears current source and exposes queued command`() {
+        val state = reduce(
+            reduce(
+                MapRouterStore.State(
+                    locationPendingViewportCommand = MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6),
+                ),
+                MapRouterMessage.ViewportCommandUpdated(
+                    source = MapRouterStore.ViewportCommandSource.RULER,
+                    command = MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
+                ),
+            ),
+            MapRouterMessage.ViewportCommandUpdated(
+                source = MapRouterStore.ViewportCommandSource.VIEWPORT,
+                command = MapViewportCommand.ZoomIn,
+            ),
+        )
+
+        val consumedViewport = reduce(state, MapRouterMessage.ViewportCommandConsumed)
+        val consumedLocation = reduce(consumedViewport, MapRouterMessage.ViewportCommandConsumed)
+
+        assertEquals(MapRouterStore.ViewportCommandSource.VIEWPORT, state.currentViewportCommandSource)
+        assertEquals(MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6), consumedViewport.pendingViewportCommand)
+        assertEquals(MapRouterStore.ViewportCommandSource.LOCATION, consumedViewport.currentViewportCommandSource)
+        assertEquals(MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0), consumedLocation.pendingViewportCommand)
+        assertEquals(MapRouterStore.ViewportCommandSource.RULER, consumedLocation.currentViewportCommandSource)
+    }
+
     private fun reduce(state: MapRouterStore.State, message: MapRouterMessage): MapRouterStore.State =
         with(reducer) { state.reduce(message) }
 }

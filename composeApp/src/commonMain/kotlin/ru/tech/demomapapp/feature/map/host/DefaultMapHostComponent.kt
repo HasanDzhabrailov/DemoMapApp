@@ -48,6 +48,7 @@ internal class DefaultMapHostComponent(
             initialModel = initialModel,
         )
     }
+    private var isInitializing = true
 
     override val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = childContext(key = TOOLS_CHILD_CONTEXT_KEY),
@@ -138,6 +139,7 @@ internal class DefaultMapHostComponent(
     )
 
     init {
+        isInitializing = false
         syncAllStates()
     }
 
@@ -212,23 +214,9 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onViewportCommandConsumed() {
-        when (currentViewportCommandSource()) {
-            MapRouterStore.ViewportCommandSource.VIEWPORT -> {
-                viewportComponent.onViewportCommandConsumed()
-                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT))
-                syncViewportState()
-            }
-
-            MapRouterStore.ViewportCommandSource.LOCATION -> {
-                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION))
-            }
-
-            MapRouterStore.ViewportCommandSource.RULER -> {
-                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER))
-            }
-
-            null -> Unit
-        }
+        routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed)
+        viewportComponent.onViewportCommandConsumed()
+        syncViewportState()
     }
 
     override fun onCenterMarkerClick() {
@@ -326,6 +314,7 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncToolsState() {
+        if (isInitializing) return
         routerHolder.accept(
             MapRouterStore.Intent.ToolsStateUpdated(
                 toolsComponent.model.value.toRouterState(toolsComponent.childSlot.value.child?.instance),
@@ -334,6 +323,7 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncDrawingState() {
+        if (isInitializing) return
         routerHolder.accept(
             MapRouterStore.Intent.DrawingStateUpdated(
                 drawingComponent.model.value.toRouterState(
@@ -345,28 +335,25 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncLocationState() {
+        if (isInitializing) return
         routerHolder.accept(MapRouterStore.Intent.LocationStateUpdated(locationComponent.model.value.toRouterState()))
     }
 
     private fun syncRulerState() {
+        if (isInitializing) return
         routerHolder.accept(MapRouterStore.Intent.RulerStateUpdated(rulerComponent.model.value.toRouterState()))
     }
 
     private fun syncViewportState() {
+        if (isInitializing) return
         routerHolder.accept(MapRouterStore.Intent.ViewportStateUpdated(viewportComponent.model.value.toViewportRouterState()))
     }
 
     private fun syncCenterMarkerState() {
+        if (isInitializing) return
         routerHolder.accept(
             MapRouterStore.Intent.CenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState()),
         )
-    }
-
-    private fun currentViewportCommandSource(): MapRouterStore.ViewportCommandSource? = when {
-        routerHolder.state.viewportPendingCommand != null -> MapRouterStore.ViewportCommandSource.VIEWPORT
-        routerHolder.state.locationPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.LOCATION
-        routerHolder.state.rulerPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.RULER
-        else -> null
     }
 
     private fun dismissToolsMenuIfVisible() {

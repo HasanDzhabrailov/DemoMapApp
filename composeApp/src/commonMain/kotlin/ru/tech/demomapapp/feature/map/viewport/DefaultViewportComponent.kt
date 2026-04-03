@@ -24,18 +24,18 @@ internal class DefaultViewportComponent(
         ViewportStoreHolder(viewportStoreFactory, initialModel)
     }
     private val mutableModel = MutableValue(initialModel)
-    private val states = holder.states {
-        syncModel()
-        output.onStateChanged()
-    }
-
-    override val model: Value<ViewportModel> = mutableModel
     override val childSlot: Value<ChildSlot<*, ViewportComponent.Child>> = childSlot(
         source = navigation,
         serializer = Config.serializer(),
         handleBackButton = false,
         childFactory = ::createChild,
     )
+    private val states = holder.states {
+        syncModel()
+        output.onStateChanged()
+    }
+
+    override val model: Value<ViewportModel> = mutableModel
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = holder.accept(ViewportStore.Intent.CameraIdle(snapshot))
 

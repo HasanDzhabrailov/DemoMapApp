@@ -95,9 +95,7 @@ internal class MapRouterExecutor : Executor<
                 callbacks.onMessage(MapRouterMessage.ViewportCommandUpdated(intent.source, intent.command))
             }
 
-            is MapRouterStore.Intent.ViewportCommandConsumed -> {
-                callbacks.onMessage(MapRouterMessage.ViewportCommandUpdated(intent.source, command = null))
-            }
+            MapRouterStore.Intent.ViewportCommandConsumed -> callbacks.onMessage(MapRouterMessage.ViewportCommandConsumed)
         }
     }
 

@@ -5,12 +5,21 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 class DefaultViewportComponentTest {
+
+    @Test
+    fun `component initializes child slot before first state sync`() {
+        val component = createComponent()
+
+        assertNotNull(component.childSlot.value)
+        assertFalse(component.model.value.isCenterMarkerMenuVisible)
+    }
 
     @Test
     fun `zoom in emits viewport command through output and model`() {

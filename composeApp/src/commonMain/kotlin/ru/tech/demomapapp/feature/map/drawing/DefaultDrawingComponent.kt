@@ -27,12 +27,14 @@ internal class DefaultDrawingComponent(
 
     override val model: Value<DrawingModel> = holder.model
     override val pointSheetSlot: Value<ChildSlot<*, DrawingComponent.PointSheetChild>> = childSlot(
+        key = POINT_SHEET_SLOT_KEY,
         source = pointSheetNavigation,
         serializer = PointSheetConfig.serializer(),
         handleBackButton = false,
         childFactory = ::createPointSheetChild,
     )
     override val shapeSheetSlot: Value<ChildSlot<*, DrawingComponent.ShapeSheetChild>> = childSlot(
+        key = SHAPE_SHEET_SLOT_KEY,
         source = shapeSheetNavigation,
         serializer = ShapeSheetConfig.serializer(),
         handleBackButton = false,
@@ -168,5 +170,7 @@ internal class DefaultDrawingComponent(
 
     private companion object {
         const val STORE_HOLDER_KEY = "DefaultDrawingComponent.drawingStoreHolder"
+        const val POINT_SHEET_SLOT_KEY = "DefaultDrawingComponent.pointSheetSlot"
+        const val SHAPE_SHEET_SLOT_KEY = "DefaultDrawingComponent.shapeSheetSlot"
     }
 }

@@ -37,7 +37,7 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
             val source: ViewportCommandSource,
             val command: MapViewportCommand?,
         ) : Intent
-        data class ViewportCommandConsumed(val source: ViewportCommandSource) : Intent
+        data object ViewportCommandConsumed : Intent
     }
 
     data class State(
@@ -120,6 +120,14 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
 
         val pendingViewportCommand: MapViewportCommand?
             get() = viewportPendingCommand ?: locationPendingViewportCommand ?: rulerPendingViewportCommand
+
+        val currentViewportCommandSource: ViewportCommandSource?
+            get() = when {
+                viewportPendingCommand != null -> ViewportCommandSource.VIEWPORT
+                locationPendingViewportCommand != null -> ViewportCommandSource.LOCATION
+                rulerPendingViewportCommand != null -> ViewportCommandSource.RULER
+                else -> null
+            }
 
         fun toModel(): MapScreenComponent.Model = MapScreenComponent.Model(
             mapState = mapState,
