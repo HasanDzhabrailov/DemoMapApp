@@ -3,8 +3,10 @@ package ru.tech.demomapapp.feature.map.ui
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
@@ -18,8 +20,8 @@ import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
+import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
-import ru.tech.demomapapp.feature.map.tools.ToolsModel
 
 @Preview
 @Composable
@@ -101,27 +103,16 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         override fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot) = Unit
     }
 
-    override val toolsComponent: ToolsComponent = object : ToolsComponent {
-        override val model: Value<ToolsModel> = MutableValue(ToolsModel())
+    override val toolsComponent: ToolsComponent = DefaultToolsComponent(
+        componentContext = DefaultComponentContext(LifecycleRegistry()),
+        toolsStoreFactory = ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory(),
+        initialModel = model.value,
+        output = object : ToolsComponent.Output {
+            override fun onStateChanged() = Unit
 
-        override fun onMapToolsClick() = Unit
-        override fun onMapToolsDismiss() = Unit
-        override fun onAvailableMapsClick() = Unit
-        override fun onAvailableMapsDismiss() = Unit
-        override fun onAvailableMapSelect(mapId: String) = Unit
-        override fun onAvailableMapConfirm() = Unit
-        override fun onAvailableMapSelectionDismiss() = Unit
-        override fun onMapsOnScreenClick() = Unit
-        override fun onMapsOnScreenDismiss() = Unit
-        override fun onLayerActionsClick(layerId: String) = Unit
-        override fun onLayerActionsDismiss() = Unit
-        override fun onMoveLayerUpClick() = Unit
-        override fun onMoveLayerDownClick() = Unit
-        override fun onRemoveLayerClick() = Unit
-        override fun onLayerOpacityClick() = Unit
-        override fun onLayerOpacityChange(value: Float) = Unit
-        override fun onLayerOpacityDismiss() = Unit
-    }
+            override fun onLayersChanged(layers: List<ru.tech.demomapapp.feature.map.api.MapLayerEntry>) = Unit
+        },
+    )
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
 

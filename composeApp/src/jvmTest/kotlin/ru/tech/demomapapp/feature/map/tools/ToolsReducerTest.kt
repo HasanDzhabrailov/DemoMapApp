@@ -15,7 +15,6 @@ class ToolsReducerTest {
     fun `available map confirm adds overlay layer and opens loaded layers sheet`() {
         val selectedMap = MapLayerCatalog.items().first { it.kind == MapCatalogItemKind.OVERLAY_LAYER }
         val initialState = ToolsStore.State(
-            isAvailableMapsSheetVisible = true,
             selectedAvailableMap = selectedMap,
         )
 
@@ -23,8 +22,7 @@ class ToolsReducerTest {
 
         assertEquals(1, updatedState.layers.size)
         assertEquals(selectedMap.title, updatedState.layers.single().title)
-        assertTrue(updatedState.isMapsOnScreenSheetVisible)
-        assertFalse(updatedState.isAvailableMapsSheetVisible)
+        assertEquals(null, updatedState.selectedAvailableMap)
     }
 
     @Test

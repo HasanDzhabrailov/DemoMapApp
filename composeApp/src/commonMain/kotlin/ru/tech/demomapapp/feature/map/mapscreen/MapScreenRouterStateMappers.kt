@@ -8,17 +8,23 @@ import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShape
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
+import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsModel
 import ru.tech.demomapapp.feature.map.viewport.ViewportModel
 
-internal fun ToolsModel.toRouterState(): MapRouterStore.ChildState.Tools = MapRouterStore.ChildState.Tools(
+internal fun ToolsModel.toRouterState(activeChild: ToolsComponent.Child?): MapRouterStore.ChildState.Tools = MapRouterStore.ChildState.Tools(
     availableMapCatalog = availableMapCatalog,
     selectedMapStyle = selectedStyle,
     overlayLayers = layers,
-    isMapToolsMenuVisible = isMenuVisible,
-    isAvailableMapsSheetVisible = isAvailableMapsSheetVisible,
+    isMapToolsMenuVisible = activeChild is ToolsComponent.Child.Menu,
+    isAvailableMapsSheetVisible =
+        activeChild is ToolsComponent.Child.AvailableMaps ||
+            activeChild is ToolsComponent.Child.ConfirmAddMap,
     selectedAvailableMap = selectedAvailableMap,
-    isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
+    isMapsOnScreenSheetVisible =
+        activeChild is ToolsComponent.Child.MapsOnScreen ||
+            activeChild is ToolsComponent.Child.LayerActions ||
+            activeChild is ToolsComponent.Child.LayerOpacity,
     selectedOverlayLayer = selectedOverlayLayer,
     editingOverlayOpacityLayer = editingOverlayOpacityLayer,
 )

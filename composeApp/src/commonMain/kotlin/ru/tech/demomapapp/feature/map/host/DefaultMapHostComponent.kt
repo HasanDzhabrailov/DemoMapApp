@@ -319,7 +319,9 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncToolsState() {
-        screenComponent.onToolsStateUpdated(toolsComponent.model.value.toRouterState())
+        screenComponent.onToolsStateUpdated(
+            toolsComponent.model.value.toRouterState(toolsComponent.childSlot.value.child?.instance),
+        )
     }
 
     private fun syncDrawingState() {
@@ -359,7 +361,7 @@ internal class DefaultMapHostComponent(
     }
 
     private fun dismissToolsMenuIfVisible() {
-        if (toolsComponent.model.value.isMenuVisible) {
+        if (toolsComponent.childSlot.value.child?.instance is ToolsComponent.Child.Menu) {
             toolsComponent.onMapToolsDismiss()
             syncToolsState()
         }

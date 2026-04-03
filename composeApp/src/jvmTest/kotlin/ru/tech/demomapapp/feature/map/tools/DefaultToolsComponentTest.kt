@@ -4,6 +4,7 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
@@ -24,6 +25,7 @@ class DefaultToolsComponentTest {
         component.onAvailableMapConfirm()
 
         assertEquals(component.model.value.layers, output.layers.single())
+        assertTrue(component.childSlot.value.child?.instance is ToolsComponent.Child.MapsOnScreen)
     }
 
     private class TestOutput : ToolsComponent.Output {

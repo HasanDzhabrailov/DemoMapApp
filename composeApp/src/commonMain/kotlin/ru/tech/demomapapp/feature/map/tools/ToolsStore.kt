@@ -28,22 +28,16 @@ internal interface ToolsStore : Store<ToolsStore.Intent, ToolsStore.State, Tools
     }
 
     data class State(
-        val isMenuVisible: Boolean = false,
-        val isAvailableMapsSheetVisible: Boolean = false,
         val availableMapCatalog: List<MapCatalogItem> = MapLayerCatalog.items(),
         val selectedAvailableMap: MapCatalogItem? = null,
-        val isMapsOnScreenSheetVisible: Boolean = false,
         val selectedOverlayLayer: MapLayerEntry? = null,
         val editingOverlayOpacityLayer: MapLayerEntry? = null,
         val layers: List<MapLayerEntry> = emptyList(),
         val selectedStyle: MapStyle = MapStyle.DEMO,
     ) {
         fun toModel(): ToolsModel = ToolsModel(
-            isMenuVisible = isMenuVisible,
-            isAvailableMapsSheetVisible = isAvailableMapsSheetVisible,
             availableMapCatalog = availableMapCatalog,
             selectedAvailableMap = selectedAvailableMap,
-            isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
             selectedOverlayLayer = selectedOverlayLayer,
             editingOverlayOpacityLayer = editingOverlayOpacityLayer,
             layers = layers,
@@ -52,11 +46,8 @@ internal interface ToolsStore : Store<ToolsStore.Intent, ToolsStore.State, Tools
 
         companion object {
             fun fromModel(model: ToolsModel): State = State(
-                isMenuVisible = model.isMenuVisible,
-                isAvailableMapsSheetVisible = model.isAvailableMapsSheetVisible,
                 availableMapCatalog = model.availableMapCatalog,
                 selectedAvailableMap = model.selectedAvailableMap,
-                isMapsOnScreenSheetVisible = model.isMapsOnScreenSheetVisible,
                 selectedOverlayLayer = model.selectedOverlayLayer,
                 editingOverlayOpacityLayer = model.editingOverlayOpacityLayer,
                 layers = model.layers,

@@ -16,8 +16,10 @@ internal fun ToolsOverlay(
     onRulerToggle: () -> Unit,
 ) {
     val model by component.model.subscribeAsState()
+    val childSlot by component.childSlot.subscribeAsState()
+    val child = childSlot.child?.instance
 
-    if (model.isMenuVisible) {
+    if (child is ToolsComponent.Child.Menu) {
         MapToolsMenuOverlay(
             isGpsEnabled = isGpsEnabled,
             isRulerEnabled = isRulerEnabled,
@@ -29,7 +31,7 @@ internal fun ToolsOverlay(
         )
     }
 
-    if (model.isAvailableMapsSheetVisible) {
+    if (child is ToolsComponent.Child.AvailableMaps || child is ToolsComponent.Child.ConfirmAddMap) {
         AvailableMapsBottomSheet(
             items = model.availableMapCatalog,
             onSelect = component::onAvailableMapSelect,
@@ -37,15 +39,21 @@ internal fun ToolsOverlay(
         )
     }
 
-    model.selectedAvailableMap?.let { selectedMap ->
-        ConfirmAddMapDialog(
-            mapTitle = selectedMap.title,
-            onConfirm = component::onAvailableMapConfirm,
-            onDismiss = component::onAvailableMapSelectionDismiss,
-        )
+    if (child is ToolsComponent.Child.ConfirmAddMap) {
+        model.selectedAvailableMap?.let { selectedMap ->
+            ConfirmAddMapDialog(
+                mapTitle = selectedMap.title,
+                onConfirm = component::onAvailableMapConfirm,
+                onDismiss = component::onAvailableMapSelectionDismiss,
+            )
+        }
     }
 
-    if (model.isMapsOnScreenSheetVisible) {
+    if (
+        child is ToolsComponent.Child.MapsOnScreen ||
+        child is ToolsComponent.Child.LayerActions ||
+        child is ToolsComponent.Child.LayerOpacity
+    ) {
         MapsOnScreenBottomSheet(
             baseMapTitle = model.selectedStyle.displayName(),
             layers = model.layers,
@@ -54,28 +62,32 @@ internal fun ToolsOverlay(
         )
     }
 
-    model.selectedOverlayLayer?.let { selectedLayer ->
-        val visibleLayers = model.layers.asReversed()
-        val selectedLayerIndex = visibleLayers.indexOfFirst { it.id == selectedLayer.id }
-        LayerActionsDialog(
-            layer = selectedLayer,
-            canMoveUp = selectedLayerIndex > 0,
-            canMoveDown = selectedLayerIndex in 0 until visibleLayers.lastIndex,
-            onMoveUp = component::onMoveLayerUpClick,
-            onMoveDown = component::onMoveLayerDownClick,
-            onChangeOpacity = component::onLayerOpacityClick,
-            onRemove = component::onRemoveLayerClick,
-            onDismiss = component::onLayerActionsDismiss,
-        )
+    if (child is ToolsComponent.Child.LayerActions) {
+        model.selectedOverlayLayer?.let { selectedLayer ->
+            val visibleLayers = model.layers.asReversed()
+            val selectedLayerIndex = visibleLayers.indexOfFirst { it.id == selectedLayer.id }
+            LayerActionsDialog(
+                layer = selectedLayer,
+                canMoveUp = selectedLayerIndex > 0,
+                canMoveDown = selectedLayerIndex in 0 until visibleLayers.lastIndex,
+                onMoveUp = component::onMoveLayerUpClick,
+                onMoveDown = component::onMoveLayerDownClick,
+                onChangeOpacity = component::onLayerOpacityClick,
+                onRemove = component::onRemoveLayerClick,
+                onDismiss = component::onLayerActionsDismiss,
+            )
+        }
     }
 
-    model.editingOverlayOpacityLayer?.let { selectedLayer ->
-        LayerOpacityBottomSheet(
-            layerTitle = selectedLayer.title,
-            opacity = selectedLayer.opacity,
-            onOpacityChange = component::onLayerOpacityChange,
-            onDismiss = component::onLayerOpacityDismiss,
-        )
+    if (child is ToolsComponent.Child.LayerOpacity) {
+        model.editingOverlayOpacityLayer?.let { selectedLayer ->
+            LayerOpacityBottomSheet(
+                layerTitle = selectedLayer.title,
+                opacity = selectedLayer.opacity,
+                onOpacityChange = component::onLayerOpacityChange,
+                onDismiss = component::onLayerOpacityDismiss,
+            )
+        }
     }
 }
 

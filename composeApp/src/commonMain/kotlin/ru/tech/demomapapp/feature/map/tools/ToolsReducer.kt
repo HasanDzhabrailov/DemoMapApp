@@ -8,31 +8,12 @@ internal object ToolsReducer {
 
     fun reduce(state: ToolsStore.State, msg: ToolsStore.Message): ToolsStore.State = with(state) {
         when (msg) {
-            is ToolsStore.Message.MapToolsMenuToggled -> {
-                val isMenuVisible = !isMenuVisible
-                copy(
-                    isMenuVisible = isMenuVisible,
-                    isAvailableMapsSheetVisible = false,
-                    isMapsOnScreenSheetVisible = false,
-                    selectedAvailableMap = null,
-                    selectedOverlayLayer = null,
-                    editingOverlayOpacityLayer = null,
-                )
-            }
+            is ToolsStore.Message.MapToolsMenuToggled,
+            is ToolsStore.Message.MapToolsMenuDismissed -> clearTransientSelection()
 
-            is ToolsStore.Message.MapToolsMenuDismissed -> copy(isMenuVisible = false)
-
-            is ToolsStore.Message.AvailableMapsOpened -> copy(
-                isMenuVisible = false,
-                isAvailableMapsSheetVisible = true,
-                isMapsOnScreenSheetVisible = false,
-                selectedAvailableMap = null,
-                selectedOverlayLayer = null,
-                editingOverlayOpacityLayer = null,
-            )
+            is ToolsStore.Message.AvailableMapsOpened -> clearTransientSelection()
 
             is ToolsStore.Message.AvailableMapsDismissed -> copy(
-                isAvailableMapsSheetVisible = false,
                 selectedAvailableMap = null,
             )
 
@@ -44,15 +25,9 @@ internal object ToolsReducer {
 
             is ToolsStore.Message.AvailableMapSelectionDismissed -> copy(selectedAvailableMap = null)
 
-            is ToolsStore.Message.MapsOnScreenOpened -> copy(
-                isMenuVisible = false,
-                isAvailableMapsSheetVisible = false,
-                isMapsOnScreenSheetVisible = true,
-                selectedAvailableMap = null,
-            )
+            is ToolsStore.Message.MapsOnScreenOpened -> clearTransientSelection()
 
             is ToolsStore.Message.MapsOnScreenDismissed -> copy(
-                isMapsOnScreenSheetVisible = false,
                 selectedOverlayLayer = null,
                 editingOverlayOpacityLayer = null,
             )
@@ -88,7 +63,6 @@ internal object ToolsReducer {
                 val source = selectedMap.source as? MapLayerSourceRef.BaseStyle ?: return this
                 copy(
                     selectedStyle = source.mapStyle,
-                    isAvailableMapsSheetVisible = false,
                     selectedAvailableMap = null,
                 )
             }
@@ -103,13 +77,17 @@ internal object ToolsReducer {
                     )
                 copy(
                     layers = updatedLayers,
-                    isAvailableMapsSheetVisible = false,
                     selectedAvailableMap = null,
-                    isMapsOnScreenSheetVisible = true,
                 )
             }
         }
     }
+
+    private fun ToolsStore.State.clearTransientSelection(): ToolsStore.State = copy(
+        selectedAvailableMap = null,
+        selectedOverlayLayer = null,
+        editingOverlayOpacityLayer = null,
+    )
 
     private fun ToolsStore.State.moveSelectedOverlayLayer(step: Int): ToolsStore.State {
         val selected = selectedOverlayLayer ?: return this
