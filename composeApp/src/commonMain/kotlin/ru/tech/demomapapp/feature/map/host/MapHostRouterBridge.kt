@@ -98,18 +98,4 @@ internal class MapHostRouterBridge(
         syncLocationState()
     }
 
-    fun dismissToolsMenuIfVisible() {
-        if (toolsComponent.model.value.isMenuVisible) {
-            toolsComponent.onMapToolsDismiss()
-            syncToolsState()
-        }
-    }
-
-    fun dismissViewportMenuIfVisible() {
-        if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
-            viewportComponent.onCenterMarkerMenuDismiss()
-            syncCenterMarkerState()
-        }
-    }
-
 }

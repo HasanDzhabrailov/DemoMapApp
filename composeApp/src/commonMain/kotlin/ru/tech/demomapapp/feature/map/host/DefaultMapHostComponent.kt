@@ -151,7 +151,7 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onMapToolsClick() {
-        bridge?.dismissViewportMenuIfVisible()
+        dismissViewportMenuIfVisible()
         toolsComponent.onMapToolsClick()
     }
 
@@ -162,7 +162,7 @@ internal class DefaultMapHostComponent(
     override fun onZoomOutClick() = viewportComponent.onZoomOutClick()
 
     override fun onAvailableMapsClick() {
-        bridge?.dismissViewportMenuIfVisible()
+        dismissViewportMenuIfVisible()
         toolsComponent.onAvailableMapsClick()
     }
 
@@ -175,7 +175,7 @@ internal class DefaultMapHostComponent(
     override fun onAvailableMapSelectionDismiss() = toolsComponent.onAvailableMapSelectionDismiss()
 
     override fun onMapsOnScreenClick() {
-        bridge?.dismissViewportMenuIfVisible()
+        dismissViewportMenuIfVisible()
         toolsComponent.onMapsOnScreenClick()
     }
 
@@ -208,7 +208,7 @@ internal class DefaultMapHostComponent(
     override fun onLocationResult(result: LocationRequestResult) = locationComponent.onLocationResult(result)
 
     override fun onRulerToggle() {
-        bridge?.dismissViewportMenuIfVisible()
+        dismissViewportMenuIfVisible()
         rulerComponent.onToggleClicked()
     }
 
@@ -236,7 +236,7 @@ internal class DefaultMapHostComponent(
         if (model.value.drawingMode != null) {
             return
         }
-        bridge?.dismissToolsMenuIfVisible()
+        dismissToolsMenuIfVisible()
         if (model.value.selectedFeatureInfoWindow != null) {
             screenComponent.onFeatureInfoWindowDismiss()
         }
@@ -246,20 +246,20 @@ internal class DefaultMapHostComponent(
     override fun onCenterMarkerMenuDismiss() = viewportComponent.onCenterMarkerMenuDismiss()
 
     override fun onCreatePointClick() {
-        bridge?.dismissToolsMenuIfVisible()
-        bridge?.dismissViewportMenuIfVisible()
+        dismissToolsMenuIfVisible()
+        dismissViewportMenuIfVisible()
         drawingComponent.onCreatePointClick()
     }
 
     override fun onCreateLineClick() {
-        bridge?.dismissToolsMenuIfVisible()
-        bridge?.dismissViewportMenuIfVisible()
+        dismissToolsMenuIfVisible()
+        dismissViewportMenuIfVisible()
         drawingComponent.onCreateLineClick()
     }
 
     override fun onCreatePolygonClick() {
-        bridge?.dismissToolsMenuIfVisible()
-        bridge?.dismissViewportMenuIfVisible()
+        dismissToolsMenuIfVisible()
+        dismissViewportMenuIfVisible()
         drawingComponent.onCreatePolygonClick()
     }
 
@@ -274,7 +274,7 @@ internal class DefaultMapHostComponent(
     override fun onCreatePointSheetDismiss() = drawingComponent.onCreatePointSheetDismiss()
 
     override fun onDrawingAddPositionClick() {
-        bridge?.dismissViewportMenuIfVisible()
+        dismissViewportMenuIfVisible()
         drawingComponent.onDrawingAddPositionClick()
     }
 
@@ -295,8 +295,8 @@ internal class DefaultMapHostComponent(
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) {
-        bridge?.dismissToolsMenuIfVisible()
-        bridge?.dismissViewportMenuIfVisible()
+        dismissToolsMenuIfVisible()
+        dismissViewportMenuIfVisible()
         screenComponent.onFeatureClick(featureKey, featureType, anchor)
     }
 
@@ -307,6 +307,20 @@ internal class DefaultMapHostComponent(
         command: MapViewportCommand,
     ) {
         screenComponent.onViewportCommandUpdated(source = source, command = command)
+    }
+
+    private fun dismissToolsMenuIfVisible() {
+        if (toolsComponent.model.value.isMenuVisible) {
+            toolsComponent.onMapToolsDismiss()
+            bridge?.syncToolsState()
+        }
+    }
+
+    private fun dismissViewportMenuIfVisible() {
+        if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
+            viewportComponent.onCenterMarkerMenuDismiss()
+            bridge?.syncCenterMarkerState()
+        }
     }
 
     private companion object {
