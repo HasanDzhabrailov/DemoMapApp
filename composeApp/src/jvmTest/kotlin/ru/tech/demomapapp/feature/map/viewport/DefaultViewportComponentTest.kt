@@ -66,9 +66,11 @@ class DefaultViewportComponentTest {
 
         component.onCenterMarkerClick()
         assertTrue(component.model.value.isCenterMarkerMenuVisible)
+        assertTrue(component.childSlot.value.child?.instance is ViewportComponent.Child.Menu)
 
         component.onCenterMarkerMenuDismiss()
         assertFalse(component.model.value.isCenterMarkerMenuVisible)
+        assertNull(component.childSlot.value.child)
         assertNull(component.model.value.pendingCommand)
     }
 

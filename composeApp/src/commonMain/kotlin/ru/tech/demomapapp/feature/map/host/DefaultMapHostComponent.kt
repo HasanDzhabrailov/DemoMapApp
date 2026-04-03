@@ -368,7 +368,7 @@ internal class DefaultMapHostComponent(
     }
 
     private fun dismissViewportMenuIfVisible() {
-        if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
+        if (viewportComponent.childSlot.value.child?.instance is ViewportComponent.Child.Menu) {
             viewportComponent.onCenterMarkerMenuDismiss()
             syncCenterMarkerState()
         }

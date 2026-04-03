@@ -2,8 +2,6 @@ package ru.tech.demomapapp.feature.map.viewport
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
@@ -20,18 +18,13 @@ class ViewportReducerTest {
     }
 
     @Test
-    fun `center marker menu open and dismiss update visibility`() {
-        val openedState = ViewportReducer.reduce(
-            ViewportStore.State(),
-            ViewportStore.Message.CenterMarkerMenuOpened,
-        )
-        val dismissedState = ViewportReducer.reduce(
-            openedState,
-            ViewportStore.Message.CenterMarkerMenuDismissed,
+    fun `pending command cleared removes command`() {
+        val newState = ViewportReducer.reduce(
+            ViewportStore.State(pendingCommand = MapViewportCommand.ZoomIn),
+            ViewportStore.Message.PendingCommandUpdated(command = null),
         )
 
-        assertTrue(openedState.isCenterMarkerMenuVisible)
-        assertFalse(dismissedState.isCenterMarkerMenuVisible)
+        assertEquals(null, newState.pendingCommand)
     }
 
     @Test

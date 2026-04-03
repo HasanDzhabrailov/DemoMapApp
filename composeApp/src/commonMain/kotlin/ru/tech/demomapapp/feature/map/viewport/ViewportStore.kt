@@ -10,26 +10,21 @@ internal interface ViewportStore : Store<ViewportStore.Intent, ViewportStore.Sta
         object ZoomInClicked : Intent
         object ZoomOutClicked : Intent
         object ViewportCommandConsumed : Intent
-        object CenterMarkerClicked : Intent
-        object CenterMarkerMenuDismissed : Intent
     }
 
     data class State(
         val cameraSnapshot: MapCameraSnapshot? = null,
         val pendingCommand: MapViewportCommand? = null,
-        val isCenterMarkerMenuVisible: Boolean = false,
     ) {
         fun toModel(): ViewportModel = ViewportModel(
             cameraSnapshot = cameraSnapshot,
             pendingCommand = pendingCommand,
-            isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
         )
 
         companion object {
             fun fromModel(model: ViewportModel): State = State(
                 cameraSnapshot = model.cameraSnapshot,
                 pendingCommand = model.pendingCommand,
-                isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
             )
         }
     }
@@ -37,8 +32,6 @@ internal interface ViewportStore : Store<ViewportStore.Intent, ViewportStore.Sta
     sealed interface Message {
         data class CameraSnapshotStored(val snapshot: MapCameraSnapshot) : Message
         data class PendingCommandUpdated(val command: MapViewportCommand?) : Message
-        object CenterMarkerMenuOpened : Message
-        object CenterMarkerMenuDismissed : Message
     }
 
     sealed interface Label {

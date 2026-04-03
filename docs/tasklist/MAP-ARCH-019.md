@@ -2,17 +2,17 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: center-marker only
+- [x] Confirm scope: center-marker only
 
-- [ ] Introduce navigation for center marker flow
-- [ ] Update UI wiring
+- [x] Introduce navigation for center marker flow
+- [x] Update UI wiring
 
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Center marker flow uses official navigation | PENDING |
+| Center marker flow uses official navigation | DONE |

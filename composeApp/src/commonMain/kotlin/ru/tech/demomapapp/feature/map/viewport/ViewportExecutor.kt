@@ -30,13 +30,6 @@ internal class ViewportExecutor :
                 ViewportStore.Message.CameraSnapshotStored(intent.snapshot),
             )
 
-            ViewportStore.Intent.CenterMarkerClicked -> callbacks.onMessage(
-                ViewportStore.Message.CenterMarkerMenuOpened,
-            )
-            ViewportStore.Intent.CenterMarkerMenuDismissed -> callbacks.onMessage(
-                ViewportStore.Message.CenterMarkerMenuDismissed,
-            )
-
             ViewportStore.Intent.ViewportCommandConsumed -> callbacks.onMessage(
                 ViewportStore.Message.PendingCommandUpdated(command = null),
             )
