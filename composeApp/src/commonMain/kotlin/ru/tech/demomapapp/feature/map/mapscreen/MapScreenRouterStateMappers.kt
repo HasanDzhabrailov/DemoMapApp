@@ -7,7 +7,7 @@ import ru.tech.demomapapp.feature.map.drawing.DrawingModel
 import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
-import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
+import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.ToolsModel
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportModel
 

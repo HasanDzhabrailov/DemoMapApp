@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 internal object RulerReducer {
     fun reduce(state: RulerStore.State, message: RulerStore.Message): RulerStore.State = when (message) {

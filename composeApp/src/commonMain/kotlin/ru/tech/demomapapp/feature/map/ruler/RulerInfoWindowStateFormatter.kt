@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl
+package ru.tech.demomapapp.feature.map.ruler
 
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement

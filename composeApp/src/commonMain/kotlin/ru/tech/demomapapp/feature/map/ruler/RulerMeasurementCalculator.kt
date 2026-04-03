@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl
+package ru.tech.demomapapp.feature.map.ruler
 
 import kotlin.math.PI
 import kotlin.math.asin

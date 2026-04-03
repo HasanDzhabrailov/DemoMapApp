@@ -1,10 +1,8 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 import com.arkivanov.mvikotlin.core.store.Executor
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 
 internal class RulerExecutor(
     private val rulerMeasurementCalculator: RulerMeasurementCalculator,

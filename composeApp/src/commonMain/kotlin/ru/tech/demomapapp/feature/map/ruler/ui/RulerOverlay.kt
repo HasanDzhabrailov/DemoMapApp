@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.ruler.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
@@ -8,7 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
+import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 
 @Composable
 internal fun BoxScope.RulerOverlay(component: RulerComponent, modifier: Modifier = Modifier) {

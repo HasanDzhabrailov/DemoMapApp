@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry

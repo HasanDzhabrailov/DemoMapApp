@@ -1,11 +1,7 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.DefaultRulerMeasurementCalculator
-import ru.tech.demomapapp.feature.map.impl.RulerInfoWindowStateFormatter
-import ru.tech.demomapapp.feature.map.impl.RulerMeasurementCalculator
 
 internal class RulerStoreFactory(
     private val storeFactory: StoreFactory = DefaultStoreFactory(),

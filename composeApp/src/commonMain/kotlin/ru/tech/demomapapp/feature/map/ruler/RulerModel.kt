@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker

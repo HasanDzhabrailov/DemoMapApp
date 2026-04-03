@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.ruler
+package ru.tech.demomapapp.feature.map.ruler
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.Value

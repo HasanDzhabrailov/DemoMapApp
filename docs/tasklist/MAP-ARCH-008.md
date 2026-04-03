@@ -2,20 +2,20 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: package-move only
+- [x] Confirm scope: package-move only
 
-- [ ] Identify ruler-owned files
-- [ ] Move ruler files to ruler package
-- [ ] Fix imports
+- [x] Identify ruler-owned files
+- [x] Move ruler files to ruler package
+- [x] Fix imports
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Ruler package exists | PENDING |
-| Behavior preserved | PENDING |
+| Ruler package exists | DONE |
+| Behavior preserved | DONE |

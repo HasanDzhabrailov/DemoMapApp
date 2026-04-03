@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.ruler.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
