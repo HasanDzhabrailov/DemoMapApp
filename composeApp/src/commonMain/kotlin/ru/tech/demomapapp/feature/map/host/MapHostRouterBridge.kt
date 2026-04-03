@@ -112,9 +112,4 @@ internal class MapHostRouterBridge(
         }
     }
 
-    fun dismissFeatureInfoWindowIfVisible() {
-        if (screenComponent.hasSelectedFeatureInfoWindow()) {
-            screenComponent.dismissFeatureInfoWindow()
-        }
-    }
 }

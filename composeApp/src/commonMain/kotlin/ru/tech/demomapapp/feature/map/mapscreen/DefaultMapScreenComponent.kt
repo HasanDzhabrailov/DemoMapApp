@@ -82,12 +82,6 @@ internal class DefaultMapScreenComponent(
         routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(source))
     }
 
-    fun hasSelectedFeatureInfoWindow(): Boolean = routerHolder.model.value.selectedFeatureInfoWindow != null
-
-    fun dismissFeatureInfoWindow() {
-        routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
-    }
-
     private companion object {
         const val MAP_ROUTER_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapRouterStoreHolder"
     }

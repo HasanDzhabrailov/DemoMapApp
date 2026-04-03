@@ -2,17 +2,17 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: one bridge concern only
+- [x] Confirm scope: one bridge concern only
 
-- [ ] Move feature info coordination out of bridge
-- [ ] Delete obsolete bridge logic
+- [x] Move feature info coordination out of bridge
+- [x] Delete obsolete bridge logic
 
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Feature info coordination no longer uses bridge | PENDING |
+| Feature info coordination no longer uses bridge | DONE |

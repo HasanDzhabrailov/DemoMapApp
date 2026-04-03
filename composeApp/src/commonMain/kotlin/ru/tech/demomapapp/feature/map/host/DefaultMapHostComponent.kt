@@ -237,7 +237,9 @@ internal class DefaultMapHostComponent(
             return
         }
         bridge?.dismissToolsMenuIfVisible()
-        bridge?.dismissFeatureInfoWindowIfVisible()
+        if (model.value.selectedFeatureInfoWindow != null) {
+            screenComponent.onFeatureInfoWindowDismiss()
+        }
         viewportComponent.onCenterMarkerClick()
     }
 

@@ -71,6 +71,28 @@ class DefaultMapScreenComponentTest {
     }
 
     @Test
+    fun `center marker click clears feature info window`() {
+        val component = createComponent()
+
+        component.onCameraIdle(defaultSnapshot())
+        component.onCreatePointClick()
+        component.onCreatePointTitleChange("Test point")
+        component.onCreatePointConfirm()
+
+        val point = component.model.value.mapState.points.single()
+        component.onFeatureClick(
+            featureKey = point.id,
+            featureType = MapScreenComponent.FeatureType.POINT,
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 120, screenY = 240),
+        )
+
+        component.onCenterMarkerClick()
+
+        assertTrue(component.model.value.isCenterMarkerMenuVisible)
+        assertNull(component.model.value.selectedFeatureInfoWindow)
+    }
+
+    @Test
     fun `gps enable emits one shot request and keeps menu open`() {
         val component = createComponent()
 
