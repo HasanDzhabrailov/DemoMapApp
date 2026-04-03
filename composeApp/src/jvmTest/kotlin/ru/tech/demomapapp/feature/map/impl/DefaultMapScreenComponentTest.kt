@@ -15,6 +15,7 @@ import ru.tech.demomapapp.feature.map.api.MapLayerSourceRef
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
@@ -816,7 +817,7 @@ class DefaultMapScreenComponentTest {
 
     private fun createComponent(
         initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
-    ): MapScreenComponent {
+    ): MapScreenUiContract {
         var nextId = 0
         return DefaultMapHostComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),

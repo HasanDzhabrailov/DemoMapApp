@@ -2,19 +2,19 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: API-cleanup only
+- [x] Confirm scope: API-cleanup only
 
-- [ ] Define narrow host and child contracts
-- [ ] Update implementations
-- [ ] Update UI, previews, and tests
+- [x] Define narrow host and child contracts
+- [x] Update implementations
+- [x] Update UI, previews, and tests
 
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Flat contract is split | PENDING |
-| UI uses narrower contracts | PENDING |
+| Flat contract is split | DONE |
+| UI uses narrower contracts | DONE |
