@@ -1,7 +1,7 @@
 package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent
+import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder

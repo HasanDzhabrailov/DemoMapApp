@@ -2,20 +2,20 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: package-move only
+- [x] Confirm scope: package-move only
 
-- [ ] Identify drawing-owned files
-- [ ] Move drawing files to drawing package
-- [ ] Fix imports
+- [x] Identify drawing-owned files
+- [x] Move drawing files to drawing package
+- [x] Fix imports
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Drawing package exists | PENDING |
-| Behavior preserved | PENDING |
+| Drawing package exists | PASS |
+| Behavior preserved | PASS |

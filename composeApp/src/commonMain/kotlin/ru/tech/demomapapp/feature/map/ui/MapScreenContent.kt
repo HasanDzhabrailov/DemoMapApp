@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.drawing.ui.DrawingContent
 import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.mapscreen.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer

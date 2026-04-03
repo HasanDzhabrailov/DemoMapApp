@@ -11,10 +11,10 @@ import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
+import ru.tech.demomapapp.feature.map.drawing.DefaultShapeDrawingPreviewMapper
+import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.impl.DefaultRulerArrowGeometryCalculator
-import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.impl.RulerArrowGeometryCalculator
-import ru.tech.demomapapp.feature.map.impl.ShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.render.MapRenderModel
 import ru.tech.demomapapp.feature.map.render.RenderCurrentLocationMarker
 import ru.tech.demomapapp.feature.map.render.RenderMapLine

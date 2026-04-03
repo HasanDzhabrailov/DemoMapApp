@@ -1,10 +1,10 @@
 package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.impl.drawing.CreatePointDraft as DrawingCreatePointDraft
-import ru.tech.demomapapp.feature.map.impl.drawing.DrawingMode as InternalDrawingMode
-import ru.tech.demomapapp.feature.map.impl.drawing.DrawingModel
-import ru.tech.demomapapp.feature.map.impl.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
+import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft as DrawingCreatePointDraft
+import ru.tech.demomapapp.feature.map.drawing.DrawingMode as InternalDrawingMode
+import ru.tech.demomapapp.feature.map.drawing.DrawingModel
+import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
 import ru.tech.demomapapp.feature.map.impl.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
@@ -37,15 +37,15 @@ internal fun DrawingModel.toRouterState(): MapRouterStore.ChildState.Drawing = M
     },
     mode = drawingMode?.let { mode ->
         when (mode) {
-            ru.tech.demomapapp.feature.map.impl.drawing.DrawingMode.LINE -> MapRouterStore.DrawingMode.LINE
-            ru.tech.demomapapp.feature.map.impl.drawing.DrawingMode.POLYGON -> MapRouterStore.DrawingMode.POLYGON
+            ru.tech.demomapapp.feature.map.drawing.DrawingMode.LINE -> MapRouterStore.DrawingMode.LINE
+            ru.tech.demomapapp.feature.map.drawing.DrawingMode.POLYGON -> MapRouterStore.DrawingMode.POLYGON
         }
     },
     shapeDraft = shapeDrawingDraft?.let { draft ->
         MapRouterStore.ShapeDrawingDraft(
             mode = when (draft.mode) {
-                ru.tech.demomapapp.feature.map.impl.drawing.DrawingMode.LINE -> MapRouterStore.DrawingMode.LINE
-                ru.tech.demomapapp.feature.map.impl.drawing.DrawingMode.POLYGON -> MapRouterStore.DrawingMode.POLYGON
+                ru.tech.demomapapp.feature.map.drawing.DrawingMode.LINE -> MapRouterStore.DrawingMode.LINE
+                ru.tech.demomapapp.feature.map.drawing.DrawingMode.POLYGON -> MapRouterStore.DrawingMode.POLYGON
             },
             fixedVertices = draft.fixedVertices,
             titleInput = draft.titleInput,

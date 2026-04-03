@@ -10,9 +10,9 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-import ru.tech.demomapapp.feature.map.impl.drawing.DefaultDrawingComponent
-import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.impl.drawing.DrawingStoreFactory
+import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
+import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
+import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.impl.location.DefaultLocationComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationStoreFactory
