@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.tools
+package ru.tech.demomapapp.feature.map.tools
 
 import ru.tech.demomapapp.feature.map.api.MapCatalogItemKind
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry

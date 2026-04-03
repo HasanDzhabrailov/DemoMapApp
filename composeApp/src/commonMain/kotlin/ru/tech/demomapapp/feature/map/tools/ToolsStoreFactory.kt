@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.tools
+package ru.tech.demomapapp.feature.map.tools
 
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory

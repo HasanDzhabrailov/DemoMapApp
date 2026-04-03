@@ -16,6 +16,7 @@ import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.mapscreen.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
+import ru.tech.demomapapp.feature.map.tools.ui.ToolsOverlay
 
 @Composable
 fun MapScreenContent(component: MapScreenComponent, modifier: Modifier = Modifier) {

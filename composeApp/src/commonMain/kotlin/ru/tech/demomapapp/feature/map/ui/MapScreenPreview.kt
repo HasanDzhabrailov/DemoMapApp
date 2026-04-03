@@ -18,8 +18,8 @@ import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsModel
+import ru.tech.demomapapp.feature.map.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.tools.ToolsModel
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportModel
 

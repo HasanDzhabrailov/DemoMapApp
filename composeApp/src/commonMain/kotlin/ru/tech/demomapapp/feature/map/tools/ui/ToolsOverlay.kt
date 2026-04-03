@@ -1,10 +1,10 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.tools.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.MapStyle
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 
 @Composable
 internal fun ToolsOverlay(

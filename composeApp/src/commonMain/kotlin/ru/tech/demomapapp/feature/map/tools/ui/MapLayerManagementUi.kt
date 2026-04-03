@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.ui
+package ru.tech.demomapapp.feature.map.tools.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement

@@ -8,7 +8,7 @@ import ru.tech.demomapapp.feature.map.impl.drawing.ShapeDrawingDraft as Internal
 import ru.tech.demomapapp.feature.map.impl.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerModel
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsModel
+import ru.tech.demomapapp.feature.map.tools.ToolsModel
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportModel
 
 internal fun ToolsModel.toRouterState(): MapRouterStore.ChildState.Tools = MapRouterStore.ChildState.Tools(

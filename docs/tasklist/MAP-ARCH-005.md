@@ -2,20 +2,24 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: package-move only
+- [x] Confirm scope: package-move only
 
-- [ ] Identify tools-owned files
-- [ ] Move tools files to tools package
-- [ ] Fix imports
+- [x] Identify tools-owned files
+- [x] Move tools files to tools package
+- [x] Fix imports
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Tools package exists | PENDING |
-| Behavior preserved | PENDING |
+| Tools package exists | DONE |
+| Behavior preserved | DONE |
+
+## Suggested Commit Message
+
+`refactor: move tools feature into dedicated package`

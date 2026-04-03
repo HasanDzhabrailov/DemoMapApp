@@ -22,9 +22,9 @@ import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder
 import ru.tech.demomapapp.feature.map.impl.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerStoreFactory
-import ru.tech.demomapapp.feature.map.impl.tools.DefaultToolsComponent
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
-import ru.tech.demomapapp.feature.map.impl.tools.ToolsStoreFactory
+import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
+import ru.tech.demomapapp.feature.map.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory
 import ru.tech.demomapapp.feature.map.impl.viewport.DefaultViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportStoreFactory

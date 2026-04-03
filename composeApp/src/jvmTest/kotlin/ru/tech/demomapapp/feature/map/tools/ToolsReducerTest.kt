@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.tools
+package ru.tech.demomapapp.feature.map.tools
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
