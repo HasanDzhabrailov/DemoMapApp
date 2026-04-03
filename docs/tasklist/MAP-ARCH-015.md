@@ -2,19 +2,19 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: cleanup only
+- [x] Confirm scope: cleanup only
 
-- [ ] Delete `MapScreenRouterBridge`
-- [ ] Delete obsolete references
+- [x] Delete `MapScreenRouterBridge`
+- [x] Delete obsolete references
 
-- [ ] Run `./gradlew :composeApp:test`
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Bridge is removed | PENDING |
-| Project remains green | PENDING |
+| Bridge is removed | DONE |
+| Project remains green | DONE |

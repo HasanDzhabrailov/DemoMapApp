@@ -20,9 +20,12 @@ import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationStoreFactory
 import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
 import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
+import ru.tech.demomapapp.feature.map.mapscreen.toCenterMarkerRouterState
 import ru.tech.demomapapp.feature.map.mapscreen.toDrawingModel
+import ru.tech.demomapapp.feature.map.mapscreen.toRouterState
 import ru.tech.demomapapp.feature.map.mapscreen.toLocationModel
 import ru.tech.demomapapp.feature.map.mapscreen.toRulerModel
+import ru.tech.demomapapp.feature.map.mapscreen.toViewportRouterState
 import ru.tech.demomapapp.feature.map.mapscreen.toViewportModel
 import ru.tech.demomapapp.feature.map.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
@@ -45,7 +48,8 @@ internal class DefaultMapHostComponent(
     rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
 ) : MapScreenUiComponent, ComponentContext by componentContext {
-    private var bridge: MapHostRouterBridge? = null
+    private var syncedRulerLocation = initialModel.currentLocationMarker
+    private var syncedRulerSnapshot = initialModel.lastCameraSnapshot
 
     override val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = childContext(key = TOOLS_CHILD_CONTEXT_KEY),
@@ -53,7 +57,7 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel,
         output = object : ToolsComponent.Output {
             override fun onStateChanged() {
-                bridge?.onToolsStateChanged()
+                syncToolsState()
             }
 
             override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
@@ -66,7 +70,7 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toDrawingModel(),
         output = object : DrawingComponent.Output {
             override fun onStateChanged() {
-                bridge?.onDrawingStateChanged()
+                syncDrawingState()
             }
 
             override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
@@ -79,7 +83,7 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toRulerModel(),
         output = object : RulerComponent.Output {
             override fun onStateChanged() {
-                bridge?.onRulerStateChanged()
+                syncRulerState()
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
@@ -94,7 +98,9 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toViewportModel(),
         output = object : ViewportComponent.Output {
             override fun onStateChanged() {
-                bridge?.onViewportStateChanged()
+                syncViewportState()
+                syncCenterMarkerState()
+                syncRulerInputs()
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
@@ -109,7 +115,8 @@ internal class DefaultMapHostComponent(
         initialModel = initialModel.toLocationModel(),
         output = object : LocationComponent.Output {
             override fun onStateChanged() {
-                bridge?.onLocationStateChanged()
+                syncLocationState()
+                syncRulerInputs()
             }
 
             override fun onLocationUpdated(location: MapLocationMarker?) = Unit
@@ -119,7 +126,7 @@ internal class DefaultMapHostComponent(
             }
 
             override fun onLocationRequestIssued(request: MapLocationRequest) {
-                bridge?.onLocationRequestIssued()
+                syncLocationState()
             }
         },
     )
@@ -131,15 +138,7 @@ internal class DefaultMapHostComponent(
     )
 
     init {
-        bridge = MapHostRouterBridge(
-            screenComponent = screenComponent,
-            toolsComponent = toolsComponent,
-            drawingComponent = drawingComponent,
-            locationComponent = locationComponent,
-            rulerComponent = rulerComponent,
-            viewportComponent = viewportComponent,
-        )
-        bridge?.syncAllStates()
+        syncAllStates()
     }
 
     override val model: Value<MapScreenComponent.Model> = screenComponent.model
@@ -217,7 +216,7 @@ internal class DefaultMapHostComponent(
             MapRouterStore.ViewportCommandSource.VIEWPORT -> {
                 viewportComponent.onViewportCommandConsumed()
                 screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT)
-                bridge?.syncViewportState()
+                syncViewportState()
             }
 
             MapRouterStore.ViewportCommandSource.LOCATION -> {
@@ -309,17 +308,67 @@ internal class DefaultMapHostComponent(
         screenComponent.onViewportCommandUpdated(source = source, command = command)
     }
 
+    private fun syncAllStates() {
+        syncToolsState()
+        syncDrawingState()
+        syncLocationState()
+        syncRulerState()
+        syncViewportState()
+        syncCenterMarkerState()
+        syncRulerInputs()
+    }
+
+    private fun syncToolsState() {
+        screenComponent.onToolsStateUpdated(toolsComponent.model.value.toRouterState())
+    }
+
+    private fun syncDrawingState() {
+        screenComponent.onDrawingStateUpdated(drawingComponent.model.value.toRouterState())
+    }
+
+    private fun syncLocationState() {
+        screenComponent.onLocationStateUpdated(locationComponent.model.value.toRouterState())
+    }
+
+    private fun syncRulerState() {
+        screenComponent.onRulerStateUpdated(rulerComponent.model.value.toRouterState())
+    }
+
+    private fun syncViewportState() {
+        screenComponent.onViewportStateUpdated(viewportComponent.model.value.toViewportRouterState())
+    }
+
+    private fun syncCenterMarkerState() {
+        screenComponent.onCenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState())
+    }
+
+    private fun syncRulerInputs() {
+        val viewportSnapshot = viewportComponent.model.value.cameraSnapshot
+        if (viewportSnapshot != syncedRulerSnapshot) {
+            viewportSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
+            syncedRulerSnapshot = viewportSnapshot
+            syncRulerState()
+        }
+
+        val locationMarker = locationComponent.model.value.currentMarker
+        if (locationMarker != syncedRulerLocation) {
+            rulerComponent.onLocationUpdated(locationMarker)
+            syncedRulerLocation = locationMarker
+            syncRulerState()
+        }
+    }
+
     private fun dismissToolsMenuIfVisible() {
         if (toolsComponent.model.value.isMenuVisible) {
             toolsComponent.onMapToolsDismiss()
-            bridge?.syncToolsState()
+            syncToolsState()
         }
     }
 
     private fun dismissViewportMenuIfVisible() {
         if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
             viewportComponent.onCenterMarkerMenuDismiss()
-            bridge?.syncCenterMarkerState()
+            syncCenterMarkerState()
         }
     }
 
