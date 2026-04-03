@@ -9,19 +9,17 @@ import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingModel
-import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsModel
-import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
-import ru.tech.demomapapp.feature.map.viewport.ViewportModel
 
 @Preview
 @Composable
@@ -32,7 +30,7 @@ internal fun MapScreenContentPreview() {
 }
 
 @Suppress("TooManyFunctions")
-private class PreviewMapScreenComponent : MapScreenUiComponent {
+private class PreviewMapScreenComponent : MapScreenUiContract {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(
             MapScreenComponent.Model(
@@ -123,17 +121,6 @@ private class PreviewMapScreenComponent : MapScreenUiComponent {
         override fun onLayerOpacityClick() = Unit
         override fun onLayerOpacityChange(value: Float) = Unit
         override fun onLayerOpacityDismiss() = Unit
-    }
-
-    override val viewportComponent: ViewportComponent = object : ViewportComponent {
-        override val model: Value<ViewportModel> = MutableValue(ViewportModel())
-
-        override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
-        override fun onZoomInClick() = Unit
-        override fun onZoomOutClick() = Unit
-        override fun onViewportCommandConsumed() = Unit
-        override fun onCenterMarkerClick() = Unit
-        override fun onCenterMarkerMenuDismiss() = Unit
     }
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit

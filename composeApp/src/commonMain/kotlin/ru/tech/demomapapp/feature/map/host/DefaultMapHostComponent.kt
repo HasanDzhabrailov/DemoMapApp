@@ -9,6 +9,7 @@ import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
@@ -19,7 +20,6 @@ import ru.tech.demomapapp.feature.map.location.DefaultLocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationStoreFactory
 import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
-import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.mapscreen.toCenterMarkerRouterState
 import ru.tech.demomapapp.feature.map.mapscreen.toDrawingModel
 import ru.tech.demomapapp.feature.map.mapscreen.toRouterState
@@ -47,7 +47,7 @@ internal class DefaultMapHostComponent(
     locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
-) : MapScreenUiComponent, ComponentContext by componentContext {
+) : MapScreenUiContract, ComponentContext by componentContext {
     private var syncedRulerLocation = initialModel.currentLocationMarker
     private var syncedRulerSnapshot = initialModel.lastCameraSnapshot
 
@@ -92,7 +92,7 @@ internal class DefaultMapHostComponent(
         },
     )
 
-    override val viewportComponent: ViewportComponent = DefaultViewportComponent(
+    private val viewportComponent: ViewportComponent = DefaultViewportComponent(
         componentContext = childContext(key = VIEWPORT_CHILD_CONTEXT_KEY),
         viewportStoreFactory = viewportStoreFactory,
         initialModel = initialModel.toViewportModel(),

@@ -2,26 +2,24 @@ package ru.tech.demomapapp.feature.map.viewport.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
 
 @Composable
 internal fun BoxScope.ViewportControls(
-    component: ViewportComponent,
+    isCenterMarkerMenuVisible: Boolean,
+    onZoomInClick: () -> Unit,
+    onZoomOutClick: () -> Unit,
+    onCenterMarkerMenuDismiss: () -> Unit,
     onCenterMarkerClick: () -> Unit,
     onCreatePointClick: () -> Unit,
     onCreateLineClick: () -> Unit,
     onCreatePolygonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val model by component.model.subscribeAsState()
-
     MapZoomControlsOverlay(
-        onZoomInClick = component::onZoomInClick,
-        onZoomOutClick = component::onZoomOutClick,
+        onZoomInClick = onZoomInClick,
+        onZoomOutClick = onZoomOutClick,
         modifier = modifier.align(Alignment.BottomEnd),
     )
 
@@ -30,9 +28,9 @@ internal fun BoxScope.ViewportControls(
         modifier = modifier.align(Alignment.Center),
     )
 
-    if (model.isCenterMarkerMenuVisible) {
+    if (isCenterMarkerMenuVisible) {
         CenterMarkerMenuOverlay(
-            onDismiss = component::onCenterMarkerMenuDismiss,
+            onDismiss = onCenterMarkerMenuDismiss,
             onCreatePointClick = onCreatePointClick,
             onCreateLineClick = onCreateLineClick,
             onCreatePolygonClick = onCreatePolygonClick,

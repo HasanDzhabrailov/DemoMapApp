@@ -12,10 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.drawing.ui.DrawingContent
 import ru.tech.demomapapp.feature.map.location.ui.LocationControls
-import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.mapscreen.toRenderModel
 import ru.tech.demomapapp.feature.map.render.MapRenderer
 import ru.tech.demomapapp.feature.map.ruler.ui.RulerOverlay
@@ -23,9 +22,7 @@ import ru.tech.demomapapp.feature.map.tools.ui.ToolsOverlay
 import ru.tech.demomapapp.feature.map.viewport.ui.ViewportControls
 
 @Composable
-fun MapScreenContent(component: MapScreenComponent, modifier: Modifier = Modifier) {
-    val uiComponent = component as? MapScreenUiComponent
-        ?: error("MapScreenContent requires MapScreenUiComponent")
+fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifier) {
     val model by component.model.subscribeAsState()
     val renderModel = model.mapState.toRenderModel(
         shapeDrawingDraft = model.shapeDrawingDraft,
@@ -63,24 +60,27 @@ fun MapScreenContent(component: MapScreenComponent, modifier: Modifier = Modifie
         )
 
         LocationControls(
-            component = uiComponent.locationComponent,
+            component = component.locationComponent,
             modifier = Modifier.align(Alignment.BottomStart),
         )
 
         ViewportControls(
-            component = uiComponent.viewportComponent,
+            isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
+            onZoomInClick = component::onZoomInClick,
+            onZoomOutClick = component::onZoomOutClick,
+            onCenterMarkerMenuDismiss = component::onCenterMarkerMenuDismiss,
             onCenterMarkerClick = component::onCenterMarkerClick,
             onCreatePointClick = component::onCreatePointClick,
             onCreateLineClick = component::onCreateLineClick,
             onCreatePolygonClick = component::onCreatePolygonClick,
         )
 
-        DrawingContent(component = uiComponent.drawingComponent)
+        DrawingContent(component = component.drawingComponent)
 
-        RulerOverlay(component = uiComponent.rulerComponent)
+        RulerOverlay(component = component.rulerComponent)
 
         ToolsOverlay(
-            component = uiComponent.toolsComponent,
+            component = component.toolsComponent,
             isGpsEnabled = model.isGpsToggleChecked(),
             isRulerEnabled = model.isRulerEnabled,
             onDismiss = component::onMapToolsDismiss,
