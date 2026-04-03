@@ -16,7 +16,13 @@ class DefaultViewportComponentTest {
     fun `zoom in emits viewport command through output and model`() {
         var emittedCommand: MapViewportCommand? = null
         val component = createComponent(
-            output = ViewportComponent.Output { command -> emittedCommand = command },
+            output = object : ViewportComponent.Output {
+                override fun onStateChanged() = Unit
+
+                override fun onViewportCommandRequested(command: MapViewportCommand) {
+                    emittedCommand = command
+                }
+            },
         )
 
         component.onZoomInClick()
@@ -29,7 +35,13 @@ class DefaultViewportComponentTest {
     fun `zoom out emits viewport command through output and model`() {
         var emittedCommand: MapViewportCommand? = null
         val component = createComponent(
-            output = ViewportComponent.Output { command -> emittedCommand = command },
+            output = object : ViewportComponent.Output {
+                override fun onStateChanged() = Unit
+
+                override fun onViewportCommandRequested(command: MapViewportCommand) {
+                    emittedCommand = command
+                }
+            },
         )
 
         component.onZoomOutClick()
@@ -61,7 +73,11 @@ class DefaultViewportComponentTest {
     }
 
     private fun createComponent(
-        output: ViewportComponent.Output = ViewportComponent.Output { _ -> },
+        output: ViewportComponent.Output = object : ViewportComponent.Output {
+            override fun onStateChanged() = Unit
+
+            override fun onViewportCommandRequested(command: MapViewportCommand) = Unit
+        },
     ): DefaultViewportComponent {
         return DefaultViewportComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),

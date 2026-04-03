@@ -12,7 +12,8 @@ interface RulerComponent {
     fun onLocationUpdated(location: MapLocationMarker?)
     fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot)
 
-    fun interface Output {
+    interface Output {
+        fun onStateChanged()
         fun onViewportCommandRequested(command: MapViewportCommand)
     }
 }

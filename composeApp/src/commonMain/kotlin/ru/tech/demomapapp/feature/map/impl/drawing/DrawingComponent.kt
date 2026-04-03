@@ -19,13 +19,15 @@ interface DrawingComponent {
     fun onCreatePointSheetDismiss()
     fun onDrawingAddPositionClick()
     fun onDrawingRemoveLastPositionClick()
+    fun onDrawingDetailsClick()
     fun onDrawingDismiss()
     fun onCreateShapeTitleChange(value: String)
     fun onCreateShapeConfirm()
     fun onCreateShapeSheetDismiss()
     fun onCameraPositionUpdated(snapshot: MapCameraSnapshot)
 
-    fun interface Output {
+    interface Output {
+        fun onStateChanged()
         fun onFeatureCreated(feature: CreatedFeature)
     }
 

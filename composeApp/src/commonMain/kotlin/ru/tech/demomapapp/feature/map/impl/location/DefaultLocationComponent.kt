@@ -9,12 +9,14 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 internal class DefaultLocationComponent(
     componentContext: ComponentContext,
     private val locationStoreFactory: LocationStoreFactory,
+    initialModel: LocationModel = LocationModel(),
     private val output: LocationComponent.Output,
 ) : LocationComponent, ComponentContext by componentContext {
 
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
-        LocationStoreHolder(locationStoreFactory)
+        LocationStoreHolder(locationStoreFactory, initialModel)
     }
+    private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<LocationModel> = holder.model
 

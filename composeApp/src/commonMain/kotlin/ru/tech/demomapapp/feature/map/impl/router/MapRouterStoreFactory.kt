@@ -2,9 +2,17 @@ package ru.tech.demomapapp.feature.map.impl.router
 
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
+import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
 
 internal class MapRouterStoreFactory(
-    private val storeFactory: StoreFactory,
+    private val storeFactory: StoreFactory = DefaultStoreFactory(),
+    private val featureSelectionResolver: MapFeatureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper =
+        DefaultMapFeatureInfoWindowStateMapper(),
 ) {
 
     fun create(): MapRouterStore = object :
@@ -16,7 +24,12 @@ internal class MapRouterStoreFactory(
             > by storeFactory.create(
             name = "MapRouterStore",
             initialState = MapRouterStore.State(),
-            executorFactory = { MapRouterExecutor() },
+            executorFactory = {
+                MapRouterExecutor(
+                    featureSelectionResolver = featureSelectionResolver,
+                    featureInfoWindowStateMapper = featureInfoWindowStateMapper,
+                )
+            },
             reducer = MapRouterReducer(),
         ) {}
 }

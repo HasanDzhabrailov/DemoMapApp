@@ -19,6 +19,7 @@ internal interface DrawingStore : Store<DrawingStore.Intent, DrawingStore.State,
         object CreatePolygonClicked : Intent
         object DrawingAddPositionClicked : Intent
         object DrawingRemoveLastPositionClicked : Intent
+        object DrawingDetailsClicked : Intent
         data class ShapeTitleChanged(val value: String) : Intent
         object ShapeConfirmed : Intent
         object ShapeSheetDismissed : Intent
@@ -78,6 +79,7 @@ internal interface DrawingStore : Store<DrawingStore.Intent, DrawingStore.State,
         data class DrawingPositionAdded(val snapshot: MapCameraSnapshot) : Message
         object DrawingLastPositionRemoved : Message
         data class ShapeTitleUpdated(val value: String) : Message
+        object ShapeSheetOpened : Message
         data class LineCreated(val line: MapLine) : Message
         data class PolygonCreated(val polygon: MapPolygon) : Message
         object ShapeSheetClosed : Message

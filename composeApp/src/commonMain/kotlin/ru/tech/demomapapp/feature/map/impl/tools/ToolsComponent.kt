@@ -24,7 +24,8 @@ interface ToolsComponent {
     fun onLayerOpacityChange(value: Float)
     fun onLayerOpacityDismiss()
 
-    fun interface Output {
+    interface Output {
+        fun onStateChanged()
         fun onLayersChanged(layers: List<MapLayerEntry>)
     }
 }

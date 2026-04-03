@@ -23,9 +23,21 @@ internal interface RulerStore : Store<RulerStore.Intent, RulerStore.State, Ruler
     ) {
         fun toModel(): RulerModel = RulerModel(
             isEnabled = isEnabled,
+            currentLocation = currentLocation,
+            lastCameraSnapshot = lastCameraSnapshot,
             measurement = measurement,
             infoWindow = infoWindow,
         )
+
+        companion object {
+            fun fromModel(model: RulerModel): State = State(
+                isEnabled = model.isEnabled,
+                currentLocation = model.currentLocation,
+                lastCameraSnapshot = model.lastCameraSnapshot,
+                measurement = model.measurement,
+                infoWindow = model.infoWindow,
+            )
+        }
     }
 
     sealed interface Message {

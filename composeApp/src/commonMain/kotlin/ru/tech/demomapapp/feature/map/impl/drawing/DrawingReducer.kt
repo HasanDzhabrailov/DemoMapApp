@@ -1,6 +1,7 @@
 package ru.tech.demomapapp.feature.map.impl.drawing
 
 internal object DrawingReducer {
+    @Suppress("ReturnCount")
     fun reduce(state: DrawingStore.State, message: DrawingStore.Message): DrawingStore.State {
         return when (message) {
             is DrawingStore.Message.CreatePointSheetOpened -> {
@@ -77,6 +78,15 @@ internal object DrawingReducer {
                 )
             }
 
+            is DrawingStore.Message.ShapeSheetOpened -> {
+                val draft = state.shapeDrawingDraft ?: return state
+                if (draft.fixedVertices.size >= draft.mode.minimumVertexCount()) {
+                    state.copy(isCreateShapeSheetVisible = true)
+                } else {
+                    state
+                }
+            }
+
             is DrawingStore.Message.LineCreated -> {
                 state.copy(
                     lines = state.lines + message.line,
@@ -121,5 +131,10 @@ internal object DrawingReducer {
                 )
             }
         }
+    }
+
+    private fun DrawingMode.minimumVertexCount(): Int = when (this) {
+        DrawingMode.LINE -> 2
+        DrawingMode.POLYGON -> 3
     }
 }

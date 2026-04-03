@@ -1,6 +1,10 @@
 package ru.tech.demomapapp.feature.map.impl.router
 
 import com.arkivanov.mvikotlin.core.store.Executor
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
+import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
 
 internal class MapRouterExecutor : Executor<
     MapRouterStore.Intent,
@@ -9,6 +13,22 @@ internal class MapRouterExecutor : Executor<
     MapRouterMessage,
     MapRouterStore.Label,
     > {
+
+    constructor() : this(
+        featureSelectionResolver = DefaultMapFeatureSelectionResolver(),
+        featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(),
+    )
+
+    internal constructor(
+        featureSelectionResolver: MapFeatureSelectionResolver,
+        featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper,
+    ) {
+        this.featureSelectionResolver = featureSelectionResolver
+        this.featureInfoWindowStateMapper = featureInfoWindowStateMapper
+    }
+
+    private val featureSelectionResolver: MapFeatureSelectionResolver
+    private val featureInfoWindowStateMapper: MapFeatureInfoWindowStateMapper
 
     private lateinit var callbacks: Executor.Callbacks<
         MapRouterStore.State,
@@ -53,16 +73,35 @@ internal class MapRouterExecutor : Executor<
                 callbacks.onMessage(MapRouterMessage.CenterMarkerStateUpdated(intent.state))
             }
 
-            is MapRouterStore.Intent.CreatePointStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.CreatePointStateUpdated(intent.state))
-            }
-
             is MapRouterStore.Intent.DrawingStateUpdated -> {
                 callbacks.onMessage(MapRouterMessage.DrawingStateUpdated(intent.state))
             }
 
-            is MapRouterStore.Intent.FeatureSelectionStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.FeatureSelectionStateUpdated(intent.state))
+            is MapRouterStore.Intent.FeatureClicked -> {
+                val selectedFeature = featureSelectionResolver.resolve(
+                    mapState = callbacks.state.mapState,
+                    featureKey = intent.featureKey,
+                    featureType = intent.featureType,
+                )
+                callbacks.onMessage(
+                    MapRouterMessage.FeatureInfoWindowUpdated(
+                        infoWindow = selectedFeature?.let {
+                            featureInfoWindowStateMapper.map(it, intent.anchor)
+                        },
+                    ),
+                )
+            }
+
+            MapRouterStore.Intent.FeatureInfoWindowDismissed -> {
+                callbacks.onMessage(MapRouterMessage.FeatureInfoWindowUpdated(infoWindow = null))
+            }
+
+            is MapRouterStore.Intent.ViewportCommandUpdated -> {
+                callbacks.onMessage(MapRouterMessage.ViewportCommandUpdated(intent.source, intent.command))
+            }
+
+            is MapRouterStore.Intent.ViewportCommandConsumed -> {
+                callbacks.onMessage(MapRouterMessage.ViewportCommandUpdated(intent.source, command = null))
             }
         }
     }

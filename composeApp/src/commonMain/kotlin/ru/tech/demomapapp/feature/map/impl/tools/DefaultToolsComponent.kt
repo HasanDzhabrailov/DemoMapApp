@@ -19,6 +19,7 @@ internal class DefaultToolsComponent(
         )
     }
     private val labels = holder.labels(::handleLabel)
+    private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<ToolsModel> = holder.model
 

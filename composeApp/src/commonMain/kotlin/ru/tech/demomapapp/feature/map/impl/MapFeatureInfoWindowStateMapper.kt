@@ -1,9 +1,12 @@
 package ru.tech.demomapapp.feature.map.impl
 
-import ru.tech.demomapapp.feature.map.impl.store.MapStore
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 internal fun interface MapFeatureInfoWindowStateMapper {
-    fun map(feature: SelectedMapFeature, anchor: MapStore.FeatureInfoWindowAnchor): MapStore.FeatureInfoWindow
+    fun map(
+        feature: SelectedMapFeature,
+        anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+    ): MapScreenComponent.FeatureInfoWindow
 }
 
 internal class DefaultMapFeatureInfoWindowStateMapper(
@@ -11,8 +14,8 @@ internal class DefaultMapFeatureInfoWindowStateMapper(
 ) : MapFeatureInfoWindowStateMapper {
     override fun map(
         feature: SelectedMapFeature,
-        anchor: MapStore.FeatureInfoWindowAnchor,
-    ): MapStore.FeatureInfoWindow = MapStore.FeatureInfoWindow(
+        anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+    ): MapScreenComponent.FeatureInfoWindow = MapScreenComponent.FeatureInfoWindow(
         title = feature.title,
         createdAtText = createdAtFormatter.format(feature.createdAtEpochMillis),
         anchor = anchor,

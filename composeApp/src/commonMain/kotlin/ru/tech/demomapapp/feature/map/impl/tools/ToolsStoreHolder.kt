@@ -16,6 +16,7 @@ internal class ToolsStoreHolder(
     private val mutableModel = MutableValue(store.state.toModel())
     private val stateDisposable: Disposable =
         store.states(observer(onNext = { state -> mutableModel.value = state.toModel() }))
+    private var statesDisposable: Disposable? = null
 
     val model: Value<ToolsModel> = mutableModel
 
@@ -25,7 +26,15 @@ internal class ToolsStoreHolder(
 
     fun labels(onLabel: (ToolsStore.Label) -> Unit): Disposable = store.labels(observer(onNext = onLabel))
 
+    fun states(onState: (ToolsModel) -> Unit): Disposable {
+        statesDisposable?.dispose()
+        return store.states(observer(onNext = { state -> onState(state.toModel()) })).also {
+            statesDisposable = it
+        }
+    }
+
     override fun onDestroy() {
+        statesDisposable?.dispose()
         stateDisposable.dispose()
         store.dispose()
     }

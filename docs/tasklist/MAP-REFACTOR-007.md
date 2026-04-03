@@ -1,68 +1,73 @@
 # Tasklist - MAP-REFACTOR-007
 
-- [ ] Read PRD
-- [ ] Read plan
-- [ ] Confirm scope
+- [x] Read PRD
+- [x] Read plan
+- [x] Confirm scope
 
 ## Delete Old Files
-- [ ] Delete `feature/map/impl/store/MapStore.kt`
-- [ ] Delete `feature/map/impl/store/MapStoreExecutor.kt`
-- [ ] Delete `feature/map/impl/store/MapStoreReducer.kt`
-- [ ] Delete `feature/map/impl/store/MapStoreMessage.kt`
-- [ ] Delete `feature/map/impl/store/MapStoreFactory.kt`
-- [ ] Delete `feature/map/impl/store/MapStoreHolder.kt`
-- [ ] Delete `feature/map/impl/store/handler/CreatePointHandler.kt`
-- [ ] Delete `feature/map/impl/store/handler/DrawingHandler.kt`
-- [ ] Delete `feature/map/impl/store/handler/LocationHandler.kt`
-- [ ] Delete `feature/map/impl/store/handler/FeatureClickHandler.kt`
-- [ ] Delete `feature/map/impl/store/handler/` directory
+- [x] Delete `feature/map/impl/store/MapStore.kt`
+- [x] Delete `feature/map/impl/store/MapStoreExecutor.kt`
+- [x] Delete `feature/map/impl/store/MapStoreReducer.kt`
+- [x] Delete `feature/map/impl/store/MapStoreMessage.kt`
+- [x] Delete `feature/map/impl/store/MapStoreFactory.kt`
+- [x] Delete `feature/map/impl/store/MapStoreHolder.kt`
+- [x] Delete `feature/map/impl/store/handler/CreatePointHandler.kt`
+- [x] Delete `feature/map/impl/store/handler/DrawingHandler.kt`
+- [x] Delete `feature/map/impl/store/handler/LocationHandler.kt`
+- [x] Delete `feature/map/impl/store/handler/FeatureClickHandler.kt`
+- [x] Delete `feature/map/impl/store/handler/` directory
 - [ ] Delete old `feature/map/api/MapScreenComponent.kt`
-- [ ] Delete old `feature/map/impl/DefaultMapScreenComponent.kt`
-- [ ] Delete `feature/map/ui/MapScreenOverlays.kt`
-- [ ] Delete old tests `MapStoreExecutorTest.kt`
-- [ ] Delete old tests `MapStoreReducerTest.kt`
+- [x] Delete old `feature/map/impl/DefaultMapScreenComponent.kt`
+- [x] Delete `feature/map/ui/MapScreenOverlays.kt`
+- [x] Delete old tests `MapStoreExecutorTest.kt`
+- [x] Delete old tests `MapStoreReducerTest.kt`
 
 ## Create New Files
-- [ ] Create new `MapScreenComponent.kt` (updated API)
+- [x] Create new `MapScreenComponent.kt` (updated API)
 - [ ] Create new `MapScreenModel` data class
-- [ ] Create new `DefaultMapScreenComponent.kt` (Router)
-- [ ] Wire DrawingComponent with Output callback
-- [ ] Wire RulerComponent with Output callback
-- [ ] Wire LocationComponent with Output callback
-- [ ] Wire ViewportComponent with Output callback
-- [ ] Wire ToolsComponent with Output callback
-- [ ] Connect child Outputs to RouterStore intents
-- [ ] Aggregate model from RouterStore
+- [x] Create new `DefaultMapScreenComponent.kt` (Router)
+- [x] Wire DrawingComponent with Output callback
+- [x] Wire RulerComponent with Output callback
+- [x] Wire LocationComponent with Output callback
+- [x] Wire ViewportComponent with Output callback
+- [x] Wire ToolsComponent with Output callback
+- [x] Connect child Outputs to RouterStore intents
+- [x] Aggregate model from RouterStore
 
 ## Integration
-- [ ] Import MAP-REFACTOR-001 (RouterStore)
-- [ ] Import MAP-REFACTOR-002 (Drawing)
-- [ ] Import MAP-REFACTOR-003 (Ruler)
-- [ ] Import MAP-REFACTOR-004 (Location)
-- [ ] Import MAP-REFACTOR-005 (Viewport)
-- [ ] Import MAP-REFACTOR-006 (Tools)
+- [x] Import MAP-REFACTOR-001 (RouterStore)
+- [x] Import MAP-REFACTOR-002 (Drawing)
+- [x] Import MAP-REFACTOR-003 (Ruler)
+- [x] Import MAP-REFACTOR-004 (Location)
+- [x] Import MAP-REFACTOR-005 (Viewport)
+- [x] Import MAP-REFACTOR-006 (Tools)
 
 ## Verification
-- [ ] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
-- [ ] Run `ktlintCheck`
-- [ ] Run `detekt`
+- [x] Run `./gradlew :composeApp:compileDebugKotlinAndroid`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
+- [x] Run `ktlintCheck`
+- [x] Run `detekt`
 
 ## Tests
-- [ ] Integration test: Full point creation flow
-- [ ] Integration test: Ruler with location updates
-- [ ] Integration test: Layer management
-- [ ] Integration test: Viewport commands
+- [x] Integration test: Full point creation flow
+- [x] Integration test: Ruler with location updates
+- [x] Integration test: Layer management
+- [x] Integration test: Viewport commands
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Old files deleted | PENDING |
-| Router component created | PENDING |
-| All children wired | PENDING |
-| Build passes | PENDING |
-| Integration tests pass | PENDING |
+| Old files deleted | DONE |
+| Router component created | DONE |
+| All children wired | DONE |
+| Build passes | DONE |
+| Integration tests pass | DONE |
+
+## Notes
+
+- `MapScreenComponent` facade was preserved per PRD non-goal.
+- Separate `MapScreenModel` file was not introduced: aggregated model remains `MapScreenComponent.Model`, but aggregation source moved into `MapRouterStore`.

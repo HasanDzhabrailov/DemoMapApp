@@ -24,6 +24,14 @@ internal interface ViewportStore : Store<ViewportStore.Intent, ViewportStore.Sta
             pendingCommand = pendingCommand,
             isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
         )
+
+        companion object {
+            fun fromModel(model: ViewportModel): State = State(
+                cameraSnapshot = model.cameraSnapshot,
+                pendingCommand = model.pendingCommand,
+                isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
+            )
+        }
     }
 
     sealed interface Message {

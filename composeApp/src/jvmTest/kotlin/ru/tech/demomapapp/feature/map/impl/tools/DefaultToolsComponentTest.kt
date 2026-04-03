@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 class DefaultToolsComponentTest {
 
@@ -14,6 +15,7 @@ class DefaultToolsComponentTest {
         val component = DefaultToolsComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
             toolsStoreFactory = ToolsStoreFactory(),
+            initialModel = MapScreenComponent.Model(),
             output = output,
         )
 
@@ -26,6 +28,8 @@ class DefaultToolsComponentTest {
 
     private class TestOutput : ToolsComponent.Output {
         val layers = mutableListOf<List<MapLayerEntry>>()
+
+        override fun onStateChanged() = Unit
 
         override fun onLayersChanged(layers: List<MapLayerEntry>) {
             this.layers += layers

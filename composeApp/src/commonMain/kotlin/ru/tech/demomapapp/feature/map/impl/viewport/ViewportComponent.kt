@@ -14,7 +14,8 @@ internal interface ViewportComponent {
     fun onCenterMarkerClick()
     fun onCenterMarkerMenuDismiss()
 
-    fun interface Output {
+    interface Output {
+        fun onStateChanged()
         fun onViewportCommandRequested(command: MapViewportCommand)
     }
 }

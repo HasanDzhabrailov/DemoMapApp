@@ -18,6 +18,7 @@ interface LocationComponent {
     fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot)
 
     interface Output {
+        fun onStateChanged()
         fun onLocationUpdated(location: MapLocationMarker?)
         fun onViewportCommandRequested(command: MapViewportCommand)
         fun onLocationRequestIssued(request: MapLocationRequest)

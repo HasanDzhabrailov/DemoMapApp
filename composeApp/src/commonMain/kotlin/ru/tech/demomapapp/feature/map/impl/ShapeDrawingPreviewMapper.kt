@@ -1,16 +1,20 @@
 package ru.tech.demomapapp.feature.map.impl
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.impl.store.MapStore
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.render.RenderDrawingPreview
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
 
 internal fun interface ShapeDrawingPreviewMapper {
-    fun map(draft: MapStore.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview?
+    fun map(draft: MapScreenComponent.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview?
 }
 
 internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
-    override fun map(draft: MapStore.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview? {
+    override fun map(
+        draft: MapScreenComponent.ShapeDrawingDraft?,
+        currentSnapshot: MapCameraSnapshot?,
+    ): RenderDrawingPreview? {
         val currentVertex = currentSnapshot?.toVertex() ?: return null
         val activeDraft = draft ?: return null
         val fixedVertices = activeDraft.fixedVertices.map { it.toRenderVertex() }
@@ -20,12 +24,12 @@ internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
 
         val previewVertex = currentVertex.toRenderVertex()
         return when (activeDraft.mode) {
-            MapStore.DrawingMode.LINE -> RenderDrawingPreview(
+            MapScreenComponent.DrawingMode.LINE -> RenderDrawingPreview(
                 fixedLineVertices = fixedVertices,
                 previewLineVertices = listOfNotNull(fixedVertices.lastOrNull(), previewVertex),
             )
 
-            MapStore.DrawingMode.POLYGON -> {
+            MapScreenComponent.DrawingMode.POLYGON -> {
                 val previewLineVertices = buildList {
                     if (fixedVertices.isNotEmpty()) {
                         add(fixedVertices.last())
@@ -45,6 +49,11 @@ internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
 }
 
 private fun ru.tech.demomapapp.feature.map.api.MapVertex.toRenderVertex(): RenderMapVertex = RenderMapVertex(
+    latitude = latitude,
+    longitude = longitude,
+)
+
+private fun MapCameraSnapshot.toVertex(): MapVertex = MapVertex(
     latitude = latitude,
     longitude = longitude,
 )

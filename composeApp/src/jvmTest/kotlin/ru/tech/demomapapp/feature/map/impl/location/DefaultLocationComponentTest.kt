@@ -60,6 +60,8 @@ class DefaultLocationComponentTest {
         val viewportCommands = mutableListOf<MapViewportCommand>()
         val requests = mutableListOf<MapLocationRequest>()
 
+        override fun onStateChanged() = Unit
+
         override fun onLocationUpdated(location: MapLocationMarker?) {
             locations += location
         }

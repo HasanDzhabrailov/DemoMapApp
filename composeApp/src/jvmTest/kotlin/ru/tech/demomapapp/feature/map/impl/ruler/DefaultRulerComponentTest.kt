@@ -57,7 +57,13 @@ class DefaultRulerComponentTest {
     fun `enable emits viewport output when snapshot exists`() {
         var emittedCommand: MapViewportCommand? = null
         val component = createComponent(
-            output = RulerComponent.Output { command -> emittedCommand = command },
+            output = object : RulerComponent.Output {
+                override fun onStateChanged() = Unit
+
+                override fun onViewportCommandRequested(command: MapViewportCommand) {
+                    emittedCommand = command
+                }
+            },
         )
 
         component.onCameraSnapshotReceived(defaultSnapshot(latitude = 55.7, longitude = 37.6))
@@ -70,7 +76,11 @@ class DefaultRulerComponentTest {
     }
 
     private fun createComponent(
-        output: RulerComponent.Output = RulerComponent.Output { _ -> },
+        output: RulerComponent.Output = object : RulerComponent.Output {
+            override fun onStateChanged() = Unit
+
+            override fun onViewportCommandRequested(command: MapViewportCommand) = Unit
+        },
     ): DefaultRulerComponent {
         val lifecycle = LifecycleRegistry()
         return DefaultRulerComponent(

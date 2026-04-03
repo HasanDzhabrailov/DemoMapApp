@@ -1,7 +1,6 @@
 package ru.tech.demomapapp.feature.map.impl
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
@@ -11,17 +10,18 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.impl.drawing.DefaultDrawingComponent
+import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent
+import ru.tech.demomapapp.feature.map.impl.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.impl.location.DefaultLocationComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationComponent
 import ru.tech.demomapapp.feature.map.impl.location.LocationStoreFactory
+import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
+import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
+import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder
 import ru.tech.demomapapp.feature.map.impl.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.impl.ruler.RulerStoreFactory
-import ru.tech.demomapapp.feature.map.impl.store.MapStore
-import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
-import ru.tech.demomapapp.feature.map.impl.store.MapStoreHolder
-import ru.tech.demomapapp.feature.map.impl.store.toStoreAnchor
-import ru.tech.demomapapp.feature.map.impl.store.toStoreFeatureType
 import ru.tech.demomapapp.feature.map.impl.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.impl.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.impl.tools.ToolsStoreFactory
@@ -29,357 +29,297 @@ import ru.tech.demomapapp.feature.map.impl.viewport.DefaultViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
 import ru.tech.demomapapp.feature.map.impl.viewport.ViewportStoreFactory
 
+@Suppress("TooManyFunctions")
 internal class DefaultMapScreenComponent(
     componentContext: ComponentContext,
     initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
-    private val mapStoreFactory: MapStoreFactory = MapStoreFactory(),
+    private val mapRouterStoreFactory: MapRouterStoreFactory = MapRouterStoreFactory(),
+    private val drawingStoreFactory: DrawingStoreFactory = DrawingStoreFactory(),
     private val toolsStoreFactory: ToolsStoreFactory = ToolsStoreFactory(),
     private val locationStoreFactory: LocationStoreFactory = LocationStoreFactory(),
     private val rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     private val viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
 ) : MapScreenComponent, ComponentContext by componentContext {
-    private val holder = instanceKeeper.getOrCreate(key = MAP_STORE_HOLDER_KEY) {
-        MapStoreHolder(
-            mapStoreFactory = mapStoreFactory,
+    private val routerHolder = instanceKeeper.getOrCreate(key = MAP_ROUTER_STORE_HOLDER_KEY) {
+        MapRouterStoreHolder(
+            mapRouterStoreFactory = mapRouterStoreFactory,
             initialModel = initialModel,
         )
     }
+    private var bridge: MapScreenRouterBridge? = null
     private val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = componentContext,
         toolsStoreFactory = toolsStoreFactory,
         initialModel = initialModel,
-        output = ToolsComponent.Output(::handleToolsLayersChanged),
+        output = object : ToolsComponent.Output {
+            override fun onStateChanged() {
+                bridge?.onToolsStateChanged()
+            }
+
+            override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
+        },
+    )
+    private val drawingComponent: DrawingComponent = DefaultDrawingComponent(
+        componentContext = componentContext,
+        drawingStoreFactory = drawingStoreFactory,
+        initialModel = initialModel.toDrawingModel(),
+        output = object : DrawingComponent.Output {
+            override fun onStateChanged() {
+                bridge?.onDrawingStateChanged()
+            }
+
+            override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
+        },
     )
     private val rulerComponent: RulerComponent = DefaultRulerComponent(
         componentContext = componentContext,
         rulerStoreFactory = rulerStoreFactory,
-        output = RulerComponent.Output(::handleRulerViewportCommand),
+        initialModel = initialModel.toRulerModel(),
+        output = object : RulerComponent.Output {
+            override fun onStateChanged() {
+                bridge?.onRulerStateChanged()
+            }
+
+            override fun onViewportCommandRequested(command: MapViewportCommand) {
+                bridge?.requestViewportCommand(
+                    source = MapRouterStore.ViewportCommandSource.RULER,
+                    command = command,
+                )
+            }
+        },
     )
     private val viewportComponent: ViewportComponent = DefaultViewportComponent(
         componentContext = componentContext,
         viewportStoreFactory = viewportStoreFactory,
-        output = ViewportComponent.Output(::handleViewportCommandRequested),
+        initialModel = initialModel.toViewportModel(),
+        output = object : ViewportComponent.Output {
+            override fun onStateChanged() {
+                bridge?.onViewportStateChanged()
+            }
+
+            override fun onViewportCommandRequested(command: MapViewportCommand) {
+                bridge?.requestViewportCommand(
+                    source = MapRouterStore.ViewportCommandSource.VIEWPORT,
+                    command = command,
+                )
+            }
+        },
     )
     private val locationComponent: LocationComponent = DefaultLocationComponent(
         componentContext = componentContext,
         locationStoreFactory = locationStoreFactory,
+        initialModel = initialModel.toLocationModel(),
         output = object : LocationComponent.Output {
-            override fun onLocationUpdated(location: MapLocationMarker?) {
-                handleLocationUpdated(location)
+            override fun onStateChanged() {
+                bridge?.onLocationStateChanged()
             }
+
+            override fun onLocationUpdated(location: MapLocationMarker?) = Unit
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
-                handleLocationViewportCommand(command)
+                bridge?.requestViewportCommand(
+                    source = MapRouterStore.ViewportCommandSource.LOCATION,
+                    command = command,
+                )
             }
 
-            override fun onLocationRequestIssued(request: MapLocationRequest) = Unit
+            override fun onLocationRequestIssued(request: MapLocationRequest) {
+                bridge?.onLocationRequestIssued()
+            }
         },
     )
-    private val mutableModel = MutableValue(mergeModels())
-    private var pendingLocationViewportCommand: MapViewportCommand? = null
-    private var pendingViewportCommand: MapViewportCommand? = null
-    private var pendingRulerViewportCommand: MapViewportCommand? = null
-    private var syncedRulerLocation = locationComponent.model.value.currentMarker
-    private var syncedRulerSnapshot = viewportComponent.model.value.cameraSnapshot
 
-    override val model: Value<MapScreenComponent.Model> = mutableModel
+    override val model: Value<MapScreenComponent.Model> = routerHolder.model
 
     init {
-        syncRulerState()
-        refreshModel()
+        bridge = MapScreenRouterBridge(
+            routerHolder = routerHolder,
+            toolsComponent = toolsComponent,
+            drawingComponent = drawingComponent,
+            locationComponent = locationComponent,
+            rulerComponent = rulerComponent,
+            viewportComponent = viewportComponent,
+        )
+        bridge?.syncAllStates()
     }
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         viewportComponent.onCameraIdle(snapshot)
-        holder.accept(MapStore.Intent.CameraIdle(snapshot))
+        drawingComponent.onCameraPositionUpdated(snapshot)
         locationComponent.onCameraSnapshotReceived(snapshot)
-        syncRulerState()
-        refreshModel()
     }
 
-    override fun onMapToolsClick() = acceptToolsUpdate(
-        clearSelectedFeatureInfoWindow = true,
+    override fun onMapToolsClick() = runToolsAction(
+        dismissViewportMenu = true,
         action = toolsComponent::onMapToolsClick,
     )
-    override fun onMapToolsDismiss() = acceptToolsUpdate(action = toolsComponent::onMapToolsDismiss)
-    override fun onZoomInClick() = acceptViewportUpdate(viewportComponent::onZoomInClick)
-    override fun onZoomOutClick() = acceptViewportUpdate(viewportComponent::onZoomOutClick)
-    override fun onAvailableMapsClick() = acceptToolsUpdate(
-        clearSelectedFeatureInfoWindow = true,
+
+    override fun onMapToolsDismiss() = toolsComponent.onMapToolsDismiss()
+
+    override fun onZoomInClick() = viewportComponent.onZoomInClick()
+
+    override fun onZoomOutClick() = viewportComponent.onZoomOutClick()
+
+    override fun onAvailableMapsClick() = runToolsAction(
+        dismissViewportMenu = true,
         action = toolsComponent::onAvailableMapsClick,
     )
-    override fun onAvailableMapsDismiss() = acceptToolsUpdate(
-        action = toolsComponent::onAvailableMapsDismiss,
-    )
-    override fun onAvailableMapSelect(mapId: String) = acceptToolsUpdate {
-        toolsComponent.onAvailableMapSelect(mapId)
-    }
-    override fun onAvailableMapConfirm() = acceptToolsUpdate(
-        action = toolsComponent::onAvailableMapConfirm,
-    )
-    override fun onAvailableMapSelectionDismiss() = acceptToolsUpdate(
-        action = toolsComponent::onAvailableMapSelectionDismiss,
-    )
-    override fun onMapsOnScreenClick() = acceptToolsUpdate(
-        clearSelectedFeatureInfoWindow = true,
+
+    override fun onAvailableMapsDismiss() = toolsComponent.onAvailableMapsDismiss()
+
+    override fun onAvailableMapSelect(mapId: String) = toolsComponent.onAvailableMapSelect(mapId)
+
+    override fun onAvailableMapConfirm() = toolsComponent.onAvailableMapConfirm()
+
+    override fun onAvailableMapSelectionDismiss() = toolsComponent.onAvailableMapSelectionDismiss()
+
+    override fun onMapsOnScreenClick() = runToolsAction(
+        dismissViewportMenu = true,
         action = toolsComponent::onMapsOnScreenClick,
     )
-    override fun onMapsOnScreenDismiss() = acceptToolsUpdate(
-        action = toolsComponent::onMapsOnScreenDismiss,
+
+    override fun onMapsOnScreenDismiss() = toolsComponent.onMapsOnScreenDismiss()
+
+    override fun onMapLayerActionsClick(layerId: String) = toolsComponent.onLayerActionsClick(layerId)
+
+    override fun onMapLayerActionsDismiss() = toolsComponent.onLayerActionsDismiss()
+
+    override fun onMoveLayerUpClick() = toolsComponent.onMoveLayerUpClick()
+
+    override fun onMoveLayerDownClick() = toolsComponent.onMoveLayerDownClick()
+
+    override fun onRemoveLayerClick() = toolsComponent.onRemoveLayerClick()
+
+    override fun onLayerOpacityClick() = toolsComponent.onLayerOpacityClick()
+
+    override fun onLayerOpacityChange(value: Float) = toolsComponent.onLayerOpacityChange(value)
+
+    override fun onLayerOpacityDismiss() = toolsComponent.onLayerOpacityDismiss()
+
+    override fun onGpsToggle() = locationComponent.onGpsToggle()
+
+    override fun onMyLocationClick() = locationComponent.onMyLocationClick()
+
+    override fun onCurrentLocationFocusClick() = locationComponent.onCurrentLocationFocusClick()
+
+    override fun onLocationRequestConsumed() = locationComponent.onLocationRequestConsumed()
+
+    override fun onLocationResult(result: LocationRequestResult) = locationComponent.onLocationResult(result)
+
+    override fun onRulerToggle() = runRulerAction(
+        dismissViewportMenu = true,
+        action = rulerComponent::onToggleClicked,
     )
-    override fun onMapLayerActionsClick(layerId: String) = acceptToolsUpdate {
-        toolsComponent.onLayerActionsClick(layerId)
-    }
-    override fun onMapLayerActionsDismiss() = acceptToolsUpdate(
-        action = toolsComponent::onLayerActionsDismiss,
-    )
-    override fun onMoveLayerUpClick() = acceptToolsUpdate(action = toolsComponent::onMoveLayerUpClick)
-    override fun onMoveLayerDownClick() = acceptToolsUpdate(action = toolsComponent::onMoveLayerDownClick)
-    override fun onRemoveLayerClick() = acceptToolsUpdate(action = toolsComponent::onRemoveLayerClick)
-    override fun onLayerOpacityClick() = acceptToolsUpdate(action = toolsComponent::onLayerOpacityClick)
-    override fun onLayerOpacityChange(value: Float) = acceptToolsUpdate {
-        toolsComponent.onLayerOpacityChange(value)
-    }
-    override fun onLayerOpacityDismiss() = acceptToolsUpdate(
-        action = toolsComponent::onLayerOpacityDismiss,
-    )
-    override fun onGpsToggle() = acceptLocationUpdate(locationComponent::onGpsToggle)
-    override fun onMyLocationClick() = acceptLocationUpdate(locationComponent::onMyLocationClick)
-    override fun onCurrentLocationFocusClick() = acceptLocationUpdate(locationComponent::onCurrentLocationFocusClick)
-    override fun onLocationRequestConsumed() = acceptLocationUpdate(locationComponent::onLocationRequestConsumed)
-    override fun onLocationResult(result: LocationRequestResult) = acceptLocationUpdate {
-        locationComponent.onLocationResult(result)
-    }
-    override fun onRulerToggle() {
-        dismissViewportMenuIfVisible()
-        rulerComponent.onToggleClicked()
-        syncRulerState()
-        refreshModel()
-    }
+
     override fun onViewportCommandConsumed() {
-        if (pendingViewportCommand != null) {
-            pendingViewportCommand = null
-            viewportComponent.onViewportCommandConsumed()
-        } else if (pendingLocationViewportCommand != null) {
-            pendingLocationViewportCommand = null
-        } else {
-            pendingRulerViewportCommand = null
-        }
-        refreshModel()
+        bridge?.consumeViewportCommand()
     }
+
     override fun onCenterMarkerClick() {
-        if (holder.model.value.drawingMode != null) {
+        if (routerHolder.model.value.drawingMode != null) {
             return
         }
-        if (toolsComponent.model.value.isMenuVisible) {
-            toolsComponent.onMapToolsDismiss()
-        }
-        if (holder.model.value.selectedFeatureInfoWindow != null) {
-            holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
-        }
-        acceptViewportUpdate(viewportComponent::onCenterMarkerClick)
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissFeatureInfoWindowIfVisible()
+        viewportComponent.onCenterMarkerClick()
     }
-    override fun onCenterMarkerMenuDismiss() = acceptViewportUpdate(viewportComponent::onCenterMarkerMenuDismiss)
-    override fun onCreatePointClick() {
-        dismissToolsMenuIfVisible()
-        acceptMapIntent(MapStore.Intent.CreatePoint.Clicked)
-    }
-    override fun onCreateLineClick() {
-        dismissToolsMenuIfVisible()
-        acceptMapIntent(MapStore.Intent.Drawing.CreateLineClicked)
-    }
-    override fun onCreatePolygonClick() {
-        dismissToolsMenuIfVisible()
-        acceptMapIntent(MapStore.Intent.Drawing.CreatePolygonClicked)
-    }
-    override fun onCreatePointLatitudeChange(value: String) = acceptMapIntent(
-        MapStore.Intent.CreatePoint.LatitudeChanged(value),
+
+    override fun onCenterMarkerMenuDismiss() = viewportComponent.onCenterMarkerMenuDismiss()
+
+    override fun onCreatePointClick() = runDrawingAction(
+        dismissToolsMenu = true,
+        dismissViewportMenu = true,
+        action = drawingComponent::onCreatePointClick,
     )
-    override fun onCreatePointLongitudeChange(value: String) = acceptMapIntent(
-        MapStore.Intent.CreatePoint.LongitudeChanged(value),
+
+    override fun onCreateLineClick() = runDrawingAction(
+        dismissToolsMenu = true,
+        dismissViewportMenu = true,
+        action = drawingComponent::onCreateLineClick,
     )
-    override fun onCreatePointTitleChange(value: String) = acceptMapIntent(
-        MapStore.Intent.CreatePoint.TitleChanged(value),
+
+    override fun onCreatePolygonClick() = runDrawingAction(
+        dismissToolsMenu = true,
+        dismissViewportMenu = true,
+        action = drawingComponent::onCreatePolygonClick,
     )
-    override fun onCreatePointConfirm() = acceptMapIntent(MapStore.Intent.CreatePoint.Confirmed)
-    override fun onCreatePointSheetDismiss() = acceptMapIntent(MapStore.Intent.CreatePoint.SheetDismissed)
-    override fun onDrawingAddPositionClick() = acceptMapIntent(MapStore.Intent.Drawing.AddPositionClicked)
-    override fun onDrawingRemoveLastPositionClick() = acceptMapIntent(MapStore.Intent.Drawing.RemoveLastPositionClicked)
-    override fun onDrawingDetailsClick() = acceptMapIntent(MapStore.Intent.Drawing.DetailsClicked)
-    override fun onDrawingDismiss() = acceptMapIntent(MapStore.Intent.Drawing.Dismissed)
-    override fun onCreateShapeTitleChange(value: String) = acceptMapIntent(MapStore.Intent.Drawing.TitleChanged(value))
-    override fun onCreateShapeConfirm() = acceptMapIntent(MapStore.Intent.Drawing.Confirmed)
-    override fun onCreateShapeSheetDismiss() = acceptMapIntent(MapStore.Intent.Drawing.ShapeSheetDismissed)
+
+    override fun onCreatePointLatitudeChange(value: String) = drawingComponent.onCreatePointLatitudeChange(value)
+
+    override fun onCreatePointLongitudeChange(value: String) = drawingComponent.onCreatePointLongitudeChange(value)
+
+    override fun onCreatePointTitleChange(value: String) = drawingComponent.onCreatePointTitleChange(value)
+
+    override fun onCreatePointConfirm() = drawingComponent.onCreatePointConfirm()
+
+    override fun onCreatePointSheetDismiss() = drawingComponent.onCreatePointSheetDismiss()
+
+    override fun onDrawingAddPositionClick() = runDrawingAction(
+        dismissViewportMenu = true,
+        action = drawingComponent::onDrawingAddPositionClick,
+    )
+
+    override fun onDrawingRemoveLastPositionClick() = drawingComponent.onDrawingRemoveLastPositionClick()
+
+    override fun onDrawingDetailsClick() = drawingComponent.onDrawingDetailsClick()
+
+    override fun onDrawingDismiss() = drawingComponent.onDrawingDismiss()
+
+    override fun onCreateShapeTitleChange(value: String) = drawingComponent.onCreateShapeTitleChange(value)
+
+    override fun onCreateShapeConfirm() = drawingComponent.onCreateShapeConfirm()
+
+    override fun onCreateShapeSheetDismiss() = drawingComponent.onCreateShapeSheetDismiss()
 
     override fun onFeatureClick(
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) {
-        dismissToolsMenuIfVisible()
-        acceptMapIntent(
-            MapStore.Intent.FeatureSelection.FeatureClicked(
+        bridge?.dismissToolsMenuIfVisible()
+        bridge?.dismissViewportMenuIfVisible()
+        routerHolder.accept(
+            MapRouterStore.Intent.FeatureClicked(
                 featureKey = featureKey,
-                featureType = featureType.toStoreFeatureType(),
-                anchor = anchor.toStoreAnchor(),
+                featureType = featureType,
+                anchor = anchor,
             ),
         )
     }
 
-    override fun onFeatureInfoWindowDismiss() = acceptMapIntent(
-        MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed,
-    )
-
-    private fun acceptMapIntent(intent: MapStore.Intent) {
-        if (shouldDismissViewportMenu(intent)) {
-            dismissViewportMenuIfVisible()
-        }
-        holder.accept(intent)
-        syncRulerState()
-        refreshModel()
+    override fun onFeatureInfoWindowDismiss() {
+        routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
     }
 
-    private fun acceptToolsUpdate(clearSelectedFeatureInfoWindow: Boolean = false, action: () -> Unit) {
-        dismissViewportMenuIfVisible()
-        if (clearSelectedFeatureInfoWindow && holder.model.value.selectedFeatureInfoWindow != null) {
-            holder.accept(MapStore.Intent.FeatureSelection.FeatureInfoWindowDismissed)
+    private inline fun runToolsAction(dismissViewportMenu: Boolean = false, action: () -> Unit) {
+        if (dismissViewportMenu) {
+            bridge?.dismissViewportMenuIfVisible()
         }
         action()
-        refreshModel()
     }
 
-    private fun acceptViewportUpdate(action: () -> Unit) {
+    private inline fun runRulerAction(dismissViewportMenu: Boolean = false, action: () -> Unit) {
+        if (dismissViewportMenu) {
+            bridge?.dismissViewportMenuIfVisible()
+        }
         action()
-        refreshModel()
     }
 
-    private fun acceptLocationUpdate(action: () -> Unit) {
+    private inline fun runDrawingAction(
+        dismissToolsMenu: Boolean = false,
+        dismissViewportMenu: Boolean = false,
+        action: () -> Unit,
+    ) {
+        if (dismissToolsMenu) {
+            bridge?.dismissToolsMenuIfVisible()
+        }
+        if (dismissViewportMenu) {
+            bridge?.dismissViewportMenuIfVisible()
+        }
         action()
-        syncRulerState()
-        refreshModel()
-    }
-
-    private fun syncRulerState() {
-        val viewportSnapshot = viewportComponent.model.value.cameraSnapshot
-        if (viewportSnapshot != syncedRulerSnapshot) {
-            viewportSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
-            syncedRulerSnapshot = viewportSnapshot
-        }
-        val locationMarker = locationComponent.model.value.currentMarker
-        if (locationMarker != syncedRulerLocation) {
-            rulerComponent.onLocationUpdated(locationMarker)
-            syncedRulerLocation = locationMarker
-        }
-    }
-
-    private fun refreshModel() {
-        if (pendingViewportCommand != null) {
-            pendingLocationViewportCommand = null
-            pendingRulerViewportCommand = null
-        } else if (pendingLocationViewportCommand != null) {
-            pendingRulerViewportCommand = null
-        }
-        mutableModel.value = mergeModels()
-    }
-
-    private fun mergeModels(): MapScreenComponent.Model {
-        val mapModel = holder.model.value
-        val toolsModel = toolsComponent.model.value
-        val locationModel = locationComponent.model.value
-        val rulerModel = rulerComponent.model.value
-        val viewportModel = viewportComponent.model.value
-        val pendingViewportCommand =
-            pendingViewportCommand ?: pendingLocationViewportCommand ?: pendingRulerViewportCommand
-
-        return mapModel.copy(
-            mapState = mapModel.mapState.copy(
-                style = toolsModel.selectedStyle,
-                overlayLayers = toolsModel.layers,
-            ),
-            availableMapCatalog = toolsModel.availableMapCatalog,
-            lastCameraSnapshot = viewportModel.cameraSnapshot ?: mapModel.lastCameraSnapshot,
-            isMapToolsMenuVisible = toolsModel.isMenuVisible,
-            isAvailableMapsSheetVisible = toolsModel.isAvailableMapsSheetVisible,
-            selectedAvailableMap = toolsModel.selectedAvailableMap,
-            isMapsOnScreenSheetVisible = toolsModel.isMapsOnScreenSheetVisible,
-            selectedOverlayLayer = toolsModel.selectedOverlayLayer,
-            editingOverlayOpacityLayer = toolsModel.editingOverlayOpacityLayer,
-            myLocationMode = locationModel.mode,
-            currentLocationMarker = locationModel.currentMarker,
-            pendingLocationRequest = locationModel.pendingRequest,
-            isRulerEnabled = rulerModel.isEnabled,
-            rulerMeasurement = rulerModel.measurement,
-            rulerInfoWindow = rulerModel.infoWindow,
-            pendingViewportCommand = pendingViewportCommand,
-            isCenterMarkerMenuVisible = viewportModel.isCenterMarkerMenuVisible,
-        )
-    }
-
-    private fun handleLocationUpdated(location: MapLocationMarker?) {
-        if (location != syncedRulerLocation) {
-            rulerComponent.onLocationUpdated(location)
-            syncedRulerLocation = location
-        }
-    }
-
-    private fun handleLocationViewportCommand(command: MapViewportCommand) {
-        pendingLocationViewportCommand = command
-    }
-
-    private fun handleRulerViewportCommand(command: MapViewportCommand) {
-        pendingRulerViewportCommand = command
-        refreshModel()
-    }
-
-    private fun handleViewportCommandRequested(command: MapViewportCommand) {
-        pendingViewportCommand = command
-        refreshModel()
-    }
-
-    private fun handleToolsLayersChanged(layers: List<MapLayerEntry>) {
-        if (layers != toolsComponent.model.value.layers) {
-            return
-        }
-        refreshModel()
-    }
-
-    private fun dismissToolsMenuIfVisible() {
-        if (toolsComponent.model.value.isMenuVisible) {
-            toolsComponent.onMapToolsDismiss()
-        }
-    }
-
-    private fun dismissViewportMenuIfVisible() {
-        if (viewportComponent.model.value.isCenterMarkerMenuVisible) {
-            viewportComponent.onCenterMarkerMenuDismiss()
-        }
-    }
-
-    private fun shouldDismissViewportMenu(intent: MapStore.Intent): Boolean = when (intent) {
-        is MapStore.Intent.CameraIdle,
-        is MapStore.Intent.CreatePoint,
-        is MapStore.Intent.Drawing,
-        is MapStore.Intent.FeatureSelection,
-        -> true
     }
 
     private companion object {
-        const val MAP_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapStoreHolder"
+        const val MAP_ROUTER_STORE_HOLDER_KEY = "DefaultMapScreenComponent.mapRouterStoreHolder"
     }
-}
-
-internal fun interface TimeProvider {
-    fun currentTimeMillis(): Long
-}
-
-internal class SystemTimeProvider : TimeProvider {
-    override fun currentTimeMillis(): Long = platformCurrentTimeMillis()
-}
-
-internal fun interface FeatureIdProvider {
-    fun nextId(): String
-}
-
-internal class UuidFeatureIdProvider : FeatureIdProvider {
-    override fun nextId(): String = generateMapPointId()
 }

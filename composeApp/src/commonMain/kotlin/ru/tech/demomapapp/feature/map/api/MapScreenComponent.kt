@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.api
 
 import com.arkivanov.decompose.value.Value
 
+@Suppress("TooManyFunctions")
 interface MapScreenComponent {
     val model: Value<Model>
 

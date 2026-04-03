@@ -13,12 +13,15 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLayerSourceRef
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
+import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
+import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
-import ru.tech.demomapapp.feature.map.impl.store.MapStoreFactory
+import ru.tech.demomapapp.feature.map.impl.drawing.DrawingStoreFactory
+import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 
 class DefaultMapScreenComponentTest {
 
@@ -721,6 +724,73 @@ class DefaultMapScreenComponentTest {
         assertEquals(listOf(overlay), component.model.value.mapState.overlayLayers)
     }
 
+    @Test
+    fun `initial drawing state is preserved`() {
+        val point = MapPoint(
+            id = "point-1",
+            title = "Restored point",
+            latitude = 55.7,
+            longitude = 37.6,
+            createdAtEpochMillis = 1_774_986_400_000L,
+        )
+        val component = createComponent(
+            initialModel = MapScreenComponent.Model(
+                mapState = MapState(points = listOf(point)),
+                isCreatePointSheetVisible = true,
+                createPointDraft = MapScreenComponent.CreatePointDraft(
+                    latitudeInput = "55.7",
+                    longitudeInput = "37.6",
+                    titleInput = "Draft point",
+                ),
+                drawingMode = MapScreenComponent.DrawingMode.POLYGON,
+                shapeDrawingDraft = MapScreenComponent.ShapeDrawingDraft(
+                    mode = MapScreenComponent.DrawingMode.POLYGON,
+                    fixedVertices = listOf(MapVertex(latitude = 55.7, longitude = 37.6)),
+                    titleInput = "Draft polygon",
+                ),
+                isCreateShapeSheetVisible = true,
+                lastCameraSnapshot = defaultSnapshot(latitude = 55.7, longitude = 37.6),
+            ),
+        )
+
+        assertEquals(listOf(point), component.model.value.mapState.points)
+        assertTrue(component.model.value.isCreatePointSheetVisible)
+        assertEquals("Draft point", component.model.value.createPointDraft?.titleInput)
+        assertEquals(MapScreenComponent.DrawingMode.POLYGON, component.model.value.drawingMode)
+        assertEquals("Draft polygon", component.model.value.shapeDrawingDraft?.titleInput)
+        assertTrue(component.model.value.isCreateShapeSheetVisible)
+    }
+
+    @Test
+    fun `initial location and viewport state are preserved`() {
+        val snapshot = defaultSnapshot(latitude = 59.0, longitude = 30.0)
+        val marker = ru.tech.demomapapp.feature.map.api.MapLocationMarker(
+            latitude = 59.0,
+            longitude = 30.0,
+            isPlaceholder = true,
+        )
+        val component = createComponent(
+            initialModel = MapScreenComponent.Model(
+                lastCameraSnapshot = snapshot,
+                myLocationMode = MyLocationMode.MANUAL_PLACEHOLDER,
+                currentLocationMarker = marker,
+                pendingLocationRequest = MapLocationRequest.EnableGpsLocationRequest,
+                pendingViewportCommand = MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
+                isCenterMarkerMenuVisible = true,
+            ),
+        )
+
+        assertEquals(snapshot, component.model.value.lastCameraSnapshot)
+        assertEquals(MyLocationMode.MANUAL_PLACEHOLDER, component.model.value.myLocationMode)
+        assertEquals(marker, component.model.value.currentLocationMarker)
+        assertEquals(MapLocationRequest.EnableGpsLocationRequest, component.model.value.pendingLocationRequest)
+        assertEquals(
+            MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
+            component.model.value.pendingViewportCommand,
+        )
+        assertTrue(component.model.value.isCenterMarkerMenuVisible)
+    }
+
     private fun createComponent(
         initialModel: MapScreenComponent.Model = MapScreenComponent.Model(),
     ): DefaultMapScreenComponent {
@@ -728,19 +798,20 @@ class DefaultMapScreenComponentTest {
         return DefaultMapScreenComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
             initialModel = initialModel,
-            mapStoreFactory = MapStoreFactory(
-                createMapPointUseCase = DefaultCreateMapPointUseCase(),
-                createMapLineUseCase = DefaultCreateMapLineUseCase(),
-                createMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
-                shapeDrawingDraftUpdater = DefaultShapeDrawingDraftUpdater(),
-                timeProvider = TimeProvider { 1_774_986_400_000L },
-                featureIdProvider = FeatureIdProvider {
-                    nextId += 1
-                    "feature-$nextId"
-                },
+            mapRouterStoreFactory = MapRouterStoreFactory(
                 featureInfoWindowStateMapper = DefaultMapFeatureInfoWindowStateMapper(
                     createdAtFormatter = MapPointCreatedAtFormatter { "26.03.2026 10:00" },
                 ),
+            ),
+            drawingStoreFactory = DrawingStoreFactory(
+                createMapPointUseCase = DefaultCreateMapPointUseCase(),
+                createMapLineUseCase = DefaultCreateMapLineUseCase(),
+                createMapPolygonUseCase = DefaultCreateMapPolygonUseCase(),
+                timeProvider = { 1_774_986_400_000L },
+                featureIdProvider = {
+                    nextId += 1
+                    "feature-$nextId"
+                },
             ),
         )
     }

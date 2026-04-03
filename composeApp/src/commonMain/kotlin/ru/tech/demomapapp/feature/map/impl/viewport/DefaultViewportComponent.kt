@@ -8,12 +8,14 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 internal class DefaultViewportComponent(
     componentContext: ComponentContext,
     private val viewportStoreFactory: ViewportStoreFactory,
+    initialModel: ViewportModel = ViewportModel(),
     private val output: ViewportComponent.Output,
 ) : ViewportComponent, ComponentContext by componentContext {
 
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
-        ViewportStoreHolder(viewportStoreFactory)
+        ViewportStoreHolder(viewportStoreFactory, initialModel)
     }
+    private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<ViewportModel> = holder.model
 

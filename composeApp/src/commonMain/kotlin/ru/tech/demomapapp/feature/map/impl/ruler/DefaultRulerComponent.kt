@@ -9,12 +9,14 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 internal class DefaultRulerComponent(
     componentContext: ComponentContext,
     private val rulerStoreFactory: RulerStoreFactory,
+    initialModel: RulerModel = RulerModel(),
     private val output: RulerComponent.Output,
 ) : RulerComponent, ComponentContext by componentContext {
 
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
-        RulerStoreHolder(rulerStoreFactory)
+        RulerStoreHolder(rulerStoreFactory, initialModel)
     }
+    private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<RulerModel> = holder.model
 

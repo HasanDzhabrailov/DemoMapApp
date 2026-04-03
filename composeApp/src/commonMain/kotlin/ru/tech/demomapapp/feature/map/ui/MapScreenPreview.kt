@@ -18,6 +18,7 @@ internal fun MapScreenContentPreview() {
     }
 }
 
+@Suppress("TooManyFunctions")
 private class PreviewMapScreenComponent : MapScreenComponent {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(

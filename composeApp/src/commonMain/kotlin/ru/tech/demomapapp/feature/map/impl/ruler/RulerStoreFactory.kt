@@ -12,7 +12,7 @@ internal class RulerStoreFactory(
     private val rulerMeasurementCalculator: RulerMeasurementCalculator = DefaultRulerMeasurementCalculator,
     private val rulerInfoWindowStateFormatter: RulerInfoWindowStateFormatter = DefaultRulerInfoWindowStateFormatter,
 ) {
-    fun create(): RulerStore {
+    fun create(initialModel: RulerModel = RulerModel()): RulerStore {
         return object :
             RulerStore,
             com.arkivanov.mvikotlin.core.store.Store<
@@ -21,7 +21,7 @@ internal class RulerStoreFactory(
                 RulerStore.Label,
                 > by storeFactory.create(
                 name = "RulerStore",
-                initialState = RulerStore.State(),
+                initialState = RulerStore.State.fromModel(initialModel),
                 executorFactory = {
                     RulerExecutor(
                         rulerMeasurementCalculator = rulerMeasurementCalculator,

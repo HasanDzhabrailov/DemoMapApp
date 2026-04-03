@@ -83,6 +83,10 @@ internal class DrawingExecutor(
                 callbacks.onMessage(DrawingStore.Message.DrawingLastPositionRemoved)
             }
 
+            is DrawingStore.Intent.DrawingDetailsClicked -> {
+                callbacks.onMessage(DrawingStore.Message.ShapeSheetOpened)
+            }
+
             is DrawingStore.Intent.ShapeTitleChanged -> {
                 callbacks.onMessage(DrawingStore.Message.ShapeTitleUpdated(intent.value))
             }

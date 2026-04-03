@@ -9,6 +9,7 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
@@ -25,9 +26,18 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         data class LocationStateUpdated(val state: ChildState.Location) : Intent
         data class RulerStateUpdated(val state: ChildState.Ruler) : Intent
         data class CenterMarkerStateUpdated(val state: ChildState.CenterMarker) : Intent
-        data class CreatePointStateUpdated(val state: ChildState.CreatePoint) : Intent
         data class DrawingStateUpdated(val state: ChildState.Drawing) : Intent
-        data class FeatureSelectionStateUpdated(val state: ChildState.FeatureSelection) : Intent
+        data class FeatureClicked(
+            val featureKey: String,
+            val featureType: MapScreenComponent.FeatureType,
+            val anchor: MapScreenComponent.FeatureInfoWindowAnchor,
+        ) : Intent
+        data object FeatureInfoWindowDismissed : Intent
+        data class ViewportCommandUpdated(
+            val source: ViewportCommandSource,
+            val command: MapViewportCommand?,
+        ) : Intent
+        data class ViewportCommandConsumed(val source: ViewportCommandSource) : Intent
     }
 
     data class State(
@@ -36,17 +46,19 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         val locationState: ChildState.Location? = null,
         val rulerState: ChildState.Ruler? = null,
         val centerMarkerState: ChildState.CenterMarker? = null,
-        val createPointState: ChildState.CreatePoint? = null,
         val drawingState: ChildState.Drawing? = null,
-        val featureSelectionState: ChildState.FeatureSelection? = null,
+        val selectedFeatureInfoWindow: MapScreenComponent.FeatureInfoWindow? = null,
+        val viewportPendingCommand: MapViewportCommand? = null,
+        val locationPendingViewportCommand: MapViewportCommand? = null,
+        val rulerPendingViewportCommand: MapViewportCommand? = null,
     ) {
         val mapState: MapState
             get() = MapState(
                 style = toolsState?.selectedMapStyle ?: MapStyle.DEMO,
                 overlayLayers = toolsState?.overlayLayers ?: emptyList(),
-                points = featureSelectionState?.points ?: emptyList(),
-                lines = featureSelectionState?.lines ?: emptyList(),
-                polygons = featureSelectionState?.polygons ?: emptyList(),
+                points = drawingState?.points ?: emptyList(),
+                lines = drawingState?.lines ?: emptyList(),
+                polygons = drawingState?.polygons ?: emptyList(),
             )
 
         val lastCameraSnapshot: MapCameraSnapshot?
@@ -92,10 +104,10 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
             get() = centerMarkerState?.isMenuVisible ?: false
 
         val isCreatePointSheetVisible: Boolean
-            get() = createPointState?.isSheetVisible ?: false
+            get() = drawingState?.isCreatePointSheetVisible ?: false
 
         val createPointDraft: CreatePointDraft?
-            get() = createPointState?.draft
+            get() = drawingState?.createPointDraft
 
         val drawingMode: DrawingMode?
             get() = drawingState?.mode
@@ -106,8 +118,34 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         val isCreateShapeSheetVisible: Boolean
             get() = drawingState?.isCreateShapeSheetVisible ?: false
 
-        val selectedFeatureInfoWindow: FeatureInfoWindow?
-            get() = featureSelectionState?.selectedInfoWindow
+        val pendingViewportCommand: MapViewportCommand?
+            get() = viewportPendingCommand ?: locationPendingViewportCommand ?: rulerPendingViewportCommand
+
+        fun toModel(): MapScreenComponent.Model = MapScreenComponent.Model(
+            mapState = mapState,
+            availableMapCatalog = toolsState?.availableMapCatalog ?: emptyList(),
+            lastCameraSnapshot = lastCameraSnapshot,
+            isMapToolsMenuVisible = isMapToolsMenuVisible,
+            isAvailableMapsSheetVisible = isAvailableMapsSheetVisible,
+            selectedAvailableMap = selectedAvailableMap,
+            isMapsOnScreenSheetVisible = isMapsOnScreenSheetVisible,
+            selectedOverlayLayer = selectedOverlayLayer,
+            editingOverlayOpacityLayer = editingOverlayOpacityLayer,
+            myLocationMode = myLocationMode,
+            currentLocationMarker = currentLocationMarker,
+            pendingLocationRequest = activeLocationRequest,
+            isRulerEnabled = isRulerEnabled,
+            rulerMeasurement = rulerMeasurement,
+            rulerInfoWindow = rulerInfoWindow,
+            pendingViewportCommand = pendingViewportCommand,
+            isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
+            isCreatePointSheetVisible = isCreatePointSheetVisible,
+            createPointDraft = createPointDraft?.toComponentDraft(),
+            drawingMode = drawingMode?.toComponentDrawingMode(),
+            shapeDrawingDraft = shapeDrawingDraft?.toComponentDraft(),
+            isCreateShapeSheetVisible = isCreateShapeSheetVisible,
+            selectedFeatureInfoWindow = selectedFeatureInfoWindow,
+        )
     }
 
     sealed interface Label {
@@ -115,12 +153,20 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         data class LocationRequestIssued(val request: MapLocationRequest) : Label
     }
 
+    enum class ViewportCommandSource {
+        VIEWPORT,
+        LOCATION,
+        RULER,
+    }
+
     sealed interface ChildState {
         data class Viewport(
             val lastCameraSnapshot: MapCameraSnapshot? = null,
+            val pendingCommand: MapViewportCommand? = null,
         ) : ChildState
 
         data class Tools(
+            val availableMapCatalog: List<MapCatalogItem> = emptyList(),
             val selectedMapStyle: MapStyle = MapStyle.DEMO,
             val overlayLayers: List<MapLayerEntry> = emptyList(),
             val isMapToolsMenuVisible: Boolean = false,
@@ -147,22 +193,15 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
             val isMenuVisible: Boolean = false,
         ) : ChildState
 
-        data class CreatePoint(
-            val isSheetVisible: Boolean = false,
-            val draft: CreatePointDraft? = null,
-        ) : ChildState
-
         data class Drawing(
-            val mode: DrawingMode? = null,
-            val shapeDraft: ShapeDrawingDraft? = null,
-            val isCreateShapeSheetVisible: Boolean = false,
-        ) : ChildState
-
-        data class FeatureSelection(
             val points: List<MapPoint> = emptyList(),
             val lines: List<MapLine> = emptyList(),
             val polygons: List<MapPolygon> = emptyList(),
-            val selectedInfoWindow: FeatureInfoWindow? = null,
+            val isCreatePointSheetVisible: Boolean = false,
+            val createPointDraft: CreatePointDraft? = null,
+            val mode: DrawingMode? = null,
+            val shapeDraft: ShapeDrawingDraft? = null,
+            val isCreateShapeSheetVisible: Boolean = false,
         ) : ChildState
     }
 
@@ -182,15 +221,23 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         val fixedVertices: List<MapVertex> = emptyList(),
         val titleInput: String = "",
     )
-
-    data class FeatureInfoWindow(
-        val title: String,
-        val createdAtText: String,
-        val anchor: FeatureInfoWindowAnchor,
-    )
-
-    data class FeatureInfoWindowAnchor(
-        val screenX: Int,
-        val screenY: Int,
-    )
 }
+
+internal fun MapRouterStore.CreatePointDraft.toComponentDraft(): MapScreenComponent.CreatePointDraft =
+    MapScreenComponent.CreatePointDraft(
+        latitudeInput = latitudeInput,
+        longitudeInput = longitudeInput,
+        titleInput = titleInput,
+    )
+
+internal fun MapRouterStore.DrawingMode.toComponentDrawingMode(): MapScreenComponent.DrawingMode = when (this) {
+    MapRouterStore.DrawingMode.LINE -> MapScreenComponent.DrawingMode.LINE
+    MapRouterStore.DrawingMode.POLYGON -> MapScreenComponent.DrawingMode.POLYGON
+}
+
+internal fun MapRouterStore.ShapeDrawingDraft.toComponentDraft(): MapScreenComponent.ShapeDrawingDraft =
+    MapScreenComponent.ShapeDrawingDraft(
+        mode = mode.toComponentDrawingMode(),
+        fixedVertices = fixedVertices,
+        titleInput = titleInput,
+    )

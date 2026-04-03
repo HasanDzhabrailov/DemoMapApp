@@ -8,12 +8,14 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 internal class DefaultDrawingComponent(
     componentContext: ComponentContext,
     private val drawingStoreFactory: DrawingStoreFactory,
+    initialModel: DrawingModel = DrawingModel(),
     private val output: DrawingComponent.Output,
 ) : DrawingComponent, ComponentContext by componentContext {
 
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
-        DrawingStoreHolder(drawingStoreFactory)
+        DrawingStoreHolder(drawingStoreFactory, initialModel)
     }
+    private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<DrawingModel> = holder.model
 
@@ -31,6 +33,7 @@ internal class DefaultDrawingComponent(
     override fun onDrawingRemoveLastPositionClick() = holder.accept(
         DrawingStore.Intent.DrawingRemoveLastPositionClicked,
     )
+    override fun onDrawingDetailsClick() = holder.accept(DrawingStore.Intent.DrawingDetailsClicked)
     override fun onDrawingDismiss() = holder.accept(DrawingStore.Intent.DrawingDismissed)
     override fun onCreateShapeTitleChange(value: String) = holder.accept(DrawingStore.Intent.ShapeTitleChanged(value))
     override fun onCreateShapeConfirm() = holder.accept(DrawingStore.Intent.ShapeConfirmed)
