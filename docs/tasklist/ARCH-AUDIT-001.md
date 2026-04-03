@@ -2,19 +2,19 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: audit-only
+- [x] Confirm scope: audit-only
 
-- [ ] Define audit categories
-- [ ] Review areas by business area
-- [ ] Group findings for cleanup tickets
+- [x] Define audit categories
+- [x] Review areas by business area
+- [x] Group findings for cleanup tickets
 
-- [ ] Review audit output
+- [x] Review audit output
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Audit inventory exists | PENDING |
-| Cleanup candidates identified | PENDING |
+| Audit inventory exists | DONE |
+| Cleanup candidates identified | DONE |

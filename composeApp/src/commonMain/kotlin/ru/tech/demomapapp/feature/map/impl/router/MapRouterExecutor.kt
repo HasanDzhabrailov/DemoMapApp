@@ -1,11 +1,6 @@
 package ru.tech.demomapapp.feature.map.impl.router
 
 import com.arkivanov.mvikotlin.core.store.Executor
-import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapFeatureInfoWindowStateMapper
-import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapFeatureSelectionResolver
-import ru.tech.demomapapp.feature.map.mapscreen.MapFeatureInfoWindowStateMapper
-import ru.tech.demomapapp.feature.map.mapscreen.MapFeatureSelectionResolver
-
 internal class MapRouterExecutor : Executor<
     MapRouterStore.Intent,
     Nothing,

@@ -2,16 +2,16 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: map-cleanup only
+- [x] Confirm scope: map-cleanup only
 
-- [ ] Resolve selected map audit findings
+- [x] Resolve selected map audit findings
 
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Selected map cleanup items resolved | PENDING |
+| Selected map cleanup items resolved | DONE |

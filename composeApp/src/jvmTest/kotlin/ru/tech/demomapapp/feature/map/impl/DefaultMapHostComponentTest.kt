@@ -23,9 +23,10 @@ import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.host.DefaultMapHostComponent
+import ru.tech.demomapapp.feature.map.impl.router.DefaultMapFeatureInfoWindowStateMapper
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
 
-class DefaultMapScreenComponentTest {
+class DefaultMapHostComponentTest {
 
     @Test
     fun `map tools menu closes center marker menu when opened`() {

@@ -3,6 +3,7 @@ package ru.tech.demomapapp.feature.map.host
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.instancekeeper.getOrCreate
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
@@ -16,17 +17,10 @@ import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreFactory
+import ru.tech.demomapapp.feature.map.impl.router.MapRouterStoreHolder
 import ru.tech.demomapapp.feature.map.location.DefaultLocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationStoreFactory
-import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapScreenComponent
-import ru.tech.demomapapp.feature.map.mapscreen.toCenterMarkerRouterState
-import ru.tech.demomapapp.feature.map.mapscreen.toDrawingModel
-import ru.tech.demomapapp.feature.map.mapscreen.toRouterState
-import ru.tech.demomapapp.feature.map.mapscreen.toLocationModel
-import ru.tech.demomapapp.feature.map.mapscreen.toRulerModel
-import ru.tech.demomapapp.feature.map.mapscreen.toViewportRouterState
-import ru.tech.demomapapp.feature.map.mapscreen.toViewportModel
 import ru.tech.demomapapp.feature.map.ruler.DefaultRulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerStoreFactory
@@ -50,6 +44,12 @@ internal class DefaultMapHostComponent(
 ) : MapScreenUiContract, ComponentContext by componentContext {
     private var syncedRulerLocation = initialModel.currentLocationMarker
     private var syncedRulerSnapshot = initialModel.lastCameraSnapshot
+    private val routerHolder = instanceKeeper.getOrCreate(key = MAP_ROUTER_STORE_HOLDER_KEY) {
+        MapRouterStoreHolder(
+            mapRouterStoreFactory = mapRouterStoreFactory,
+            initialModel = initialModel,
+        )
+    }
 
     override val toolsComponent: ToolsComponent = DefaultToolsComponent(
         componentContext = childContext(key = TOOLS_CHILD_CONTEXT_KEY),
@@ -131,17 +131,11 @@ internal class DefaultMapHostComponent(
         },
     )
 
-    private val screenComponent = DefaultMapScreenComponent(
-        componentContext = childContext(key = SCREEN_CHILD_CONTEXT_KEY),
-        initialModel = initialModel,
-        mapRouterStoreFactory = mapRouterStoreFactory,
-    )
-
     init {
         syncAllStates()
     }
 
-    override val model: Value<MapScreenComponent.Model> = screenComponent.model
+    override val model: Value<MapScreenComponent.Model> = routerHolder.model
 
     override fun onCameraIdle(snapshot: MapCameraSnapshot) {
         viewportComponent.onCameraIdle(snapshot)
@@ -212,19 +206,19 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onViewportCommandConsumed() {
-        when (screenComponent.currentViewportCommandSource()) {
+        when (currentViewportCommandSource()) {
             MapRouterStore.ViewportCommandSource.VIEWPORT -> {
                 viewportComponent.onViewportCommandConsumed()
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT)
+                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.VIEWPORT))
                 syncViewportState()
             }
 
             MapRouterStore.ViewportCommandSource.LOCATION -> {
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION)
+                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.LOCATION))
             }
 
             MapRouterStore.ViewportCommandSource.RULER -> {
-                screenComponent.onViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER)
+                routerHolder.accept(MapRouterStore.Intent.ViewportCommandConsumed(MapRouterStore.ViewportCommandSource.RULER))
             }
 
             null -> Unit
@@ -237,7 +231,7 @@ internal class DefaultMapHostComponent(
         }
         dismissToolsMenuIfVisible()
         if (model.value.selectedFeatureInfoWindow != null) {
-            screenComponent.onFeatureInfoWindowDismiss()
+            routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
         }
         viewportComponent.onCenterMarkerClick()
     }
@@ -296,16 +290,24 @@ internal class DefaultMapHostComponent(
     ) {
         dismissToolsMenuIfVisible()
         dismissViewportMenuIfVisible()
-        screenComponent.onFeatureClick(featureKey, featureType, anchor)
+        routerHolder.accept(
+            MapRouterStore.Intent.FeatureClicked(
+                featureKey = featureKey,
+                featureType = featureType,
+                anchor = anchor,
+            ),
+        )
     }
 
-    override fun onFeatureInfoWindowDismiss() = screenComponent.onFeatureInfoWindowDismiss()
+    override fun onFeatureInfoWindowDismiss() {
+        routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
+    }
 
     private fun onViewportCommandRequested(
         source: MapRouterStore.ViewportCommandSource,
         command: MapViewportCommand,
     ) {
-        screenComponent.onViewportCommandUpdated(source = source, command = command)
+        routerHolder.accept(MapRouterStore.Intent.ViewportCommandUpdated(source = source, command = command))
     }
 
     private fun syncAllStates() {
@@ -319,34 +321,47 @@ internal class DefaultMapHostComponent(
     }
 
     private fun syncToolsState() {
-        screenComponent.onToolsStateUpdated(
-            toolsComponent.model.value.toRouterState(toolsComponent.childSlot.value.child?.instance),
+        routerHolder.accept(
+            MapRouterStore.Intent.ToolsStateUpdated(
+                toolsComponent.model.value.toRouterState(toolsComponent.childSlot.value.child?.instance),
+            ),
         )
     }
 
     private fun syncDrawingState() {
-        screenComponent.onDrawingStateUpdated(
-            drawingComponent.model.value.toRouterState(
-                activePointSheetChild = drawingComponent.pointSheetSlot.value.child?.instance,
-                activeShapeSheetChild = drawingComponent.shapeSheetSlot.value.child?.instance,
+        routerHolder.accept(
+            MapRouterStore.Intent.DrawingStateUpdated(
+                drawingComponent.model.value.toRouterState(
+                    activePointSheetChild = drawingComponent.pointSheetSlot.value.child?.instance,
+                    activeShapeSheetChild = drawingComponent.shapeSheetSlot.value.child?.instance,
+                ),
             ),
         )
     }
 
     private fun syncLocationState() {
-        screenComponent.onLocationStateUpdated(locationComponent.model.value.toRouterState())
+        routerHolder.accept(MapRouterStore.Intent.LocationStateUpdated(locationComponent.model.value.toRouterState()))
     }
 
     private fun syncRulerState() {
-        screenComponent.onRulerStateUpdated(rulerComponent.model.value.toRouterState())
+        routerHolder.accept(MapRouterStore.Intent.RulerStateUpdated(rulerComponent.model.value.toRouterState()))
     }
 
     private fun syncViewportState() {
-        screenComponent.onViewportStateUpdated(viewportComponent.model.value.toViewportRouterState())
+        routerHolder.accept(MapRouterStore.Intent.ViewportStateUpdated(viewportComponent.model.value.toViewportRouterState()))
     }
 
     private fun syncCenterMarkerState() {
-        screenComponent.onCenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState())
+        routerHolder.accept(
+            MapRouterStore.Intent.CenterMarkerStateUpdated(viewportComponent.model.value.toCenterMarkerRouterState()),
+        )
+    }
+
+    private fun currentViewportCommandSource(): MapRouterStore.ViewportCommandSource? = when {
+        routerHolder.state.viewportPendingCommand != null -> MapRouterStore.ViewportCommandSource.VIEWPORT
+        routerHolder.state.locationPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.LOCATION
+        routerHolder.state.rulerPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.RULER
+        else -> null
     }
 
     private fun syncRulerInputs() {
@@ -380,7 +395,7 @@ internal class DefaultMapHostComponent(
     }
 
     private companion object {
-        const val SCREEN_CHILD_CONTEXT_KEY = "map_screen"
+        const val MAP_ROUTER_STORE_HOLDER_KEY = "DefaultMapHostComponent.mapRouterStoreHolder"
         const val TOOLS_CHILD_CONTEXT_KEY = "tools"
         const val DRAWING_CHILD_CONTEXT_KEY = "drawing"
         const val LOCATION_CHILD_CONTEXT_KEY = "location"

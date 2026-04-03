@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.mapscreen
+package ru.tech.demomapapp.feature.map.impl.router
 
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.impl.DefaultMapPointCreatedAtFormatter
