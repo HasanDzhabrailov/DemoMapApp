@@ -1,17 +1,17 @@
 package ru.tech.demomapapp.feature.map.host
 
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft as DrawingCreatePointDraft
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.drawing.DrawingMode as InternalDrawingMode
 import ru.tech.demomapapp.feature.map.drawing.DrawingModel
-import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
-import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.impl.router.MapRouterStore
+import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsModel
 import ru.tech.demomapapp.feature.map.viewport.ViewportModel
+import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft as DrawingCreatePointDraft
+import ru.tech.demomapapp.feature.map.drawing.DrawingMode as InternalDrawingMode
+import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft as InternalShapeDrawingDraft
 
 internal fun ToolsModel.toRouterState(activeChild: ToolsComponent.Child?): MapRouterStore.ChildState.Tools = MapRouterStore.ChildState.Tools(
     availableMapCatalog = availableMapCatalog,

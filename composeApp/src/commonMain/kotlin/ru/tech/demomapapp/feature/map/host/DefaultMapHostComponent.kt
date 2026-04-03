@@ -139,6 +139,7 @@ internal class DefaultMapHostComponent(
     )
 
     init {
+        routerHolder.labels(::handleRouterLabel)
         isInitializing = false
         syncAllStates()
     }
@@ -152,7 +153,7 @@ internal class DefaultMapHostComponent(
     }
 
     override fun onMapToolsClick() {
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.TOOLS_OVERLAY)
         toolsComponent.onMapToolsClick()
     }
 
@@ -163,7 +164,7 @@ internal class DefaultMapHostComponent(
     override fun onZoomOutClick() = viewportComponent.onZoomOutClick()
 
     override fun onAvailableMapsClick() {
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.TOOLS_OVERLAY)
         toolsComponent.onAvailableMapsClick()
     }
 
@@ -176,7 +177,7 @@ internal class DefaultMapHostComponent(
     override fun onAvailableMapSelectionDismiss() = toolsComponent.onAvailableMapSelectionDismiss()
 
     override fun onMapsOnScreenClick() {
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.TOOLS_OVERLAY)
         toolsComponent.onMapsOnScreenClick()
     }
 
@@ -209,7 +210,7 @@ internal class DefaultMapHostComponent(
     override fun onLocationResult(result: LocationRequestResult) = locationComponent.onLocationResult(result)
 
     override fun onRulerToggle() {
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.VIEWPORT_EXCLUSIVE_ACTION)
         rulerComponent.onToggleClicked()
     }
 
@@ -223,30 +224,24 @@ internal class DefaultMapHostComponent(
         if (model.value.drawingMode != null) {
             return
         }
-        dismissToolsMenuIfVisible()
-        if (model.value.selectedFeatureInfoWindow != null) {
-            routerHolder.accept(MapRouterStore.Intent.FeatureInfoWindowDismissed)
-        }
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.CENTER_MARKER_MENU)
         viewportComponent.onCenterMarkerClick()
     }
 
     override fun onCenterMarkerMenuDismiss() = viewportComponent.onCenterMarkerMenuDismiss()
 
     override fun onCreatePointClick() {
-        dismissToolsMenuIfVisible()
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.DRAWING_OVERLAY)
         drawingComponent.onCreatePointClick()
     }
 
     override fun onCreateLineClick() {
-        dismissToolsMenuIfVisible()
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.DRAWING_OVERLAY)
         drawingComponent.onCreateLineClick()
     }
 
     override fun onCreatePolygonClick() {
-        dismissToolsMenuIfVisible()
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.DRAWING_OVERLAY)
         drawingComponent.onCreatePolygonClick()
     }
 
@@ -261,7 +256,7 @@ internal class DefaultMapHostComponent(
     override fun onCreatePointSheetDismiss() = drawingComponent.onCreatePointSheetDismiss()
 
     override fun onDrawingAddPositionClick() {
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.VIEWPORT_EXCLUSIVE_ACTION)
         drawingComponent.onDrawingAddPositionClick()
     }
 
@@ -282,8 +277,7 @@ internal class DefaultMapHostComponent(
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) {
-        dismissToolsMenuIfVisible()
-        dismissViewportMenuIfVisible()
+        routeOverlayInteraction(MapRouterStore.OverlayTarget.FEATURE_SELECTION)
         routerHolder.accept(
             MapRouterStore.Intent.FeatureClicked(
                 featureKey = featureKey,
@@ -356,17 +350,25 @@ internal class DefaultMapHostComponent(
         )
     }
 
-    private fun dismissToolsMenuIfVisible() {
-        if (toolsComponent.childSlot.value.child?.instance is ToolsComponent.Child.Menu) {
-            toolsComponent.onMapToolsDismiss()
-            syncToolsState()
-        }
+    private fun routeOverlayInteraction(target: MapRouterStore.OverlayTarget) {
+        routerHolder.accept(MapRouterStore.Intent.OverlayInteractionRequested(target))
     }
 
-    private fun dismissViewportMenuIfVisible() {
-        if (viewportComponent.childSlot.value.child?.instance is ViewportComponent.Child.Menu) {
-            viewportComponent.onCenterMarkerMenuDismiss()
-            syncCenterMarkerState()
+    private fun handleRouterLabel(label: MapRouterStore.Label) {
+        when (label) {
+            MapRouterStore.Label.DismissToolsMenu -> {
+                toolsComponent.onMapToolsDismiss()
+                syncToolsState()
+            }
+
+            MapRouterStore.Label.DismissViewportMenu -> {
+                viewportComponent.onCenterMarkerMenuDismiss()
+                syncCenterMarkerState()
+            }
+
+            is MapRouterStore.Label.LocationRequestIssued,
+            is MapRouterStore.Label.ViewportCommandRequested,
+            -> Unit
         }
     }
 

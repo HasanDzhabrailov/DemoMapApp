@@ -55,6 +55,24 @@ class MapRouterReducerTest {
     }
 
     @Test
+    fun `center marker interaction clears selected feature info window`() {
+        val state = MapRouterStore.State(
+            selectedFeatureInfoWindow = MapScreenComponent.FeatureInfoWindow(
+                title = "Point",
+                createdAtText = "now",
+                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+            ),
+        )
+
+        val newState = reduce(
+            state,
+            MapRouterMessage.OverlayInteractionProcessed(MapRouterStore.OverlayTarget.CENTER_MARKER_MENU),
+        )
+
+        assertNull(newState.selectedFeatureInfoWindow)
+    }
+
+    @Test
     fun `viewport command priority prefers viewport then location then ruler`() {
         val withLocation = reduce(
             MapRouterStore.State(),

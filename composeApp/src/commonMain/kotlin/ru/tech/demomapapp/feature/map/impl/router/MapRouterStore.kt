@@ -27,6 +27,7 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         data class RulerStateUpdated(val state: ChildState.Ruler) : Intent
         data class CenterMarkerStateUpdated(val state: ChildState.CenterMarker) : Intent
         data class DrawingStateUpdated(val state: ChildState.Drawing) : Intent
+        data class OverlayInteractionRequested(val target: OverlayTarget) : Intent
         data class FeatureClicked(
             val featureKey: String,
             val featureType: MapScreenComponent.FeatureType,
@@ -159,6 +160,40 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
     sealed interface Label {
         data class ViewportCommandRequested(val command: MapViewportCommand) : Label
         data class LocationRequestIssued(val request: MapLocationRequest) : Label
+        data object DismissToolsMenu : Label
+        data object DismissViewportMenu : Label
+    }
+
+    enum class OverlayTarget(
+        val dismissToolsMenu: Boolean,
+        val dismissViewportMenu: Boolean,
+        val clearFeatureInfoWindow: Boolean,
+    ) {
+        TOOLS_OVERLAY(
+            dismissToolsMenu = false,
+            dismissViewportMenu = true,
+            clearFeatureInfoWindow = false,
+        ),
+        CENTER_MARKER_MENU(
+            dismissToolsMenu = true,
+            dismissViewportMenu = false,
+            clearFeatureInfoWindow = true,
+        ),
+        DRAWING_OVERLAY(
+            dismissToolsMenu = true,
+            dismissViewportMenu = true,
+            clearFeatureInfoWindow = false,
+        ),
+        VIEWPORT_EXCLUSIVE_ACTION(
+            dismissToolsMenu = false,
+            dismissViewportMenu = true,
+            clearFeatureInfoWindow = false,
+        ),
+        FEATURE_SELECTION(
+            dismissToolsMenu = true,
+            dismissViewportMenu = true,
+            clearFeatureInfoWindow = false,
+        ),
     }
 
     enum class ViewportCommandSource {

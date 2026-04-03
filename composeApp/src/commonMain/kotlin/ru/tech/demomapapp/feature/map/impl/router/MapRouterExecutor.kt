@@ -72,6 +72,16 @@ internal class MapRouterExecutor : Executor<
                 callbacks.onMessage(MapRouterMessage.DrawingStateUpdated(intent.state))
             }
 
+            is MapRouterStore.Intent.OverlayInteractionRequested -> {
+                callbacks.onMessage(MapRouterMessage.OverlayInteractionProcessed(intent.target))
+                if (intent.target.dismissToolsMenu && callbacks.state.isMapToolsMenuVisible) {
+                    callbacks.onLabel(MapRouterStore.Label.DismissToolsMenu)
+                }
+                if (intent.target.dismissViewportMenu && callbacks.state.isCenterMarkerMenuVisible) {
+                    callbacks.onLabel(MapRouterStore.Label.DismissViewportMenu)
+                }
+            }
+
             is MapRouterStore.Intent.FeatureClicked -> {
                 val selectedFeature = featureSelectionResolver.resolve(
                     mapState = callbacks.state.mapState,

@@ -52,6 +52,15 @@ internal class MapRouterReducer : Reducer<MapRouterStore.State, MapRouterMessage
                 },
             )
 
+        is MapRouterMessage.OverlayInteractionProcessed ->
+            copy(
+                selectedFeatureInfoWindow = if (msg.target.clearFeatureInfoWindow) {
+                    null
+                } else {
+                    selectedFeatureInfoWindow
+                },
+            )
+
         is MapRouterMessage.FeatureInfoWindowUpdated ->
             copy(selectedFeatureInfoWindow = msg.infoWindow)
 
