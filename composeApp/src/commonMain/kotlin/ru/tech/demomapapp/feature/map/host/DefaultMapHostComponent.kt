@@ -42,8 +42,6 @@ internal class DefaultMapHostComponent(
     rulerStoreFactory: RulerStoreFactory = RulerStoreFactory(),
     viewportStoreFactory: ViewportStoreFactory = ViewportStoreFactory(),
 ) : MapScreenUiContract, ComponentContext by componentContext {
-    private var syncedRulerLocation = initialModel.currentLocationMarker
-    private var syncedRulerSnapshot = initialModel.lastCameraSnapshot
     private val routerHolder = instanceKeeper.getOrCreate(key = MAP_ROUTER_STORE_HOLDER_KEY) {
         MapRouterStoreHolder(
             mapRouterStoreFactory = mapRouterStoreFactory,
@@ -81,6 +79,16 @@ internal class DefaultMapHostComponent(
         componentContext = childContext(key = RULER_CHILD_CONTEXT_KEY),
         rulerStoreFactory = rulerStoreFactory,
         initialModel = initialModel.toRulerModel(),
+        inputSource = RulerComponent.InputSource { callback ->
+            routerHolder.states { state ->
+                callback(
+                    RulerComponent.ParentState(
+                        location = state.currentLocationMarker,
+                        cameraSnapshot = state.lastCameraSnapshot,
+                    ),
+                )
+            }
+        },
         output = object : RulerComponent.Output {
             override fun onStateChanged() {
                 syncRulerState()
@@ -100,7 +108,6 @@ internal class DefaultMapHostComponent(
             override fun onStateChanged() {
                 syncViewportState()
                 syncCenterMarkerState()
-                syncRulerInputs()
             }
 
             override fun onViewportCommandRequested(command: MapViewportCommand) {
@@ -116,7 +123,6 @@ internal class DefaultMapHostComponent(
         output = object : LocationComponent.Output {
             override fun onStateChanged() {
                 syncLocationState()
-                syncRulerInputs()
             }
 
             override fun onLocationUpdated(location: MapLocationMarker?) = Unit
@@ -317,7 +323,6 @@ internal class DefaultMapHostComponent(
         syncRulerState()
         syncViewportState()
         syncCenterMarkerState()
-        syncRulerInputs()
     }
 
     private fun syncToolsState() {
@@ -362,22 +367,6 @@ internal class DefaultMapHostComponent(
         routerHolder.state.locationPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.LOCATION
         routerHolder.state.rulerPendingViewportCommand != null -> MapRouterStore.ViewportCommandSource.RULER
         else -> null
-    }
-
-    private fun syncRulerInputs() {
-        val viewportSnapshot = viewportComponent.model.value.cameraSnapshot
-        if (viewportSnapshot != syncedRulerSnapshot) {
-            viewportSnapshot?.let(rulerComponent::onCameraSnapshotReceived)
-            syncedRulerSnapshot = viewportSnapshot
-            syncRulerState()
-        }
-
-        val locationMarker = locationComponent.model.value.currentMarker
-        if (locationMarker != syncedRulerLocation) {
-            rulerComponent.onLocationUpdated(locationMarker)
-            syncedRulerLocation = locationMarker
-            syncRulerState()
-        }
     }
 
     private fun dismissToolsMenuIfVisible() {

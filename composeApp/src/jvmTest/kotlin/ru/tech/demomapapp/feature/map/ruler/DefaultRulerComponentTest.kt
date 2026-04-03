@@ -2,6 +2,7 @@ package ru.tech.demomapapp.feature.map.ruler
 
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.mvikotlin.core.rx.Disposable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -86,6 +87,7 @@ class DefaultRulerComponentTest {
         return DefaultRulerComponent(
             componentContext = DefaultComponentContext(lifecycle),
             rulerStoreFactory = RulerStoreFactory(),
+            inputSource = RulerComponent.InputSource { _ -> Disposable { } },
             output = output,
         )
     }

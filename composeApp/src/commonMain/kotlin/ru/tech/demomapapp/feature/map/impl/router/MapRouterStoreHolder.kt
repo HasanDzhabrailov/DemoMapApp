@@ -15,6 +15,7 @@ internal class MapRouterStoreHolder(
     private val mutableModel = MutableValue(initialModel)
     private val stateDisposable: Disposable =
         store.states(observer(onNext = { state -> mutableModel.value = state.toModel() }))
+    private var statesDisposable: Disposable? = null
 
     val model: Value<MapScreenComponent.Model> = mutableModel
     val state: MapRouterStore.State
@@ -24,7 +25,15 @@ internal class MapRouterStoreHolder(
         store.accept(intent)
     }
 
+    fun states(callback: (MapRouterStore.State) -> Unit): Disposable {
+        statesDisposable?.dispose()
+        val disposable = store.states(observer(onNext = callback))
+        statesDisposable = disposable
+        return disposable
+    }
+
     override fun onDestroy() {
+        statesDisposable?.dispose()
         stateDisposable.dispose()
         store.dispose()
     }

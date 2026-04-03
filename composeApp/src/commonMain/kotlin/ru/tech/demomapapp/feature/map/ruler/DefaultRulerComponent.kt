@@ -10,11 +10,16 @@ internal class DefaultRulerComponent(
     componentContext: ComponentContext,
     private val rulerStoreFactory: RulerStoreFactory,
     initialModel: RulerModel = RulerModel(),
+    inputSource: RulerComponent.InputSource,
     private val output: RulerComponent.Output,
 ) : RulerComponent, ComponentContext by componentContext {
 
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
-        RulerStoreHolder(rulerStoreFactory, initialModel)
+        RulerStoreHolder(
+            rulerStoreFactory = rulerStoreFactory,
+            initialModel = initialModel,
+            inputSource = inputSource,
+        )
     }
     private val states = holder.states { output.onStateChanged() }
 
