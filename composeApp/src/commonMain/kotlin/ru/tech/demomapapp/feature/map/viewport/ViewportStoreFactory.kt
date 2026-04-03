@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.viewport
+package ru.tech.demomapapp.feature.map.viewport
 
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory

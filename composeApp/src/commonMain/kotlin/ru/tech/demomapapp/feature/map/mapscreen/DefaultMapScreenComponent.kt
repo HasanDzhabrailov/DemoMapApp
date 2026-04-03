@@ -25,9 +25,9 @@ import ru.tech.demomapapp.feature.map.ruler.RulerStoreFactory
 import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory
-import ru.tech.demomapapp.feature.map.impl.viewport.DefaultViewportComponent
-import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
-import ru.tech.demomapapp.feature.map.impl.viewport.ViewportStoreFactory
+import ru.tech.demomapapp.feature.map.viewport.DefaultViewportComponent
+import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
+import ru.tech.demomapapp.feature.map.viewport.ViewportStoreFactory
 
 @Suppress("TooManyFunctions")
 internal class DefaultMapScreenComponent(

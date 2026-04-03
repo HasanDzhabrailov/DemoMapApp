@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.viewport
+package ru.tech.demomapapp.feature.map.viewport
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand

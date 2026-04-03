@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl.viewport
+package ru.tech.demomapapp.feature.map.viewport
 
 internal object ViewportReducer {
     fun reduce(state: ViewportStore.State, message: ViewportStore.Message): ViewportStore.State = when (message) {

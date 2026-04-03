@@ -20,8 +20,8 @@ import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsModel
-import ru.tech.demomapapp.feature.map.impl.viewport.ViewportComponent
-import ru.tech.demomapapp.feature.map.impl.viewport.ViewportModel
+import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
+import ru.tech.demomapapp.feature.map.viewport.ViewportModel
 
 @Preview
 @Composable
