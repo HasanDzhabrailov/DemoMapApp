@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.impl
+package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
@@ -11,6 +11,10 @@ import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
+import ru.tech.demomapapp.feature.map.impl.DefaultRulerArrowGeometryCalculator
+import ru.tech.demomapapp.feature.map.impl.DefaultShapeDrawingPreviewMapper
+import ru.tech.demomapapp.feature.map.impl.RulerArrowGeometryCalculator
+import ru.tech.demomapapp.feature.map.impl.ShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.render.MapRenderModel
 import ru.tech.demomapapp.feature.map.render.RenderCurrentLocationMarker
 import ru.tech.demomapapp.feature.map.render.RenderMapLine

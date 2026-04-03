@@ -11,7 +11,7 @@ import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
-import ru.tech.demomapapp.feature.map.host.MapScreenUiComponent
+import ru.tech.demomapapp.feature.map.mapscreen.MapScreenUiComponent
 import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.impl.drawing.DrawingModel
 import ru.tech.demomapapp.feature.map.impl.location.LocationComponent

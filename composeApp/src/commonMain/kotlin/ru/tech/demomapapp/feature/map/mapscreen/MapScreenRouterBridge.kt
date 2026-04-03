@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.host
+package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 import ru.tech.demomapapp.feature.map.impl.drawing.DrawingComponent

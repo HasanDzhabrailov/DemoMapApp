@@ -2,20 +2,24 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Confirm scope: package-move only
+- [x] Confirm scope: package-move only
 
-- [ ] Identify map-screen-owned files
-- [ ] Move map-screen-owned files to mapscreen package
-- [ ] Fix imports and references
+- [x] Identify map-screen-owned files
+- [x] Move map-screen-owned files to mapscreen package
+- [x] Fix imports and references
 
-- [ ] Run `./gradlew :composeApp:compileKotlinJvm`
-- [ ] Run `./gradlew :composeApp:test`
+- [x] Run `./gradlew :composeApp:compileKotlinJvm`
+- [x] Run `./gradlew :composeApp:test`
 
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| Mapscreen package exists | PENDING |
-| Behavior preserved | PENDING |
+| Mapscreen package exists | DONE |
+| Behavior preserved | DONE |
+
+## Suggested Commit Message
+
+`refactor: move map screen orchestration into mapscreen package`

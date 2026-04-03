@@ -3,10 +3,10 @@ package ru.tech.demomapapp.feature.map.impl.router
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
-import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureInfoWindowStateMapper
-import ru.tech.demomapapp.feature.map.impl.DefaultMapFeatureSelectionResolver
-import ru.tech.demomapapp.feature.map.impl.MapFeatureInfoWindowStateMapper
-import ru.tech.demomapapp.feature.map.impl.MapFeatureSelectionResolver
+import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.mapscreen.DefaultMapFeatureSelectionResolver
+import ru.tech.demomapapp.feature.map.mapscreen.MapFeatureInfoWindowStateMapper
+import ru.tech.demomapapp.feature.map.mapscreen.MapFeatureSelectionResolver
 
 internal class MapRouterStoreFactory(
     private val storeFactory: StoreFactory = DefaultStoreFactory(),

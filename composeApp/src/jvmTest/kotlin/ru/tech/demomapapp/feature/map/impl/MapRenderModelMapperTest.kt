@@ -10,6 +10,7 @@ import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
+import ru.tech.demomapapp.feature.map.mapscreen.toRenderModel
 import ru.tech.demomapapp.feature.map.render.RenderMapStyle
 
 class MapRenderModelMapperTest {

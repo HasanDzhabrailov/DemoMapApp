@@ -1,6 +1,8 @@
-package ru.tech.demomapapp.feature.map.impl
+package ru.tech.demomapapp.feature.map.mapscreen
 
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.impl.DefaultMapPointCreatedAtFormatter
+import ru.tech.demomapapp.feature.map.impl.MapPointCreatedAtFormatter
 
 internal fun interface MapFeatureInfoWindowStateMapper {
     fun map(
