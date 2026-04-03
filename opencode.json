@@ -1,0 +1,17 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "official_docs": {
+      "type": "local",
+      "command": [
+        "python",
+        "tools/opencode_official_docs_mcp.py"
+      ],
+      "enabled": true,
+      "timeout": 60000
+    }
+  },
+  "instructions": [
+    "docs/opencode-mcp.md"
+  ]
+}
