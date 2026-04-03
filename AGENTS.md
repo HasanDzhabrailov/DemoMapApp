@@ -54,6 +54,8 @@ Only verified facts can be used to declare completion.
 
 - This is a modular super app. Each module owns one business area.
 - Use `feature/api/impl` structure.
+- Package boundaries in changed code must support future multi-module extraction.
+- New or changed packages must align with ownership boundaries so a feature can be moved without unrelated code moves.
 - There is no separate domain layer.
 
 - Design and refactor by responsibility ownership and reason to change, not by file size.
@@ -66,6 +68,11 @@ Only verified facts can be used to declare completion.
 - All new screen logic must use:
   - Decompose Component
   - MVIKotlin Store
+- One component per feature responsibility.
+- One store per feature component.
+- A component may own multiple child components only when it is the clear parent boundary for that feature.
+- Child components must use their own `ComponentContext` via `childContext(key)` or an official Decompose navigation model.
+- Never pass one `ComponentContext` instance to multiple child components.
 
 ### Responsibilities
 
@@ -220,6 +227,7 @@ Only verified facts can be used to declare completion.
   5. Renderer / platform adapters
 
 - Component API must be intent-driven
+- If a screen responsibility needs separate state, side effects, or lifecycle ownership, split it into a dedicated component + store pair.
 
 - Before adding logic:
   decide if it belongs to:
@@ -246,6 +254,11 @@ Only verified facts can be used to declare completion.
 
 - God classes:
   - mixing multiple responsibilities
+  - growing central components, routers, or bridge classes that accumulate unrelated feature ownership
+
+- Glue / bridge orchestration without ownership:
+  - do not add helper, bridge, coordinator, or router classes that own cross-feature behavior without a clear bounded responsibility
+  - if logic can belong to a feature component, store, or official navigation model, keep it there
 
 - Base classes / inheritance abuse:
   - DO NOT create `Base*`
@@ -326,6 +339,8 @@ If any condition fails → NOT DONE
 
 - Make smallest change possible
 - Do not expand scope
+- Split oversized refactors into smaller tickets when they involve multiple feature responsibilities, unrelated package moves, or independent behavior changes.
+- A ticket must stay bounded to one clear refactor goal that can be verified without relying on follow-up work.
 
 - After completion:
   - update `docs/tasklist/<ticket>.md`
