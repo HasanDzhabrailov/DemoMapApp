@@ -9,6 +9,15 @@
       ],
       "enabled": true,
       "timeout": 60000
+    },
+    "maplibre_android_docs": {
+      "type": "local",
+      "command": [
+        "python",
+        "tools/opencode_maplibre_android_docs_mcp.py"
+      ],
+      "enabled": true,
+      "timeout": 60000
     }
   },
   "instructions": [

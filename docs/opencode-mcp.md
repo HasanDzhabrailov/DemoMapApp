@@ -1,39 +1,46 @@
 # OpenCode MCP Docs Retrieval
 
-This repository provides a repo-local OpenCode MCP server for official Android and Kotlin documentation.
+This repository provides repo-local OpenCode MCP servers for official Android/Kotlin documentation and for MapLibre Android API documentation.
 
 ## Config
 
 - OpenCode project config lives in `opencode.json`.
-- The MCP server is `official_docs`.
-- It starts `python tools/opencode_official_docs_mcp.py`.
-- The server only allows `developer.android.com` and `kotlinlang.org` pages.
-- MCP timeout is set to `60000` ms to avoid Android search timeouts during focused page ranking.
+- `official_docs` starts `python tools/opencode_official_docs_mcp.py`.
+- `maplibre_android_docs` starts `python tools/opencode_maplibre_android_docs_mcp.py`.
+- `official_docs` only allows `developer.android.com` and `kotlinlang.org` pages.
+- `maplibre_android_docs` only allows `https://maplibre.org/maplibre-native/android/api/` pages.
+- MCP timeout is set to `60000` ms to avoid focused-ranking timeouts.
 
 ## Retrieval Policy
 
 - Always use search first.
 - Then choose the single best page.
-- Then fetch only the needed section with `official_docs_fetch`.
+- Then fetch only the needed section with the matching fetch tool.
 - Use `intent: api` for symbols, classes, methods, functions, packages, and annotations.
 - Use `intent: guide` for workflows, architecture, lifecycle, setup, and conceptual questions.
 - Do not fetch broad multi-page dumps.
 - If the first result is weak, refine the query and search again instead of widening context.
+- For MapLibre Android API, keep retrieval inside the Android API site only and avoid Style Spec, Native book, examples, GitHub, and community sources.
 
 ## Available Tools
 
 - `android_docs_search`
 - `kotlin_docs_search`
 - `official_docs_fetch`
+- `maplibre_android_docs_search`
+- `maplibre_android_docs_fetch`
 
 ## Suggested Build-Mode Usage
 
 - Android API example:
-  - Search: `android_docs_search` with `query: "androidx lifecycle ViewModel"`, `intent: "api"`
-  - Fetch: `official_docs_fetch` for the selected reference page and only the needed section.
+- Search: `android_docs_search` with `query: "androidx lifecycle ViewModel"`, `intent: "api"`
+- Fetch: `official_docs_fetch` for the selected reference page and only the needed section.
 - Kotlin guide example:
-  - Search: `kotlin_docs_search` with `query: "sequence builder"`, `intent: "guide"`
-  - Fetch: `official_docs_fetch` for the selected page and only the needed section.
+- Search: `kotlin_docs_search` with `query: "sequence builder"`, `intent: "guide"`
+- Fetch: `official_docs_fetch` for the selected page and only the needed section.
+- MapLibre Android API example:
+- Search: `maplibre_android_docs_search` with `query: "Style addSource"`
+- Fetch: `maplibre_android_docs_fetch` for the selected page and only the needed section.
 
 ## Smoke Checks
 
@@ -44,6 +51,10 @@ Verified path in this workspace:
 ```bash
 python tools/opencode_attach_run.py --agent build "Use official_docs. Search official Android docs for androidx lifecycle ViewModel with API preference, fetch only the needed section, and answer briefly."
 python tools/opencode_attach_run.py --agent build "Use official_docs. Search official Kotlin docs for sequence builder with guide preference, fetch only the needed section, and answer briefly."
+python tools/opencode_attach_run.py --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for MapView, fetch only the needed section, and answer briefly."
+python tools/opencode_attach_run.py --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for Style.addSource, fetch only the needed section, and answer briefly."
+python tools/opencode_attach_run.py --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for GeoJsonSource, fetch only the needed section, and answer briefly."
+python tools/opencode_attach_run.py --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for SymbolLayer, fetch only the needed section, and answer briefly."
 ```
 
 Note:
@@ -58,6 +69,7 @@ Expected outcome:
 - It fetches one focused page/section instead of dumping broad docs.
 - Android answers cite `developer.android.com`.
 - Kotlin answers cite `kotlinlang.org`.
+- MapLibre Android answers cite `maplibre.org/maplibre-native/android/api/` only.
 
 ## Environment Gap
 

@@ -167,6 +167,9 @@
 - Always use search first, then choose one best page, then fetch only the needed section.
 - Android docs must come from `developer.android.com`, Kotlin docs from `kotlinlang.org`.
 - Use `android_docs_search`, `kotlin_docs_search`, and `official_docs_fetch`.
+- For MapLibre Android API questions, use repo-local MapLibre MCP tools only.
+- MapLibre Android docs must come from `https://maplibre.org/maplibre-native/android/api/` only.
+- Use `maplibre_android_docs_search` first, then `maplibre_android_docs_fetch` for the smallest needed section.
 - If direct `opencode run` does not work in this environment, use `tools/opencode_attach_run.py`.
 
 ## Verification and Completion
