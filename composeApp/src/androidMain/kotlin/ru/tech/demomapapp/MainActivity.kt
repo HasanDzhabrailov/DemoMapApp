@@ -12,7 +12,7 @@ import com.arkivanov.decompose.defaultComponentContext
 import org.maplibre.android.MapLibre
 import ru.tech.demomapapp.app.App
 import ru.tech.demomapapp.root.api.RootComponent
-import ru.tech.demomapapp.root.impl.createRootComponent
+import ru.tech.demomapapp.root.impl.DefaultRootComponent
 
 class MainActivity : ComponentActivity() {
     private lateinit var rootComponent: RootComponent
@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         MapLibre.getInstance(applicationContext)
 
-        rootComponent = createRootComponent(
+        rootComponent = DefaultRootComponent(
             componentContext = defaultComponentContext(),
         )
 

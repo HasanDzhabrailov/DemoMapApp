@@ -2,19 +2,22 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Update MainActivity.kt to use DefaultRootComponent
-- [ ] Update Main.kt to use DefaultRootComponent
-- [ ] Delete RootComponentFactory.kt
-- [ ] Verify compilation for Android target
-- [ ] Verify compilation for JVM target
-- [ ] Run tests
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Update MainActivity.kt to use DefaultRootComponent
+- [x] Update Main.kt to use DefaultRootComponent
+- [x] Delete RootComponentFactory.kt
+- [x] Verify compilation for Android target
+- [x] Verify compilation for JVM target
+- [x] Run tests
+- [x] Update this tasklist
+- [x] Prepare commit message
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| RootComponentFactory.kt deleted | PENDING |
-| MainActivity.kt compiles | PENDING |
-| Main.kt compiles | PENDING |
-| Tests pass | PENDING |
+| RootComponentFactory.kt deleted | DONE |
+| MainActivity.kt compiles | DONE |
+| Main.kt compiles | DONE |
+| Tests pass | DONE |
+
+## Summary
+RootComponentFactory helper successfully removed. Both Android and JVM entry points now create DefaultRootComponent directly.

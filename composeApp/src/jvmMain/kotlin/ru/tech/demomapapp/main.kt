@@ -8,13 +8,13 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
 import ru.tech.demomapapp.app.App
-import ru.tech.demomapapp.root.impl.createRootComponent
+import ru.tech.demomapapp.root.impl.DefaultRootComponent
 
 fun main() {
     val lifecycle = LifecycleRegistry()
     val rootComponent =
         runOnUiThread {
-            createRootComponent(
+            DefaultRootComponent(
                 componentContext = DefaultComponentContext(lifecycle = lifecycle),
             )
         }
