@@ -517,9 +517,29 @@ class SectionHTMLParser(HTMLParser):
 def cleanup_text(text: str) -> str:
     cleaned = html.unescape(text)
     cleaned = cleaned.replace("\xa0", " ")
+    cleaned = re.sub(r"<a\s+href=\"[^\"]*\">.*?</a>", " ", cleaned, flags=re.IGNORECASE | re.DOTALL)
     cleaned = re.sub(r"\bLink copied to clipboard\b", " ", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\bMembers\b", " ", cleaned)
     cleaned = re.sub(r"\bnative Ptr\b", "nativePtr", cleaned)
+    cleaned = re.sub(
+        r"Use of\s+`?MapView`?\s+requires\s+a\s+MapLibre\s+API\s+access\s+token\.?",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(
+        r"Obtain an access token on the\s+MapLibre account page\s*\([^)]*mapbox\.com[^)]*\)\.?",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"[^.!?\n]*access token[^.!?\n]*[.!?]?", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"[^.!?\n]*account page[^.!?\n]*[.!?]?", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"https?://[^\s)]*mapbox\.com[^\s)]*", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"See also:\s*MapLibre Style Spec(?:ification)?[^\n]*", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"MapLibre Style Spec(?:ification)?\s*-\s*Symbol Layer", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"https?://maplibre\.org/maplibre-style-spec/[^\s)]*", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"#{1,4}\s*See also\s*\n+", " ", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"[ \t]+", " ", cleaned)
     cleaned = re.sub(r" ?\n ?", "\n", cleaned)
     cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
@@ -713,7 +733,8 @@ def handle_request(message: dict) -> dict | None:
                     "Use search first, then fetch only the smallest needed section. "
                     "If search returns an exact member page for a method or property, prefer that page over the class page. "
                     "Avoid broad class-page fetches when an exact member page exists. "
-                    "Restrict retrieval to MapLibre Android API pages under maplibre.org/maplibre-native/android/api/."
+                    "Restrict retrieval to MapLibre Android API pages under maplibre.org/maplibre-native/android/api/. "
+                    "Answer only from the fetched section. Do not add access-token requirements, Style Spec references, or other external-source details unless they are explicitly present in the fetched text."
                 ),
             },
         }

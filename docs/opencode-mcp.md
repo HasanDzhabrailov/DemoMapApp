@@ -22,6 +22,15 @@ This repository provides repo-local OpenCode MCP servers for official Android/Ko
 - If the first result is weak, refine the query and search again instead of widening context.
 - For MapLibre Android API, keep retrieval inside the Android API site only and avoid Style Spec, Native book, examples, GitHub, and community sources.
 
+## Known Limitations
+
+- In this workspace, `opencode` may be unavailable in `PATH` even when the local binary exists under `~/.opencode/bin`.
+- Use `tools/opencode_attach_run.py` for smoke checks and local validation when direct `opencode run ...` is unavailable or returns session-attach issues.
+- MapLibre Android API retrieval infrastructure is restricted correctly, but answer quality can still vary at the agent layer.
+- With broad prompts, the agent may occasionally add extra commentary or cite a non-API MapLibre page even though the MCP search/fetch stayed within the Android API docs.
+- For MapLibre questions, prefer prompts that explicitly say `Use maplibre_android_docs only` and `cite only a maplibre.org/maplibre-native/android/api URL`.
+- `official_docs_fetch` for Android pages can be sensitive to vague `section_hint` values; if the first fetch is too generic, retry with a more specific symbol or heading hint.
+
 ## Available Tools
 
 - `android_docs_search`
@@ -70,6 +79,10 @@ Expected outcome:
 - Android answers cite `developer.android.com`.
 - Kotlin answers cite `kotlinlang.org`.
 - MapLibre Android answers cite `maplibre.org/maplibre-native/android/api/` only.
+
+Practical note:
+
+- The expected source restriction is reliably enforced at the MCP layer, but stricter prompting may still be needed to keep the final natural-language answer from mentioning adjacent non-API MapLibre material.
 
 ## Environment Gap
 

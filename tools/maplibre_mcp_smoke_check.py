@@ -13,6 +13,7 @@ CASES = [
         "fetch_url": "https://maplibre.org/maplibre-native/android/api/-map-libre%20-native%20-android/org.maplibre.android.maps/-map-view/index.html",
         "section_hint": "constructor",
         "expected_fetch_phrase": "constructor",
+        "forbidden_fetch_phrases": ["MapLibre API access token", "mapbox.com"],
     },
     {
         "query": "Style.addSource",
@@ -34,6 +35,7 @@ CASES = [
         "fetch_url": "https://maplibre.org/maplibre-native/android/api/-map-libre%20-native%20-android/org.maplibre.android.style.layers/-symbol-layer/index.html",
         "section_hint": "constructor",
         "expected_fetch_phrase": "Creates a SymbolLayer",
+        "forbidden_fetch_phrases": ["maplibre-style-spec", "Style Spec"],
     },
 ]
 
@@ -90,6 +92,8 @@ def main() -> int:
             )
             fetch_text = fetch_response["result"]["content"][0]["text"]
             require(case["expected_fetch_phrase"] in fetch_text, f"fetch failed for {case['query']}")
+            for forbidden_phrase in case.get("forbidden_fetch_phrases", []):
+                require(forbidden_phrase not in fetch_text, f"forbidden phrase present for {case['query']}: {forbidden_phrase}")
 
         allowlist_response = rpc(
             process,

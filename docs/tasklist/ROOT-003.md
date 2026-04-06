@@ -63,6 +63,8 @@
 - `python "tools/opencode_attach_run.py" --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for Style.addSource, fetch only the needed section, and answer briefly with the selected URL."` -> passed and selected exact member page
 - Direct MCP fetch from `Style/index.html` with `section_hint: addLayerAbove` now auto-resolves to `add-layer-above.html`
 - `python "tools/opencode_attach_run.py" --agent build "Use maplibre_android_docs. Search MapLibre Android API docs for Style.addLayerAbove, fetch only the needed section, and answer briefly with the selected URL."` -> passed and selected exact member page
+- 2026-04-06 follow-up validation: `official_docs` Android/Kotlin smoke checks passed, `maplibre_android_docs` smoke checks passed via `tools/opencode_attach_run.py`, but broad MapLibre prompts can still produce non-API citations or imprecise wording at the agent-answer layer; documented in `docs/opencode-mcp.md`
+- 2026-04-06 risk fix: sanitized MapLibre fetch output to remove stale `MapView` token / `mapbox.com` text and `Style Spec` cross-links leaking from Dokka pages; `python "tools/maplibre_mcp_smoke_check.py"` -> passed; broad attach-run checks for `MapView` and `SymbolLayer` no longer emitted those known-risk references
 
 ## Diff Summary
 
@@ -74,6 +76,8 @@
 - Tightened Dokka HTML extraction for cleaner focused fetch output
 - Added repeatable smoke checks in `tools/maplibre_mcp_smoke_check.py`
 - Added class-page fetch auto-resolution to exact member pages when `section_hint` names a method/property
+- Documented observed post-smoke limitations and stricter prompting guidance in `docs/opencode-mcp.md`
+- Sanitized fetched MapLibre page text to suppress known stale/non-API references before agent summarization
 
 ## Suggested Commit Message
 `chore: refine MapLibre MCP ranking and fetch quality`
