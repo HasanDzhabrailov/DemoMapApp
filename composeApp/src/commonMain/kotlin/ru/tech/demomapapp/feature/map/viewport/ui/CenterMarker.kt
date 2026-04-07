@@ -15,16 +15,36 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun CenterMarker(onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun CenterMarker(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier,
+) {
+    val backgroundColor = if (enabled) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    }
+
     Box(
         modifier = modifier
             .size(48.dp)
-            .clickable(onClick = onClick)
+            .then(
+                if (enabled) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            )
             .wrapContentSize(align = Alignment.Center),
     ) {
         Box(
             modifier = Modifier
-                .shadow(elevation = 6.dp, shape = CircleShape, clip = false)
+                .shadow(
+                    elevation = if (enabled) 6.dp else 2.dp,
+                    shape = CircleShape,
+                    clip = false,
+                )
                 .size(18.dp)
                 .border(
                     width = 2.dp,
@@ -32,7 +52,7 @@ internal fun CenterMarker(onClick: () -> Unit, modifier: Modifier = Modifier) {
                     shape = CircleShape,
                 )
                 .background(
-                    color = MaterialTheme.colorScheme.primary,
+                    color = backgroundColor,
                     shape = CircleShape,
                 ),
         )

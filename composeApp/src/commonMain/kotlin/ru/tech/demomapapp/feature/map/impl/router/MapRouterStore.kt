@@ -21,19 +21,31 @@ import ru.tech.demomapapp.feature.map.api.RulerMeasurement
 internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.State, MapRouterStore.Label> {
 
     sealed interface Intent {
+        // Child state updates - these will be triggered by external state observation
         data class ViewportStateUpdated(val state: ChildState.Viewport) : Intent
         data class ToolsStateUpdated(val state: ChildState.Tools) : Intent
         data class LocationStateUpdated(val state: ChildState.Location) : Intent
         data class RulerStateUpdated(val state: ChildState.Ruler) : Intent
         data class CenterMarkerStateUpdated(val state: ChildState.CenterMarker) : Intent
         data class DrawingStateUpdated(val state: ChildState.Drawing) : Intent
+
+        // Overlay management
         data class OverlayInteractionRequested(val target: OverlayTarget) : Intent
+        data object ToolsMenuDismissRequested : Intent
+        data object ViewportMenuDismissRequested : Intent
+
+        // Feature selection
         data class FeatureClicked(
             val featureKey: String,
             val featureType: MapScreenComponent.FeatureType,
             val anchor: MapScreenComponent.FeatureInfoWindowAnchor,
         ) : Intent
         data object FeatureInfoWindowDismissed : Intent
+
+        // Center marker actions
+        data object CenterMarkerClicked : Intent
+
+        // Viewport commands
         data class ViewportCommandUpdated(
             val source: ViewportCommandSource,
             val command: MapViewportCommand?,
@@ -53,6 +65,9 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         val locationPendingViewportCommand: MapViewportCommand? = null,
         val rulerPendingViewportCommand: MapViewportCommand? = null,
     ) {
+        // Business rule: center marker is disabled during drawing mode
+        val isCenterMarkerEnabled: Boolean
+            get() = drawingState?.mode == null && drawingState?.isCreatePointSheetVisible != true
         val mapState: MapState
             get() = MapState(
                 style = toolsState?.selectedMapStyle ?: MapStyle.DEMO,
@@ -148,6 +163,7 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
             rulerInfoWindow = rulerInfoWindow,
             pendingViewportCommand = pendingViewportCommand,
             isCenterMarkerMenuVisible = isCenterMarkerMenuVisible,
+            isCenterMarkerEnabled = isCenterMarkerEnabled,
             isCreatePointSheetVisible = isCreatePointSheetVisible,
             createPointDraft = createPointDraft?.toComponentDraft(),
             drawingMode = drawingMode?.toComponentDrawingMode(),
@@ -162,6 +178,7 @@ internal interface MapRouterStore : Store<MapRouterStore.Intent, MapRouterStore.
         data class LocationRequestIssued(val request: MapLocationRequest) : Label
         data object DismissToolsMenu : Label
         data object DismissViewportMenu : Label
+        data object CenterMarkerMenuOpenRequested : Label
     }
 
     enum class OverlayTarget(

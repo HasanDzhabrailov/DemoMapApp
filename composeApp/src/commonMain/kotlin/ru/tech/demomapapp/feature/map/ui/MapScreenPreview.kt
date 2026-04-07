@@ -4,6 +4,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.DefaultComponentContext
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
@@ -23,6 +24,8 @@ import ru.tech.demomapapp.feature.map.ruler.RulerComponent
 import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
+import ru.tech.demomapapp.feature.map.viewport.ViewportModel
 
 @Preview
 @Composable
@@ -32,7 +35,6 @@ internal fun MapScreenContentPreview() {
     }
 }
 
-@Suppress("TooManyFunctions")
 private class PreviewMapScreenComponent : MapScreenUiContract {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(
@@ -55,7 +57,6 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         drawingStoreFactory = DrawingStoreFactory(),
         output = object : DrawingComponent.Output {
             override fun onStateChanged() = Unit
-
             override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
         },
     )
@@ -99,104 +100,39 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         initialModel = model.value,
         output = object : ToolsComponent.Output {
             override fun onStateChanged() = Unit
-
             override fun onLayersChanged(layers: List<ru.tech.demomapapp.feature.map.api.MapLayerEntry>) = Unit
         },
     )
 
+    override val viewportComponent: ViewportComponent = object : ViewportComponent {
+        override val model: Value<ViewportModel> = MutableValue(ViewportModel())
+        override val childSlot: Value<ChildSlot<*, ViewportComponent.Child>> = MutableValue(
+            ChildSlot<Nothing, ViewportComponent.Child>()
+        )
+
+        override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
+        override fun onZoomInClick() = Unit
+        override fun onZoomOutClick() = Unit
+        override fun onViewportCommandConsumed() = Unit
+        override fun onCenterMarkerClick() = Unit
+        override fun onCenterMarkerMenuDismiss() = Unit
+    }
+
     override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
-
     override fun onMapToolsClick() = Unit
-
-    override fun onMapToolsDismiss() = Unit
-
-    override fun onZoomInClick() = Unit
-
-    override fun onZoomOutClick() = Unit
-
     override fun onAvailableMapsClick() = Unit
-
-    override fun onAvailableMapsDismiss() = Unit
-
-    override fun onAvailableMapSelect(mapId: String) = Unit
-
-    override fun onAvailableMapConfirm() = Unit
-
-    override fun onAvailableMapSelectionDismiss() = Unit
-
     override fun onMapsOnScreenClick() = Unit
-
-    override fun onMapsOnScreenDismiss() = Unit
-
-    override fun onMapLayerActionsClick(layerId: String) = Unit
-
-    override fun onMapLayerActionsDismiss() = Unit
-
-    override fun onMoveLayerUpClick() = Unit
-
-    override fun onMoveLayerDownClick() = Unit
-
-    override fun onRemoveLayerClick() = Unit
-
-    override fun onLayerOpacityClick() = Unit
-
-    override fun onLayerOpacityChange(value: Float) = Unit
-
-    override fun onLayerOpacityDismiss() = Unit
-
-    override fun onGpsToggle() = Unit
-
-    override fun onMyLocationClick() = Unit
-
-    override fun onCurrentLocationFocusClick() = Unit
-
-    override fun onLocationRequestConsumed() = Unit
-
-    override fun onLocationResult(result: LocationRequestResult) = Unit
-
     override fun onRulerToggle() = Unit
-
     override fun onViewportCommandConsumed() = Unit
-
     override fun onCenterMarkerClick() = Unit
-
-    override fun onCenterMarkerMenuDismiss() = Unit
-
     override fun onCreatePointClick() = Unit
-
     override fun onCreateLineClick() = Unit
-
     override fun onCreatePolygonClick() = Unit
-
-    override fun onCreatePointLatitudeChange(value: String) = Unit
-
-    override fun onCreatePointLongitudeChange(value: String) = Unit
-
-    override fun onCreatePointTitleChange(value: String) = Unit
-
-    override fun onCreatePointConfirm() = Unit
-
-    override fun onCreatePointSheetDismiss() = Unit
-
     override fun onDrawingAddPositionClick() = Unit
-
-    override fun onDrawingRemoveLastPositionClick() = Unit
-
-    override fun onDrawingDetailsClick() = Unit
-
-    override fun onDrawingDismiss() = Unit
-
-    override fun onCreateShapeTitleChange(value: String) = Unit
-
-    override fun onCreateShapeConfirm() = Unit
-
-    override fun onCreateShapeSheetDismiss() = Unit
-
     override fun onFeatureClick(
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,
     ) = Unit
-
     override fun onFeatureInfoWindowDismiss() = Unit
 }

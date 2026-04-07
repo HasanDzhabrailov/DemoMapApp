@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 @Composable
 internal fun BoxScope.ViewportControls(
     isCenterMarkerMenuVisible: Boolean,
+    isCenterMarkerEnabled: Boolean,
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit,
     onCenterMarkerMenuDismiss: () -> Unit,
@@ -25,6 +26,7 @@ internal fun BoxScope.ViewportControls(
 
     CenterMarker(
         onClick = onCenterMarkerClick,
+        enabled = isCenterMarkerEnabled,
         modifier = modifier.align(Alignment.Center),
     )
 

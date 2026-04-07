@@ -5,7 +5,7 @@ import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
-internal interface ViewportComponent {
+interface ViewportComponent {
     val model: Value<ViewportModel>
     val childSlot: Value<ChildSlot<*, Child>>
 

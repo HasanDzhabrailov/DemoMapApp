@@ -82,6 +82,26 @@ internal class MapRouterExecutor : Executor<
                 }
             }
 
+            MapRouterStore.Intent.ToolsMenuDismissRequested -> {
+                if (callbacks.state.isMapToolsMenuVisible) {
+                    callbacks.onLabel(MapRouterStore.Label.DismissToolsMenu)
+                }
+            }
+
+            MapRouterStore.Intent.ViewportMenuDismissRequested -> {
+                if (callbacks.state.isCenterMarkerMenuVisible) {
+                    callbacks.onLabel(MapRouterStore.Label.DismissViewportMenu)
+                }
+            }
+
+            MapRouterStore.Intent.CenterMarkerClicked -> {
+                // Business rule: center marker is disabled during drawing mode
+                if (callbacks.state.isCenterMarkerEnabled) {
+                    callbacks.onLabel(MapRouterStore.Label.CenterMarkerMenuOpenRequested)
+                }
+                // If disabled, silently ignore the click (no-op)
+            }
+
             is MapRouterStore.Intent.FeatureClicked -> {
                 val selectedFeature = featureSelectionResolver.resolve(
                     mapState = callbacks.state.mapState,

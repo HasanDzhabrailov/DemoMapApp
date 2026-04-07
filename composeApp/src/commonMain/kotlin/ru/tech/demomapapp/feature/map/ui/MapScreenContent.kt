@@ -41,7 +41,7 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
             modifier = Modifier.fillMaxSize(),
             viewportCommand = model.pendingViewportCommand,
             onCameraIdle = component::onCameraIdle,
-            onViewportCommandConsumed = component::onViewportCommandConsumed,
+            onViewportCommandConsumed = component.viewportComponent::onViewportCommandConsumed,
             onFeatureClick = { click ->
                 component.onFeatureClick(
                     featureKey = click.featureKey,
@@ -66,9 +66,10 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
 
         ViewportControls(
             isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
-            onZoomInClick = component::onZoomInClick,
-            onZoomOutClick = component::onZoomOutClick,
-            onCenterMarkerMenuDismiss = component::onCenterMarkerMenuDismiss,
+            isCenterMarkerEnabled = model.isCenterMarkerEnabled,
+            onZoomInClick = component.viewportComponent::onZoomInClick,
+            onZoomOutClick = component.viewportComponent::onZoomOutClick,
+            onCenterMarkerMenuDismiss = component.viewportComponent::onCenterMarkerMenuDismiss,
             onCenterMarkerClick = component::onCenterMarkerClick,
             onCreatePointClick = component::onCreatePointClick,
             onCreateLineClick = component::onCreateLineClick,
@@ -83,8 +84,8 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
             component = component.toolsComponent,
             isGpsEnabled = model.isGpsToggleChecked(),
             isRulerEnabled = model.isRulerEnabled,
-            onDismiss = component::onMapToolsDismiss,
-            onGpsToggle = component::onGpsToggle,
+            onDismiss = component.toolsComponent::onMapToolsDismiss,
+            onGpsToggle = component.locationComponent::onGpsToggle,
             onRulerToggle = component::onRulerToggle,
         )
 

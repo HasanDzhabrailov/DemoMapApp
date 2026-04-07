@@ -23,6 +23,7 @@ interface MapScreenComponent {
         val rulerInfoWindow: RulerInfoWindowState? = null,
         val pendingViewportCommand: MapViewportCommand? = null,
         val isCenterMarkerMenuVisible: Boolean = false,
+        val isCenterMarkerEnabled: Boolean = true,
         val isCreatePointSheetVisible: Boolean = false,
         val createPointDraft: CreatePointDraft? = null,
         val drawingMode: DrawingMode? = null,
