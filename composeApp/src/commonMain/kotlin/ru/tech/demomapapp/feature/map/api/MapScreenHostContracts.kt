@@ -23,7 +23,14 @@ interface MapScreenDrawingHost {
 }
 
 interface MapScreenFeatureHost {
+    /**
+     * Feature selection with render data passed explicitly.
+     * Render data (points, lines, polygons) is owned by child components.
+     */
     fun onFeatureClick(
+        points: List<MapPoint>,
+        lines: List<MapLine>,
+        polygons: List<MapPolygon>,
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,

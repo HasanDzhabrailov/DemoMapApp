@@ -12,7 +12,11 @@ class RulerReducerTest {
 
     @Test
     fun `measurement updated stores measurement and info window`() {
-        val measurement = RulerMeasurement(distanceMeters = 1200.0, trueAzimuthDegrees = 90.0)
+        val measurement = RulerMeasurement(
+            startLatitude = 55.0, startLongitude = 37.0,
+            endLatitude = 55.1, endLongitude = 37.1,
+            distanceMeters = 1200.0, trueAzimuthDegrees = 90.0
+        )
         val infoWindow = RulerInfoWindowState(distanceText = "1.2 km", trueAzimuthText = "90°")
 
         val newState = RulerReducer.reduce(
@@ -28,7 +32,11 @@ class RulerReducerTest {
     fun `disabled ruler clears measurement and info window`() {
         val state = RulerStore.State(
             isEnabled = true,
-            measurement = RulerMeasurement(distanceMeters = 1200.0, trueAzimuthDegrees = 90.0),
+            measurement = RulerMeasurement(
+                startLatitude = 55.0, startLongitude = 37.0,
+                endLatitude = 55.1, endLongitude = 37.1,
+                distanceMeters = 1200.0, trueAzimuthDegrees = 90.0
+            ),
             infoWindow = RulerInfoWindowState(distanceText = "1.2 km", trueAzimuthText = "90°"),
         )
 

@@ -4,11 +4,12 @@ import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.api.MapState
 
 internal fun interface MapFeatureSelectionResolver {
     fun resolve(
-        mapState: MapState,
+        points: List<MapPoint>,
+        lines: List<MapLine>,
+        polygons: List<MapPolygon>,
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
     ): SelectedMapFeature?
@@ -21,13 +22,15 @@ internal data class SelectedMapFeature(
 
 internal class DefaultMapFeatureSelectionResolver : MapFeatureSelectionResolver {
     override fun resolve(
-        mapState: MapState,
+        points: List<MapPoint>,
+        lines: List<MapLine>,
+        polygons: List<MapPolygon>,
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
     ): SelectedMapFeature? = when (featureType) {
-        MapScreenComponent.FeatureType.POINT -> mapState.points.findById(featureKey)?.toSelectedMapFeature()
-        MapScreenComponent.FeatureType.LINE -> mapState.lines.findById(featureKey)?.toSelectedMapFeature()
-        MapScreenComponent.FeatureType.POLYGON -> mapState.polygons.findById(featureKey)?.toSelectedMapFeature()
+        MapScreenComponent.FeatureType.POINT -> points.findById(featureKey)?.toSelectedMapFeature()
+        MapScreenComponent.FeatureType.LINE -> lines.findById(featureKey)?.toSelectedMapFeature()
+        MapScreenComponent.FeatureType.POLYGON -> polygons.findById(featureKey)?.toSelectedMapFeature()
     }
 }
 

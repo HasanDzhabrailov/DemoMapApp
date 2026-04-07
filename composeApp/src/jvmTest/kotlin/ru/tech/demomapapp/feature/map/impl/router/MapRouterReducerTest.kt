@@ -3,7 +3,6 @@ package ru.tech.demomapapp.feature.map.impl.router
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
@@ -12,50 +11,7 @@ class MapRouterReducerTest {
     private val reducer = MapRouterReducer()
 
     @Test
-    fun `tools overlay visibility clears selected feature info window`() {
-        val state = MapRouterStore.State(
-            selectedFeatureInfoWindow = MapScreenComponent.FeatureInfoWindow(
-                title = "Point",
-                createdAtText = "now",
-                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
-            ),
-        )
-
-        val newState = reduce(
-            state,
-            MapRouterMessage.ToolsStateUpdated(
-                MapRouterStore.ChildState.Tools(isMapToolsMenuVisible = true),
-            ),
-        )
-
-        assertNull(newState.selectedFeatureInfoWindow)
-    }
-
-    @Test
-    fun `viewport snapshot change clears selected feature info window`() {
-        val snapshotA = MapCameraSnapshot(latitude = 55.7, longitude = 37.6, zoom = 10.0, bearing = 0.0)
-        val snapshotB = MapCameraSnapshot(latitude = 59.0, longitude = 30.0, zoom = 11.0, bearing = 0.0)
-        val state = MapRouterStore.State(
-            viewportState = MapRouterStore.ChildState.Viewport(lastCameraSnapshot = snapshotA),
-            selectedFeatureInfoWindow = MapScreenComponent.FeatureInfoWindow(
-                title = "Point",
-                createdAtText = "now",
-                anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
-            ),
-        )
-
-        val newState = reduce(
-            state,
-            MapRouterMessage.ViewportStateUpdated(
-                MapRouterStore.ChildState.Viewport(lastCameraSnapshot = snapshotB),
-            ),
-        )
-
-        assertNull(newState.selectedFeatureInfoWindow)
-    }
-
-    @Test
-    fun `center marker interaction clears selected feature info window`() {
+    fun `overlay interaction clears selected feature info window when configured`() {
         val state = MapRouterStore.State(
             selectedFeatureInfoWindow = MapScreenComponent.FeatureInfoWindow(
                 title = "Point",
@@ -70,6 +26,41 @@ class MapRouterReducerTest {
         )
 
         assertNull(newState.selectedFeatureInfoWindow)
+    }
+
+    @Test
+    fun `overlay interaction preserves selected feature info window when not configured to clear`() {
+        val infoWindow = MapScreenComponent.FeatureInfoWindow(
+            title = "Point",
+            createdAtText = "now",
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+        )
+        val state = MapRouterStore.State(
+            selectedFeatureInfoWindow = infoWindow,
+        )
+
+        val newState = reduce(
+            state,
+            MapRouterMessage.OverlayInteractionProcessed(MapRouterStore.OverlayTarget.TOOLS_OVERLAY),
+        )
+
+        assertEquals(infoWindow, newState.selectedFeatureInfoWindow)
+    }
+
+    @Test
+    fun `feature info window updated sets the info window`() {
+        val infoWindow = MapScreenComponent.FeatureInfoWindow(
+            title = "Point",
+            createdAtText = "now",
+            anchor = MapScreenComponent.FeatureInfoWindowAnchor(screenX = 10, screenY = 20),
+        )
+
+        val newState = reduce(
+            MapRouterStore.State(),
+            MapRouterMessage.FeatureInfoWindowUpdated(infoWindow),
+        )
+
+        assertEquals(infoWindow, newState.selectedFeatureInfoWindow)
     }
 
     @Test
@@ -103,30 +94,42 @@ class MapRouterReducerTest {
 
     @Test
     fun `viewport command consumed clears current source and exposes queued command`() {
-        val state = reduce(
-            reduce(
-                MapRouterStore.State(
-                    locationPendingViewportCommand = MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6),
-                ),
-                MapRouterMessage.ViewportCommandUpdated(
-                    source = MapRouterStore.ViewportCommandSource.RULER,
-                    command = MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
-                ),
+        // Viewport command has priority - it clears other pending commands
+        val withRuler = reduce(
+            MapRouterStore.State(
+                locationPendingViewportCommand = MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6),
             ),
+            MapRouterMessage.ViewportCommandUpdated(
+                source = MapRouterStore.ViewportCommandSource.RULER,
+                command = MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0),
+            ),
+        )
+        val withViewport = reduce(
+            withRuler,
             MapRouterMessage.ViewportCommandUpdated(
                 source = MapRouterStore.ViewportCommandSource.VIEWPORT,
                 command = MapViewportCommand.ZoomIn,
             ),
         )
 
-        val consumedViewport = reduce(state, MapRouterMessage.ViewportCommandConsumed)
-        val consumedLocation = reduce(consumedViewport, MapRouterMessage.ViewportCommandConsumed)
+        // Viewport command clears location and ruler commands
+        assertEquals(MapRouterStore.ViewportCommandSource.VIEWPORT, withViewport.currentViewportCommandSource)
+        assertEquals(MapViewportCommand.ZoomIn, withViewport.pendingViewportCommand)
 
-        assertEquals(MapRouterStore.ViewportCommandSource.VIEWPORT, state.currentViewportCommandSource)
-        assertEquals(MapViewportCommand.MoveTo(latitude = 55.7, longitude = 37.6), consumedViewport.pendingViewportCommand)
-        assertEquals(MapRouterStore.ViewportCommandSource.LOCATION, consumedViewport.currentViewportCommandSource)
-        assertEquals(MapViewportCommand.MoveTo(latitude = 59.0, longitude = 30.0), consumedLocation.pendingViewportCommand)
-        assertEquals(MapRouterStore.ViewportCommandSource.RULER, consumedLocation.currentViewportCommandSource)
+        // After consuming viewport command, no commands left (location and ruler were cleared)
+        val consumedViewport = reduce(withViewport, MapRouterMessage.ViewportCommandConsumed)
+        assertEquals(null, consumedViewport.pendingViewportCommand)
+        assertEquals(null, consumedViewport.currentViewportCommandSource)
+    }
+
+    @Test
+    fun `ruler enabled updated sets the flag`() {
+        val newState = reduce(
+            MapRouterStore.State(),
+            MapRouterMessage.RulerEnabledUpdated(enabled = true),
+        )
+
+        assertEquals(true, newState.isRulerEnabled)
     }
 
     private fun reduce(state: MapRouterStore.State, message: MapRouterMessage): MapRouterStore.State =

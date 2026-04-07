@@ -5,53 +5,6 @@ import com.arkivanov.mvikotlin.core.store.Reducer
 internal class MapRouterReducer : Reducer<MapRouterStore.State, MapRouterMessage> {
 
     override fun MapRouterStore.State.reduce(msg: MapRouterMessage): MapRouterStore.State = when (msg) {
-        is MapRouterMessage.ViewportStateUpdated ->
-            copy(
-                viewportState = msg.state,
-                selectedFeatureInfoWindow = if (msg.state.lastCameraSnapshot != viewportState?.lastCameraSnapshot) {
-                    null
-                } else {
-                    selectedFeatureInfoWindow
-                },
-            )
-
-        is MapRouterMessage.ToolsStateUpdated ->
-            copy(
-                toolsState = msg.state,
-                selectedFeatureInfoWindow = if (
-                    msg.state.isMapToolsMenuVisible ||
-                    msg.state.isAvailableMapsSheetVisible ||
-                    msg.state.isMapsOnScreenSheetVisible
-                ) {
-                    null
-                } else {
-                    selectedFeatureInfoWindow
-                },
-            )
-
-        is MapRouterMessage.LocationStateUpdated ->
-            copy(locationState = msg.state)
-
-        is MapRouterMessage.RulerStateUpdated ->
-            copy(rulerState = msg.state)
-
-        is MapRouterMessage.CenterMarkerStateUpdated ->
-            copy(centerMarkerState = msg.state)
-
-        is MapRouterMessage.DrawingStateUpdated ->
-            copy(
-                drawingState = msg.state,
-                selectedFeatureInfoWindow = if (
-                    msg.state.isCreatePointSheetVisible ||
-                    msg.state.mode != null ||
-                    msg.state.shapeDraft != drawingState?.shapeDraft
-                ) {
-                    null
-                } else {
-                    selectedFeatureInfoWindow
-                },
-            )
-
         is MapRouterMessage.OverlayInteractionProcessed ->
             copy(
                 selectedFeatureInfoWindow = if (msg.target.clearFeatureInfoWindow) {
@@ -87,5 +40,7 @@ internal class MapRouterReducer : Reducer<MapRouterStore.State, MapRouterMessage
             MapRouterStore.ViewportCommandSource.RULER -> copy(rulerPendingViewportCommand = null)
             null -> this
         }
+
+        is MapRouterMessage.RulerEnabledUpdated -> copy(isRulerEnabled = msg.enabled)
     }
 }

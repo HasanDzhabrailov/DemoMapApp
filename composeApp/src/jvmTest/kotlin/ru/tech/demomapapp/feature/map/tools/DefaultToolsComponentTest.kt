@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.ToolsModel
 
 class DefaultToolsComponentTest {
 
@@ -16,7 +16,7 @@ class DefaultToolsComponentTest {
         val component = DefaultToolsComponent(
             componentContext = DefaultComponentContext(LifecycleRegistry()),
             toolsStoreFactory = ToolsStoreFactory(),
-            initialModel = MapScreenComponent.Model(),
+            initialModel = ToolsModel(),
             output = output,
         )
 

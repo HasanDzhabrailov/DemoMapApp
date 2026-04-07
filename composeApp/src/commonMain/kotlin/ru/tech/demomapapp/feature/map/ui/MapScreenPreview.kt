@@ -8,24 +8,29 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import ru.tech.demomapapp.feature.map.api.DrawingModel
 import ru.tech.demomapapp.feature.map.api.LocationRequestResult
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
+import ru.tech.demomapapp.feature.map.api.MapPoint
+import ru.tech.demomapapp.feature.map.api.MapPolygon
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MyLocationMode
 import ru.tech.demomapapp.feature.map.api.RulerInfoWindowState
+import ru.tech.demomapapp.feature.map.api.RulerModel
+import ru.tech.demomapapp.feature.map.api.ToolsModel
+import ru.tech.demomapapp.feature.map.api.ViewportModel
 import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
 import ru.tech.demomapapp.feature.map.location.LocationComponent
 import ru.tech.demomapapp.feature.map.location.LocationModel
 import ru.tech.demomapapp.feature.map.ruler.RulerComponent
-import ru.tech.demomapapp.feature.map.ruler.RulerModel
 import ru.tech.demomapapp.feature.map.tools.DefaultToolsComponent
 import ru.tech.demomapapp.feature.map.tools.ToolsComponent
 import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
-import ru.tech.demomapapp.feature.map.viewport.ViewportModel
 
 @Preview
 @Composable
@@ -39,16 +44,7 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
     override val model: Value<MapScreenComponent.Model> =
         MutableValue(
             MapScreenComponent.Model(
-                lastCameraSnapshot = MapCameraSnapshot(
-                    latitude = 55.75124,
-                    longitude = 37.61842,
-                    zoom = 12.34567,
-                    bearing = 18.2,
-                ),
-                rulerInfoWindow = RulerInfoWindowState(
-                    distanceText = "12,9 км",
-                    trueAzimuthText = "A = 97° 33' 29\"",
-                ),
+                isRulerEnabled = true,
             ),
         )
 
@@ -64,7 +60,7 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
     override val locationUi: ru.tech.demomapapp.feature.map.api.LocationUiContract = object : ru.tech.demomapapp.feature.map.api.LocationUiContract {
         override val model: Value<LocationModel> = MutableValue(
             LocationModel(
-                mode = MyLocationMode.MANUAL_PLACEHOLDER,
+                mode = MyLocationMode.GPS,
                 currentMarker = MapLocationMarker(latitude = 55.75, longitude = 37.61, isPlaceholder = true),
                 pendingRequest = null,
             ),
@@ -92,7 +88,6 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
     override val toolsUi: ru.tech.demomapapp.feature.map.api.ToolsUiContract = DefaultToolsComponent(
         componentContext = DefaultComponentContext(LifecycleRegistry()),
         toolsStoreFactory = ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory(),
-        initialModel = model.value,
         output = object : ToolsComponent.Output {
             override fun onStateChanged() = Unit
             override fun onLayersChanged(layers: List<ru.tech.demomapapp.feature.map.api.MapLayerEntry>) = Unit
@@ -100,7 +95,16 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
     )
 
     override val viewportUi: ru.tech.demomapapp.feature.map.api.ViewportUiContract = object : ru.tech.demomapapp.feature.map.api.ViewportUiContract {
-        override val model: Value<ViewportModel> = MutableValue(ViewportModel())
+        override val model: Value<ViewportModel> = MutableValue(
+            ViewportModel(
+                cameraSnapshot = MapCameraSnapshot(
+                    latitude = 55.75124,
+                    longitude = 37.61842,
+                    zoom = 12.34567,
+                    bearing = 18.2,
+                ),
+            )
+        )
         override val childSlot: Value<ChildSlot<*, ViewportComponent.Child>> = MutableValue(
             ChildSlot<Nothing, ViewportComponent.Child>()
         )
@@ -123,6 +127,9 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
     override fun onCreatePolygonClick() = Unit
     override fun onDrawingAddPositionClick() = Unit
     override fun onFeatureClick(
+        points: List<MapPoint>,
+        lines: List<MapLine>,
+        polygons: List<MapPolygon>,
         featureKey: String,
         featureType: MapScreenComponent.FeatureType,
         anchor: MapScreenComponent.FeatureInfoWindowAnchor,

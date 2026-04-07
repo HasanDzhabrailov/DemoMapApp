@@ -1,9 +1,10 @@
 package ru.tech.demomapapp.feature.map.impl.router
 
 import com.arkivanov.mvikotlin.core.store.Executor
+
 internal class MapRouterExecutor : Executor<
     MapRouterStore.Intent,
-    Nothing,
+    MapRouterStore.Action,
     MapRouterStore.State,
     MapRouterMessage,
     MapRouterStore.Label,
@@ -28,7 +29,7 @@ internal class MapRouterExecutor : Executor<
     private lateinit var callbacks: Executor.Callbacks<
         MapRouterStore.State,
         MapRouterMessage,
-        Nothing,
+        MapRouterStore.Action,
         MapRouterStore.Label,
         >
 
@@ -36,7 +37,7 @@ internal class MapRouterExecutor : Executor<
         callbacks: Executor.Callbacks<
             MapRouterStore.State,
             MapRouterMessage,
-            Nothing,
+            MapRouterStore.Action,
             MapRouterStore.Label,
             >,
     ) {
@@ -45,66 +46,38 @@ internal class MapRouterExecutor : Executor<
 
     override fun executeIntent(intent: MapRouterStore.Intent) {
         when (intent) {
-            is MapRouterStore.Intent.ViewportStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.ViewportStateUpdated(intent.state))
-            }
-
-            is MapRouterStore.Intent.ToolsStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.ToolsStateUpdated(intent.state))
-            }
-
-            is MapRouterStore.Intent.LocationStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.LocationStateUpdated(intent.state))
-                intent.state.activeLocationRequest?.let { request ->
-                    callbacks.onLabel(MapRouterStore.Label.LocationRequestIssued(request))
-                }
-            }
-
-            is MapRouterStore.Intent.RulerStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.RulerStateUpdated(intent.state))
-            }
-
-            is MapRouterStore.Intent.CenterMarkerStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.CenterMarkerStateUpdated(intent.state))
-            }
-
-            is MapRouterStore.Intent.DrawingStateUpdated -> {
-                callbacks.onMessage(MapRouterMessage.DrawingStateUpdated(intent.state))
-            }
-
             is MapRouterStore.Intent.OverlayInteractionRequested -> {
                 callbacks.onMessage(MapRouterMessage.OverlayInteractionProcessed(intent.target))
-                if (intent.target.dismissToolsMenu && callbacks.state.isMapToolsMenuVisible) {
+                // Always publish dismiss labels - child components handle their own state
+                if (intent.target.dismissToolsMenu) {
                     callbacks.onLabel(MapRouterStore.Label.DismissToolsMenu)
                 }
-                if (intent.target.dismissViewportMenu && callbacks.state.isCenterMarkerMenuVisible) {
+                if (intent.target.dismissViewportMenu) {
                     callbacks.onLabel(MapRouterStore.Label.DismissViewportMenu)
                 }
             }
 
             MapRouterStore.Intent.ToolsMenuDismissRequested -> {
-                if (callbacks.state.isMapToolsMenuVisible) {
-                    callbacks.onLabel(MapRouterStore.Label.DismissToolsMenu)
-                }
+                callbacks.onLabel(MapRouterStore.Label.DismissToolsMenu)
             }
 
             MapRouterStore.Intent.ViewportMenuDismissRequested -> {
-                if (callbacks.state.isCenterMarkerMenuVisible) {
-                    callbacks.onLabel(MapRouterStore.Label.DismissViewportMenu)
-                }
+                callbacks.onLabel(MapRouterStore.Label.DismissViewportMenu)
             }
 
             MapRouterStore.Intent.CenterMarkerClicked -> {
-                // Business rule: center marker is disabled during drawing mode
-                if (callbacks.state.isCenterMarkerEnabled) {
-                    callbacks.onLabel(MapRouterStore.Label.CenterMarkerMenuOpenRequested)
-                }
-                // If disabled, silently ignore the click (no-op)
+                // Center marker click is handled by viewport child component
+                // Parent only coordinates cross-feature concerns
+                callbacks.onLabel(MapRouterStore.Label.CenterMarkerMenuOpenRequested)
             }
 
             is MapRouterStore.Intent.FeatureClicked -> {
+                // Feature selection requires render data from child components
+                // This is passed via intent parameters now
                 val selectedFeature = featureSelectionResolver.resolve(
-                    mapState = callbacks.state.mapState,
+                    points = intent.points,
+                    lines = intent.lines,
+                    polygons = intent.polygons,
                     featureKey = intent.featureKey,
                     featureType = intent.featureType,
                 )
@@ -126,10 +99,14 @@ internal class MapRouterExecutor : Executor<
             }
 
             MapRouterStore.Intent.ViewportCommandConsumed -> callbacks.onMessage(MapRouterMessage.ViewportCommandConsumed)
+
+            is MapRouterStore.Intent.RulerEnabledUpdated -> {
+                callbacks.onMessage(MapRouterMessage.RulerEnabledUpdated(intent.enabled))
+            }
         }
     }
 
-    override fun executeAction(action: Nothing) = Unit
+    override fun executeAction(action: MapRouterStore.Action) = Unit
 
     override fun dispose() = Unit
 }

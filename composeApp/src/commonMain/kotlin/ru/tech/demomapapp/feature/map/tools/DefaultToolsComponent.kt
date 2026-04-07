@@ -10,21 +10,19 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import kotlinx.serialization.Serializable
 import ru.tech.demomapapp.feature.map.api.MapCatalogItemKind
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.tools.fromModel
 
 internal class DefaultToolsComponent(
     componentContext: ComponentContext,
     private val toolsStoreFactory: ToolsStoreFactory,
-    initialModel: MapScreenComponent.Model,
+    initialModel: ToolsModel = ToolsModel(),
     private val output: ToolsComponent.Output,
 ) : ToolsComponent, ComponentContext by componentContext {
     private val navigation = SlotNavigation<Config>()
-    
+
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
         ToolsStoreHolder(
             toolsStoreFactory = toolsStoreFactory,
-            initialModel = fromModel(initialModel),
+            initialModel = initialModel,
         )
     }
     private val labels = holder.labels(::handleLabel)
