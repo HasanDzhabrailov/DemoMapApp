@@ -2,38 +2,43 @@ package ru.tech.demomapapp.feature.map.drawing
 
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
+import ru.tech.demomapapp.feature.map.api.DrawingUiContract
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
 
-interface DrawingComponent {
-    val model: Value<DrawingModel>
-    val pointSheetSlot: Value<ChildSlot<*, PointSheetChild>>
-    val shapeSheetSlot: Value<ChildSlot<*, ShapeSheetChild>>
+/**
+ * DrawingComponent extends DrawingUiContract to expose minimal UI interface.
+ * Internal methods (onCreatePointClick, onCreateLineClick, etc.) remain in this interface.
+ */
+interface DrawingComponent : DrawingUiContract {
+    override val model: Value<DrawingModel>
+    override val pointSheetSlot: Value<ChildSlot<*, PointSheetChild>>
+    override val shapeSheetSlot: Value<ChildSlot<*, ShapeSheetChild>>
 
     fun onCreatePointClick()
     fun onCreateLineClick()
     fun onCreatePolygonClick()
-    fun onCreatePointLatitudeChange(value: String)
-    fun onCreatePointLongitudeChange(value: String)
-    fun onCreatePointTitleChange(value: String)
-    fun onCreatePointConfirm()
-    fun onCreatePointSheetDismiss()
-    fun onDrawingAddPositionClick()
-    fun onDrawingRemoveLastPositionClick()
-    fun onDrawingDetailsClick()
-    fun onDrawingDismiss()
-    fun onCreateShapeTitleChange(value: String)
-    fun onCreateShapeConfirm()
-    fun onCreateShapeSheetDismiss()
+    override fun onCreatePointLatitudeChange(value: String)
+    override fun onCreatePointLongitudeChange(value: String)
+    override fun onCreatePointTitleChange(value: String)
+    override fun onCreatePointConfirm()
+    override fun onCreatePointSheetDismiss()
+    override fun onDrawingAddPositionClick()
+    override fun onDrawingRemoveLastPositionClick()
+    override fun onDrawingDetailsClick()
+    override fun onDrawingDismiss()
+    override fun onCreateShapeTitleChange(value: String)
+    override fun onCreateShapeConfirm()
+    override fun onCreateShapeSheetDismiss()
     fun onCameraPositionUpdated(snapshot: MapCameraSnapshot)
 
-    sealed interface PointSheetChild {
+    sealed interface PointSheetChild : DrawingUiContract.PointSheetChild {
         data object Content : PointSheetChild
     }
 
-    sealed interface ShapeSheetChild {
+    sealed interface ShapeSheetChild : DrawingUiContract.ShapeSheetChild {
         data object Content : ShapeSheetChild
     }
 

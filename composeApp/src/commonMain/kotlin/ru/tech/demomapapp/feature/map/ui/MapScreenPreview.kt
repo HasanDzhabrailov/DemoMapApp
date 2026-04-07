@@ -52,7 +52,7 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
             ),
         )
 
-    override val drawingComponent: DrawingComponent = DefaultDrawingComponent(
+    override val drawingUi: ru.tech.demomapapp.feature.map.api.DrawingUiContract = DefaultDrawingComponent(
         componentContext = DefaultComponentContext(LifecycleRegistry()),
         drawingStoreFactory = DrawingStoreFactory(),
         output = object : DrawingComponent.Output {
@@ -61,7 +61,7 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         },
     )
 
-    override val locationComponent: LocationComponent = object : LocationComponent {
+    override val locationUi: ru.tech.demomapapp.feature.map.api.LocationUiContract = object : ru.tech.demomapapp.feature.map.api.LocationUiContract {
         override val model: Value<LocationModel> = MutableValue(
             LocationModel(
                 mode = MyLocationMode.MANUAL_PLACEHOLDER,
@@ -75,10 +75,9 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         override fun onCurrentLocationFocusClick() = Unit
         override fun onLocationResult(result: LocationRequestResult) = Unit
         override fun onLocationRequestConsumed() = Unit
-        override fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot) = Unit
     }
 
-    override val rulerComponent: RulerComponent = object : RulerComponent {
+    override val rulerUi: ru.tech.demomapapp.feature.map.api.RulerUiContract = object : ru.tech.demomapapp.feature.map.api.RulerUiContract {
         override val model: Value<RulerModel> = MutableValue(
             RulerModel(
                 isEnabled = true,
@@ -88,13 +87,9 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
                 ),
             ),
         )
-
-        override fun onToggleClicked() = Unit
-        override fun onLocationUpdated(location: MapLocationMarker?) = Unit
-        override fun onCameraSnapshotReceived(snapshot: MapCameraSnapshot) = Unit
     }
 
-    override val toolsComponent: ToolsComponent = DefaultToolsComponent(
+    override val toolsUi: ru.tech.demomapapp.feature.map.api.ToolsUiContract = DefaultToolsComponent(
         componentContext = DefaultComponentContext(LifecycleRegistry()),
         toolsStoreFactory = ru.tech.demomapapp.feature.map.tools.ToolsStoreFactory(),
         initialModel = model.value,
@@ -104,17 +99,15 @@ private class PreviewMapScreenComponent : MapScreenUiContract {
         },
     )
 
-    override val viewportComponent: ViewportComponent = object : ViewportComponent {
+    override val viewportUi: ru.tech.demomapapp.feature.map.api.ViewportUiContract = object : ru.tech.demomapapp.feature.map.api.ViewportUiContract {
         override val model: Value<ViewportModel> = MutableValue(ViewportModel())
         override val childSlot: Value<ChildSlot<*, ViewportComponent.Child>> = MutableValue(
             ChildSlot<Nothing, ViewportComponent.Child>()
         )
 
-        override fun onCameraIdle(snapshot: MapCameraSnapshot) = Unit
         override fun onZoomInClick() = Unit
         override fun onZoomOutClick() = Unit
         override fun onViewportCommandConsumed() = Unit
-        override fun onCenterMarkerClick() = Unit
         override fun onCenterMarkerMenuDismiss() = Unit
     }
 

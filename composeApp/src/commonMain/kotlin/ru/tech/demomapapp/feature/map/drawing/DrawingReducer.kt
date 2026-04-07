@@ -1,5 +1,13 @@
 package ru.tech.demomapapp.feature.map.drawing
 
+import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
+import ru.tech.demomapapp.feature.map.api.MapVertex
+
+internal fun MapCameraSnapshot.toVertex(): MapVertex = MapVertex(
+    latitude = latitude,
+    longitude = longitude,
+)
+
 internal object DrawingReducer {
     @Suppress("ReturnCount")
     fun reduce(state: DrawingStore.State, message: DrawingStore.Message): DrawingStore.State {

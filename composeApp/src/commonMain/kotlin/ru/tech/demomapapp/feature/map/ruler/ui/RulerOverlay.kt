@@ -8,10 +8,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import ru.tech.demomapapp.feature.map.ruler.RulerComponent
+import ru.tech.demomapapp.feature.map.api.RulerUiContract
 
 @Composable
-internal fun BoxScope.RulerOverlay(component: RulerComponent, modifier: Modifier = Modifier) {
+internal fun BoxScope.RulerOverlay(component: RulerUiContract, modifier: Modifier = Modifier) {
     val model by component.model.subscribeAsState()
 
     model.infoWindow?.let { infoWindow ->

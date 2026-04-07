@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.MapStyle
-import ru.tech.demomapapp.feature.map.tools.ToolsComponent
+import ru.tech.demomapapp.feature.map.api.ToolsUiContract
 
 @Composable
 internal fun ToolsOverlay(
-    component: ToolsComponent,
+    component: ToolsUiContract,
     isGpsEnabled: Boolean,
     isRulerEnabled: Boolean,
     onDismiss: () -> Unit,
@@ -19,7 +19,7 @@ internal fun ToolsOverlay(
     val childSlot by component.childSlot.subscribeAsState()
     val child = childSlot.child?.instance
 
-    if (child is ToolsComponent.Child.Menu) {
+    if (child is ToolsUiContract.Child.Menu) {
         MapToolsMenuOverlay(
             isGpsEnabled = isGpsEnabled,
             isRulerEnabled = isRulerEnabled,
@@ -31,7 +31,7 @@ internal fun ToolsOverlay(
         )
     }
 
-    if (child is ToolsComponent.Child.AvailableMaps || child is ToolsComponent.Child.ConfirmAddMap) {
+    if (child is ToolsUiContract.Child.AvailableMaps || child is ToolsUiContract.Child.ConfirmAddMap) {
         AvailableMapsBottomSheet(
             items = model.availableMapCatalog,
             onSelect = component::onAvailableMapSelect,
@@ -39,7 +39,7 @@ internal fun ToolsOverlay(
         )
     }
 
-    if (child is ToolsComponent.Child.ConfirmAddMap) {
+    if (child is ToolsUiContract.Child.ConfirmAddMap) {
         model.selectedAvailableMap?.let { selectedMap ->
             ConfirmAddMapDialog(
                 mapTitle = selectedMap.title,
@@ -50,9 +50,9 @@ internal fun ToolsOverlay(
     }
 
     if (
-        child is ToolsComponent.Child.MapsOnScreen ||
-        child is ToolsComponent.Child.LayerActions ||
-        child is ToolsComponent.Child.LayerOpacity
+        child is ToolsUiContract.Child.MapsOnScreen ||
+        child is ToolsUiContract.Child.LayerActions ||
+        child is ToolsUiContract.Child.LayerOpacity
     ) {
         MapsOnScreenBottomSheet(
             baseMapTitle = model.selectedStyle.displayName(),
@@ -62,7 +62,7 @@ internal fun ToolsOverlay(
         )
     }
 
-    if (child is ToolsComponent.Child.LayerActions) {
+    if (child is ToolsUiContract.Child.LayerActions) {
         model.selectedOverlayLayer?.let { selectedLayer ->
             val visibleLayers = model.layers.asReversed()
             val selectedLayerIndex = visibleLayers.indexOfFirst { it.id == selectedLayer.id }
@@ -79,7 +79,7 @@ internal fun ToolsOverlay(
         }
     }
 
-    if (child is ToolsComponent.Child.LayerOpacity) {
+    if (child is ToolsUiContract.Child.LayerOpacity) {
         model.editingOverlayOpacityLayer?.let { selectedLayer ->
             LayerOpacityBottomSheet(
                 layerTitle = selectedLayer.title,

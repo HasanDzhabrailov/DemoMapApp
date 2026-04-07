@@ -1,10 +1,7 @@
 package ru.tech.demomapapp.feature.map.viewport
 
-import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
-
-data class ViewportModel(
-    val cameraSnapshot: MapCameraSnapshot? = null,
-    val pendingCommand: MapViewportCommand? = null,
-    val isCenterMarkerMenuVisible: Boolean = false,
-)
+/**
+ * ViewportModel is now defined in the API package.
+ * This typealias preserves backward compatibility.
+ */
+typealias ViewportModel = ru.tech.demomapapp.feature.map.api.ViewportModel

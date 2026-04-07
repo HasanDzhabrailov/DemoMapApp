@@ -41,7 +41,7 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
             modifier = Modifier.fillMaxSize(),
             viewportCommand = model.pendingViewportCommand,
             onCameraIdle = component::onCameraIdle,
-            onViewportCommandConsumed = component.viewportComponent::onViewportCommandConsumed,
+            onViewportCommandConsumed = component.viewportUi::onViewportCommandConsumed,
             onFeatureClick = { click ->
                 component.onFeatureClick(
                     featureKey = click.featureKey,
@@ -60,32 +60,32 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
         )
 
         LocationControls(
-            component = component.locationComponent,
+            component = component.locationUi,
             modifier = Modifier.align(Alignment.BottomStart),
         )
 
         ViewportControls(
             isCenterMarkerMenuVisible = model.isCenterMarkerMenuVisible,
             isCenterMarkerEnabled = model.isCenterMarkerEnabled,
-            onZoomInClick = component.viewportComponent::onZoomInClick,
-            onZoomOutClick = component.viewportComponent::onZoomOutClick,
-            onCenterMarkerMenuDismiss = component.viewportComponent::onCenterMarkerMenuDismiss,
+            onZoomInClick = component.viewportUi::onZoomInClick,
+            onZoomOutClick = component.viewportUi::onZoomOutClick,
+            onCenterMarkerMenuDismiss = component.viewportUi::onCenterMarkerMenuDismiss,
             onCenterMarkerClick = component::onCenterMarkerClick,
             onCreatePointClick = component::onCreatePointClick,
             onCreateLineClick = component::onCreateLineClick,
             onCreatePolygonClick = component::onCreatePolygonClick,
         )
 
-        DrawingContent(component = component.drawingComponent)
+        DrawingContent(component = component.drawingUi)
 
-        RulerOverlay(component = component.rulerComponent)
+        RulerOverlay(component = component.rulerUi)
 
         ToolsOverlay(
-            component = component.toolsComponent,
+            component = component.toolsUi,
             isGpsEnabled = model.isGpsToggleChecked(),
             isRulerEnabled = model.isRulerEnabled,
-            onDismiss = component.toolsComponent::onMapToolsDismiss,
-            onGpsToggle = component.locationComponent::onGpsToggle,
+            onDismiss = component.toolsUi::onMapToolsDismiss,
+            onGpsToggle = component.locationUi::onGpsToggle,
             onRulerToggle = component::onRulerToggle,
         )
 

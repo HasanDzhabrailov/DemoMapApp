@@ -11,6 +11,7 @@ import com.arkivanov.essenty.instancekeeper.getOrCreate
 import kotlinx.serialization.Serializable
 import ru.tech.demomapapp.feature.map.api.MapCatalogItemKind
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.tools.fromModel
 
 internal class DefaultToolsComponent(
     componentContext: ComponentContext,
@@ -23,7 +24,7 @@ internal class DefaultToolsComponent(
     private val holder = instanceKeeper.getOrCreate(key = STORE_HOLDER_KEY) {
         ToolsStoreHolder(
             toolsStoreFactory = toolsStoreFactory,
-            initialModel = ToolsModel.fromModel(initialModel),
+            initialModel = fromModel(initialModel),
         )
     }
     private val labels = holder.labels(::handleLabel)

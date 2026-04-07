@@ -1,11 +1,7 @@
 package ru.tech.demomapapp.feature.map.location
 
-import ru.tech.demomapapp.feature.map.api.MapLocationMarker
-import ru.tech.demomapapp.feature.map.api.MapLocationRequest
-import ru.tech.demomapapp.feature.map.api.MyLocationMode
-
-data class LocationModel(
-    val mode: MyLocationMode = MyLocationMode.OFF,
-    val currentMarker: MapLocationMarker? = null,
-    val pendingRequest: MapLocationRequest? = null,
-)
+/**
+ * LocationModel is now defined in the API package.
+ * This typealias preserves backward compatibility.
+ */
+typealias LocationModel = ru.tech.demomapapp.feature.map.api.LocationModel

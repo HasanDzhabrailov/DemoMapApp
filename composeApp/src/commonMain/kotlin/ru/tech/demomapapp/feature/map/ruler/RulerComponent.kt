@@ -5,9 +5,14 @@ import com.arkivanov.mvikotlin.core.rx.Disposable
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.api.RulerUiContract
 
-interface RulerComponent {
-    val model: Value<RulerModel>
+/**
+ * RulerComponent extends RulerUiContract to expose minimal UI interface.
+ * Internal methods remain in this interface only.
+ */
+interface RulerComponent : RulerUiContract {
+    override val model: Value<RulerModel>
 
     fun onToggleClicked()
     fun onLocationUpdated(location: MapLocationMarker?)

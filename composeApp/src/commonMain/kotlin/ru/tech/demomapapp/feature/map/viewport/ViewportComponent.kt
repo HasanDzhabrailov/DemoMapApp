@@ -4,19 +4,24 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.Value
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.api.ViewportUiContract
 
-interface ViewportComponent {
-    val model: Value<ViewportModel>
-    val childSlot: Value<ChildSlot<*, Child>>
+/**
+ * ViewportComponent extends ViewportUiContract to expose minimal UI interface.
+ * Internal methods (onCameraIdle, onCenterMarkerClick) remain in this interface only.
+ */
+interface ViewportComponent : ViewportUiContract {
+    override val model: Value<ViewportModel>
+    override val childSlot: Value<ChildSlot<*, Child>>
 
     fun onCameraIdle(snapshot: MapCameraSnapshot)
-    fun onZoomInClick()
-    fun onZoomOutClick()
-    fun onViewportCommandConsumed()
+    override fun onZoomInClick()
+    override fun onZoomOutClick()
+    override fun onViewportCommandConsumed()
     fun onCenterMarkerClick()
-    fun onCenterMarkerMenuDismiss()
+    override fun onCenterMarkerMenuDismiss()
 
-    sealed interface Child {
+    sealed interface Child : ViewportUiContract.Child {
         data object Menu : Child
     }
 

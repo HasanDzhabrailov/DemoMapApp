@@ -4,6 +4,8 @@ import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.childContext
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
+import ru.tech.demomapapp.feature.map.api.DrawingUiContract
+import ru.tech.demomapapp.feature.map.api.LocationUiContract
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
@@ -11,6 +13,9 @@ import ru.tech.demomapapp.feature.map.api.MapLocationRequest
 import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import ru.tech.demomapapp.feature.map.api.RulerUiContract
+import ru.tech.demomapapp.feature.map.api.ToolsUiContract
+import ru.tech.demomapapp.feature.map.api.ViewportUiContract
 import ru.tech.demomapapp.feature.map.drawing.DefaultDrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
 import ru.tech.demomapapp.feature.map.drawing.DrawingStoreFactory
@@ -43,21 +48,21 @@ internal class DefaultMapHostComponent(
     private val routerHolder = instanceKeeper.getOrCreate(KEY) {
         MapRouterStoreHolder(mapRouterStoreFactory, initialModel)
     }
-    override val toolsComponent: ToolsComponent = DefaultToolsComponent(
+    private val toolsComponent: ToolsComponent = DefaultToolsComponent(
         childContext("tools"), toolsStoreFactory, initialModel,
         output = object : ToolsComponent.Output {
             override fun onStateChanged() = Unit
             override fun onLayersChanged(layers: List<MapLayerEntry>) = Unit
         },
     )
-    override val drawingComponent: DrawingComponent = DefaultDrawingComponent(
+    private val drawingComponent: DrawingComponent = DefaultDrawingComponent(
         childContext("drawing"), drawingStoreFactory, initialModel.toDrawingModel(),
         output = object : DrawingComponent.Output {
             override fun onStateChanged() = Unit
             override fun onFeatureCreated(feature: DrawingComponent.CreatedFeature) = Unit
         },
     )
-    override val rulerComponent: RulerComponent = DefaultRulerComponent(
+    private val rulerComponent: RulerComponent = DefaultRulerComponent(
         childContext("ruler"), rulerStoreFactory, initialModel.toRulerModel(),
         inputSource = RulerComponent.InputSource { cb -> routerHolder.states { cb(RulerComponent.ParentState(it.currentLocationMarker, it.lastCameraSnapshot)) } },
         output = object : RulerComponent.Output {
@@ -65,14 +70,14 @@ internal class DefaultMapHostComponent(
             override fun onViewportCommandRequested(cmd: MapViewportCommand) { onViewportCommandRequested(MapRouterStore.ViewportCommandSource.RULER, cmd) }
         },
     )
-    override val viewportComponent: ViewportComponent = DefaultViewportComponent(
+    private val viewportComponent: ViewportComponent = DefaultViewportComponent(
         childContext("viewport"), viewportStoreFactory, initialModel.toViewportModel(),
         output = object : ViewportComponent.Output {
             override fun onStateChanged() = Unit
             override fun onViewportCommandRequested(cmd: MapViewportCommand) { onViewportCommandRequested(MapRouterStore.ViewportCommandSource.VIEWPORT, cmd) }
         },
     )
-    override val locationComponent: LocationComponent = DefaultLocationComponent(
+    private val locationComponent: LocationComponent = DefaultLocationComponent(
         childContext("location"), locationStoreFactory, initialModel.toLocationModel(),
         output = object : LocationComponent.Output {
             override fun onStateChanged() = Unit
@@ -81,6 +86,13 @@ internal class DefaultMapHostComponent(
             override fun onLocationRequestIssued(request: MapLocationRequest) = Unit
         },
     )
+
+    // Expose via narrow UI contracts
+    override val toolsUi: ToolsUiContract = toolsComponent
+    override val drawingUi: DrawingUiContract = drawingComponent
+    override val rulerUi: RulerUiContract = rulerComponent
+    override val viewportUi: ViewportUiContract = viewportComponent
+    override val locationUi: LocationUiContract = locationComponent
     init {
         routerHolder.labels(::handleRouterLabel)
         subscribeToChildStates()

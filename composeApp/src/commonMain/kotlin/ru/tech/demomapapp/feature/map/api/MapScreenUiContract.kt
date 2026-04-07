@@ -1,19 +1,21 @@
 package ru.tech.demomapapp.feature.map.api
 
-import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.location.LocationComponent
-import ru.tech.demomapapp.feature.map.ruler.RulerComponent
-import ru.tech.demomapapp.feature.map.tools.ToolsComponent
-import ru.tech.demomapapp.feature.map.viewport.ViewportComponent
-
+/**
+ * Child components exposed via narrow UI contracts.
+ * This hides internal implementation details from API consumers.
+ */
 interface MapScreenChildComponents {
-    val drawingComponent: DrawingComponent
-    val locationComponent: LocationComponent
-    val rulerComponent: RulerComponent
-    val toolsComponent: ToolsComponent
-    val viewportComponent: ViewportComponent
+    val drawingUi: DrawingUiContract
+    val locationUi: LocationUiContract
+    val rulerUi: RulerUiContract
+    val toolsUi: ToolsUiContract
+    val viewportUi: ViewportUiContract
 }
 
+/**
+ * MapScreenUiContract combines all host interfaces and exposes child components
+ * via narrow UI contracts (LocationUiContract, DrawingUiContract, etc.).
+ */
 interface MapScreenUiContract :
     MapScreenComponent,
     MapScreenToolsHost,

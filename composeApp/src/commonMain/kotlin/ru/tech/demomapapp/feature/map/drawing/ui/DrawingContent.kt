@@ -6,14 +6,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.drawing.DrawingModel
 import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft
-import ru.tech.demomapapp.feature.map.drawing.DrawingComponent
-import ru.tech.demomapapp.feature.map.drawing.DrawingMode
 import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft
+import ru.tech.demomapapp.feature.map.drawing.DrawingMode
+import ru.tech.demomapapp.feature.map.api.DrawingUiContract
+import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 
 @Composable
-internal fun BoxScope.DrawingContent(component: DrawingComponent, modifier: Modifier = Modifier) {
+internal fun BoxScope.DrawingContent(component: DrawingUiContract, modifier: Modifier = Modifier) {
     val model by component.model.subscribeAsState()
     val pointSheetSlot by component.pointSheetSlot.subscribeAsState()
     val shapeSheetSlot by component.shapeSheetSlot.subscribeAsState()
