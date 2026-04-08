@@ -2,24 +2,31 @@
 
 - [x] Read PRD
 - [x] Read plan
-- [ ] Create module directory structure
-- [ ] Create api module build script
-- [ ] Create impl module build script
-- [ ] Move api code to api module
-- [ ] Move impl code to impl module
-- [ ] Update composeApp dependencies
-- [ ] Verify api module builds
-- [ ] Verify impl module builds
-- [ ] Verify composeApp builds
-- [ ] Run tests
-- [ ] Update this tasklist
-- [ ] Prepare commit message
+- [x] Create module directory structure
+- [x] Create api module build script
+- [x] Create impl module build script
+- [x] Move api code to api module
+- [x] Move impl code to impl module
+- [x] Update composeApp dependencies
+- [x] Verify api module builds
+- [x] Verify impl module builds
+- [x] Verify composeApp builds
+- [x] Run tests
+- [x] Update this tasklist
+- [x] Prepare commit message
+
+## Completion
+
+- Status: DONE
+- Verification command: `./gradlew :feature:map:api:build :feature:map:impl:build :composeApp:build`
+- Verification result: SUCCESS
+- Suggested commit message: `Create map api and impl Gradle modules`
 
 ## Expected Results
 | Check | Status |
 |-------|--------|
-| api module created | PENDING |
-| impl module created | PENDING |
-| composeApp depends on impl | PENDING |
-| Build successful | PENDING |
-| Tests pass | PENDING |
+| api module created | DONE |
+| impl module created | DONE |
+| composeApp depends on impl | DONE |
+| Build successful | DONE |
+| Tests pass | DONE |

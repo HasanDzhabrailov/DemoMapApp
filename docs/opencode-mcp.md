@@ -70,6 +70,26 @@ Note:
 
 - In this environment, direct `opencode run ...` returned `Session not found`.
 - `tools/opencode_attach_run.py` works around that by starting `opencode serve` and routing the request through `run --attach` automatically.
+- For an interactive OpenCode shell that keeps the same local MCP servers alive, use `python tools/opencode_attach_run.py --shell`.
+- If you need the local OpenCode server to outlive a single client session, use `python tools/opencode_attach_run.py --serve-only`, then attach explicitly with the printed `opencode attach ...` command.
+
+Interactive shell example:
+
+```bash
+python tools/opencode_attach_run.py --shell
+```
+
+Persistent server example:
+
+```bash
+python tools/opencode_attach_run.py --serve-only
+```
+
+Then attach from another terminal using the printed command, for example:
+
+```bash
+opencode attach http://127.0.0.1:4096 --dir C:/Users/Maestro/AndroidStudioProjects/DemoMapApp
+```
 
 Expected outcome:
 

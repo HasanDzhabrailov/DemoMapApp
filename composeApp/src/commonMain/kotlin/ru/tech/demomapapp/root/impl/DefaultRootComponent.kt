@@ -6,7 +6,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import kotlinx.serialization.Serializable
-import ru.tech.demomapapp.feature.map.host.DefaultMapHostComponent
+import ru.tech.demomapapp.feature.map.host.createMapHostComponent
 import ru.tech.demomapapp.root.api.RootComponent
 
 class DefaultRootComponent(
@@ -26,7 +26,7 @@ class DefaultRootComponent(
 
     private fun child(config: Config, componentContext: ComponentContext): RootComponent.Child = when (config) {
         Config.MapScreen -> RootComponent.Child.MapScreen(
-            instance = DefaultMapHostComponent(
+            instance = createMapHostComponent(
                 componentContext = componentContext,
             ),
         )

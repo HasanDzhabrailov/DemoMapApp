@@ -33,3 +33,5 @@ plugins {
 }
 
 include(":composeApp")
+include(":feature:map:api")
+include(":feature:map:impl")
