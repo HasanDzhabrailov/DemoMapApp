@@ -17,7 +17,7 @@ import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
 import ru.tech.demomapapp.feature.map.api.MapViewportCommand
 
 @Composable
-actual fun MapRenderer(
+actual fun FeatureMapRenderer(
     model: MapRenderModel,
     modifier: Modifier,
     viewportCommand: MapViewportCommand?,

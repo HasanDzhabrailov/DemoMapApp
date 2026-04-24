@@ -1,4 +1,4 @@
-package ru.tech.demomapapp.feature.map.render
+package ru.tech.demomapapp.map
 
 import android.content.ComponentCallbacks2
 import android.content.Context
@@ -14,24 +14,27 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.savedstate.SavedStateRegistryOwner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
-import org.maplibre.android.camera.CameraUpdateFactory
-import org.maplibre.android.geometry.LatLng
+import kotlinx.coroutines.flow.MutableSharedFlow
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
-import ru.tech.demomapapp.feature.map.api.MapViewportCommand
+import org.maplibre.android.maps.Style
 
 private const val MAP_VIEW_STATE_KEY = "map_renderer_view_state"
 private const val MAP_COMPASS_MARGIN_HORIZONTAL_PX = 32
 private const val MAP_COMPASS_MARGIN_BOTTOM_PX = 88
 
-internal class MapViewHolder(
+actual class MapViewHolder internal constructor(
     val mapView: MapView,
 ) {
+    private val styleLoadCoordinator = StyleLoadCoordinator()
     private var mapLibreMap: MapLibreMap? = null
     private var pendingMap: CompletableDeferred<MapLibreMap>? = null
+    private var pendingStyle: CompletableDeferred<Style>? = null
     private var areUiSettingsConfigured: Boolean = false
     var isDestroyed: Boolean = false
         private set
+
+    internal val styleLoadedEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
 
     fun onLowMemory() {
         if (!isDestroyed) {
@@ -52,7 +55,10 @@ internal class MapViewHolder(
 
         isDestroyed = true
         pendingMap?.cancel(CancellationException("MapViewHolder destroyed before map was ready"))
+        pendingStyle?.cancel(CancellationException("MapViewHolder destroyed before style was ready"))
         pendingMap = null
+        pendingStyle = null
+        styleLoadCoordinator.reset()
         mapLibreMap = null
         areUiSettingsConfigured = false
         mapView.onDestroy()
@@ -65,25 +71,6 @@ internal class MapViewHolder(
 
         awaitMap().configureUiSettings()
         areUiSettingsConfigured = true
-    }
-
-    suspend fun applyViewportCommand(command: MapViewportCommand) {
-        if (isDestroyed) {
-            return
-        }
-
-        val map = awaitMap()
-        when (command) {
-            MapViewportCommand.ZoomIn -> map.animateCamera(CameraUpdateFactory.zoomIn())
-            MapViewportCommand.ZoomOut -> map.animateCamera(CameraUpdateFactory.zoomOut())
-            is MapViewportCommand.MoveTo -> {
-                map.animateCamera(
-                    CameraUpdateFactory.newLatLng(
-                        LatLng(command.latitude, command.longitude),
-                    ),
-                )
-            }
-        }
     }
 
     suspend fun awaitMap(): MapLibreMap {
@@ -116,6 +103,79 @@ internal class MapViewHolder(
                 pendingMap = null
             }
             throw error
+        }
+    }
+
+    suspend fun loadStyle(styleUrl: String): Style {
+        if (isDestroyed) {
+            throw CancellationException("MapViewHolder destroyed before style load")
+        }
+
+        val map = awaitMap()
+        val currentPendingStyle = pendingStyle
+        val currentStyle = map.style
+        return when (
+            val decision = styleLoadCoordinator.onLoadRequested(
+                styleUrl = styleUrl,
+                hasCurrentStyle = currentStyle != null,
+            )
+        ) {
+            LoadRequestDecision.AwaitPending -> currentPendingStyle!!.await()
+            is LoadRequestDecision.UseCurrent -> {
+                if (decision.cancelPending) {
+                    currentPendingStyle?.cancel(CancellationException("Style load superseded by a newer request"))
+                    if (pendingStyle === currentPendingStyle) {
+                        pendingStyle = null
+                    }
+                }
+                currentStyle!!
+            }
+
+            is LoadRequestDecision.StartNew -> {
+                if (decision.cancelPending) {
+                    currentPendingStyle?.cancel(CancellationException("Style load superseded by a newer request"))
+                    if (pendingStyle === currentPendingStyle) {
+                        pendingStyle = null
+                    }
+                }
+
+                val deferred = CompletableDeferred<Style>()
+                pendingStyle = deferred
+
+                map.setStyle(styleUrl) { loadedStyle ->
+                    if (isDestroyed) {
+                        deferred.cancel(CancellationException("MapViewHolder destroyed before style callback"))
+                        if (pendingStyle === deferred) {
+                            pendingStyle = null
+                        }
+                        styleLoadCoordinator.onLoadCancelled(styleUrl)
+                        return@setStyle
+                    }
+
+                    if (!styleLoadCoordinator.shouldAcceptLoadedStyle(styleUrl) || pendingStyle !== deferred) {
+                        deferred.cancel(CancellationException("Style load superseded before callback completed"))
+                        styleLoadCoordinator.onLoadCancelled(styleUrl)
+                        return@setStyle
+                    }
+
+                    if (pendingStyle === deferred) {
+                        pendingStyle = null
+                    }
+                    styleLoadCoordinator.onLoadCompleted(styleUrl)
+                    deferred.complete(loadedStyle)
+                    styleLoadedEvents.tryEmit(Unit)
+                }
+
+                try {
+                    deferred.await()
+                } catch (error: Throwable) {
+                    if (pendingStyle === deferred) {
+                        pendingStyle = null
+                    }
+                    styleLoadCoordinator.onLoadCancelled(styleUrl)
+                    throw error
+                }
+            }
         }
     }
 }

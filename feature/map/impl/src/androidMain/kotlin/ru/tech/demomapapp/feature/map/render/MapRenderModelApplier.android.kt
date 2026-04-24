@@ -1,21 +1,15 @@
 package ru.tech.demomapapp.feature.map.render
 
-import kotlin.coroutines.resume
-import kotlinx.coroutines.suspendCancellableCoroutine
-import org.maplibre.android.maps.MapLibreMap
-import org.maplibre.android.maps.Style
+import ru.tech.demomapapp.map.MapViewHolder
 
 internal class MapRenderModelApplier {
-    private var lastAppliedStyle: RenderMapStyle? = null
 
     suspend fun apply(holder: MapViewHolder, model: MapRenderModel) {
         if (holder.isDestroyed) {
             return
         }
 
-        val map = holder.awaitMap()
-        val style = map.loadStyle(model.style, lastAppliedStyle)
-        lastAppliedStyle = model.style
+        val style = holder.loadStyle(model.style.styleUrl())
         style.applyRasterTileLayers(model.tileLayers)
         style.applyPoints(model.points)
         style.applyCurrentLocationMarker(model.currentLocationMarker)
@@ -23,20 +17,5 @@ internal class MapRenderModelApplier {
         style.applyLines(model.lines)
         style.applyPolygons(model.polygons)
         style.applyDrawingPreview(model.drawingPreview)
-    }
-}
-
-private suspend fun MapLibreMap.loadStyle(style: RenderMapStyle, lastAppliedStyle: RenderMapStyle?): Style {
-    val currentStyle = this.style
-    if (lastAppliedStyle == style && currentStyle != null) {
-        return currentStyle
-    }
-
-    return suspendCancellableCoroutine { continuation ->
-        setStyle(style.styleUrl()) { loadedStyle ->
-            if (continuation.isActive) {
-                continuation.resume(loadedStyle)
-            }
-        }
     }
 }

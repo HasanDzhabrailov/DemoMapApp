@@ -22,7 +22,7 @@ import ru.tech.demomapapp.feature.map.api.ViewportModel
 import ru.tech.demomapapp.feature.map.drawing.ui.DrawingContent
 import ru.tech.demomapapp.feature.map.location.ui.LocationControls
 import ru.tech.demomapapp.feature.map.mapscreen.toRenderModel
-import ru.tech.demomapapp.feature.map.render.MapRenderer
+import ru.tech.demomapapp.feature.map.render.FeatureMapRenderer
 import ru.tech.demomapapp.feature.map.ruler.ui.RulerOverlay
 import ru.tech.demomapapp.feature.map.tools.ui.ToolsOverlay
 import ru.tech.demomapapp.feature.map.viewport.ui.ViewportControls
@@ -60,7 +60,7 @@ fun MapScreenContent(component: MapScreenUiContract, modifier: Modifier = Modifi
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
     ) {
-        MapRenderer(
+        FeatureMapRenderer(
             model = renderModel,
             modifier = Modifier.fillMaxSize(),
             viewportCommand = parentModel.pendingViewportCommand,
