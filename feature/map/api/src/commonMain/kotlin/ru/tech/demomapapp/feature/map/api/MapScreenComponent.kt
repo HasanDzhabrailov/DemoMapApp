@@ -16,28 +16,11 @@ interface MapScreenComponent {
         val selectedFeatureInfoWindow: FeatureInfoWindow? = null,
     )
 
-    enum class DrawingMode {
-        LINE,
-        POLYGON,
-    }
-
     enum class FeatureType {
         POINT,
         LINE,
         POLYGON,
     }
-
-    data class CreatePointDraft(
-        val latitudeInput: String,
-        val longitudeInput: String,
-        val titleInput: String = "",
-    )
-
-    data class ShapeDrawingDraft(
-        val mode: DrawingMode,
-        val fixedVertices: List<MapVertex> = emptyList(),
-        val titleInput: String = "",
-    )
 
     data class FeatureInfoWindow(
         val title: String,

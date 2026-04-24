@@ -25,7 +25,7 @@ kotlin {
             implementation(libs.maplibre.android)
         }
         commonMain.dependencies {
-            implementation(projects.feature.map.api)
+            api(projects.feature.map.api)
             implementation(libs.decompose)
             implementation(libs.decompose.compose)
             implementation(libs.mvikotlin)

@@ -14,12 +14,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.CreatePointDraft
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CreatePointBottomSheet(
-    draft: MapScreenComponent.CreatePointDraft,
+    draft: CreatePointDraft,
     onLatitudeChange: (String) -> Unit,
     onLongitudeChange: (String) -> Unit,
     onTitleChange: (String) -> Unit,

@@ -1,20 +1,18 @@
 package ru.tech.demomapapp.feature.map.drawing
 
+import ru.tech.demomapapp.feature.map.api.DrawingMode
 import ru.tech.demomapapp.feature.map.api.MapCameraSnapshot
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapVertex
+import ru.tech.demomapapp.feature.map.api.ShapeDrawingDraft
 import ru.tech.demomapapp.feature.map.render.RenderDrawingPreview
 import ru.tech.demomapapp.feature.map.render.RenderMapVertex
 
 internal fun interface ShapeDrawingPreviewMapper {
-    fun map(draft: MapScreenComponent.ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview?
+    fun map(draft: ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview?
 }
 
 internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
-    override fun map(
-        draft: MapScreenComponent.ShapeDrawingDraft?,
-        currentSnapshot: MapCameraSnapshot?,
-    ): RenderDrawingPreview? {
+    override fun map(draft: ShapeDrawingDraft?, currentSnapshot: MapCameraSnapshot?): RenderDrawingPreview? {
         val currentVertex = currentSnapshot?.toPreviewVertex() ?: return null
         val activeDraft = draft ?: return null
         val fixedVertices = activeDraft.fixedVertices.map { it.toRenderVertex() }
@@ -24,12 +22,12 @@ internal object DefaultShapeDrawingPreviewMapper : ShapeDrawingPreviewMapper {
 
         val previewVertex = currentVertex.toRenderVertex()
         return when (activeDraft.mode) {
-            MapScreenComponent.DrawingMode.LINE -> RenderDrawingPreview(
+            DrawingMode.LINE -> RenderDrawingPreview(
                 fixedLineVertices = fixedVertices,
                 previewLineVertices = listOfNotNull(fixedVertices.lastOrNull(), previewVertex),
             )
 
-            MapScreenComponent.DrawingMode.POLYGON -> {
+            DrawingMode.POLYGON -> {
                 val previewLineVertices = buildList {
                     if (fixedVertices.isNotEmpty()) {
                         add(fixedVertices.last())

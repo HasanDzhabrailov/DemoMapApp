@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.DrawingModel
 import ru.tech.demomapapp.feature.map.api.LocationModel
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapScreenUiContract
 import ru.tech.demomapapp.feature.map.api.RulerModel
 import ru.tech.demomapapp.feature.map.api.ToolsModel
@@ -157,22 +156,11 @@ private fun DrawingModel.toRenderModel(
     lines = lines,
     polygons = polygons,
 ).toRenderModel(
-    shapeDrawingDraft = shapeDrawingDraft?.toComponentDraft(),
+    shapeDrawingDraft = shapeDrawingDraft,
     currentSnapshot = currentSnapshot,
     currentLocationMarker = currentLocationMarker,
     rulerMeasurement = rulerMeasurement,
 )
-
-private fun ru.tech.demomapapp.feature.map.api.ShapeDrawingDraft.toComponentDraft():
-    MapScreenComponent.ShapeDrawingDraft =
-    MapScreenComponent.ShapeDrawingDraft(
-        mode = when (mode) {
-            ru.tech.demomapapp.feature.map.api.DrawingMode.LINE -> MapScreenComponent.DrawingMode.LINE
-            ru.tech.demomapapp.feature.map.api.DrawingMode.POLYGON -> MapScreenComponent.DrawingMode.POLYGON
-        },
-        fixedVertices = fixedVertices,
-        titleInput = titleInput,
-    )
 
 private fun ru.tech.demomapapp.feature.map.api.MyLocationMode.isGpsActive(): Boolean =
     this == ru.tech.demomapapp.feature.map.api.MyLocationMode.GPS

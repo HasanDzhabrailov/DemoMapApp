@@ -14,12 +14,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.DrawingMode
+import ru.tech.demomapapp.feature.map.api.ShapeDrawingDraft
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun CreateShapeBottomSheet(
-    draft: MapScreenComponent.ShapeDrawingDraft,
+    draft: ShapeDrawingDraft,
     onTitleChange: (String) -> Unit,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
@@ -42,7 +43,7 @@ internal fun CreateShapeBottomSheet(
                 modifier = Modifier.fillMaxWidth(),
                 label = {
                     Text(
-                        if (draft.mode == MapScreenComponent.DrawingMode.LINE) {
+                        if (draft.mode == DrawingMode.LINE) {
                             "Название линии"
                         } else {
                             "Название полигона"
@@ -54,7 +55,7 @@ internal fun CreateShapeBottomSheet(
 
             Text(
                 text = draft.titleInput.ifBlank {
-                    if (draft.mode == MapScreenComponent.DrawingMode.LINE) {
+                    if (draft.mode == DrawingMode.LINE) {
                         "Название линии"
                     } else {
                         "Название полигона"

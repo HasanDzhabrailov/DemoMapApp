@@ -7,10 +7,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import ru.tech.demomapapp.feature.map.api.DrawingUiContract
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
-import ru.tech.demomapapp.feature.map.drawing.CreatePointDraft
-import ru.tech.demomapapp.feature.map.drawing.DrawingMode
-import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingDraft
 
 @Composable
 internal fun BoxScope.DrawingContent(component: DrawingUiContract, modifier: Modifier = Modifier) {
@@ -20,7 +16,7 @@ internal fun BoxScope.DrawingContent(component: DrawingUiContract, modifier: Mod
 
     model.shapeDrawingDraft?.let { draft ->
         ShapeDrawingControlsOverlay(
-            mode = draft.mode.toUiDrawingMode(),
+            mode = draft.mode,
             fixedVertexCount = draft.fixedVertices.size,
             onRemoveLastClick = component::onDrawingRemoveLastPositionClick,
             onAddPositionClick = component::onDrawingAddPositionClick,
@@ -33,7 +29,7 @@ internal fun BoxScope.DrawingContent(component: DrawingUiContract, modifier: Mod
     if (pointSheetSlot.child != null) {
         model.createPointDraft?.let { draft ->
             CreatePointBottomSheet(
-                draft = draft.toUiDraft(),
+                draft = draft,
                 onLatitudeChange = component::onCreatePointLatitudeChange,
                 onLongitudeChange = component::onCreatePointLongitudeChange,
                 onTitleChange = component::onCreatePointTitleChange,
@@ -46,28 +42,11 @@ internal fun BoxScope.DrawingContent(component: DrawingUiContract, modifier: Mod
     if (shapeSheetSlot.child != null) {
         model.shapeDrawingDraft?.let { draft ->
             CreateShapeBottomSheet(
-                draft = draft.toUiDraft(),
+                draft = draft,
                 onTitleChange = component::onCreateShapeTitleChange,
                 onConfirm = component::onCreateShapeConfirm,
                 onDismiss = component::onCreateShapeSheetDismiss,
             )
         }
     }
-}
-
-private fun CreatePointDraft.toUiDraft(): MapScreenComponent.CreatePointDraft = MapScreenComponent.CreatePointDraft(
-    latitudeInput = latitudeInput,
-    longitudeInput = longitudeInput,
-    titleInput = titleInput,
-)
-
-private fun ShapeDrawingDraft.toUiDraft(): MapScreenComponent.ShapeDrawingDraft = MapScreenComponent.ShapeDrawingDraft(
-    mode = mode.toUiDrawingMode(),
-    fixedVertices = fixedVertices,
-    titleInput = titleInput,
-)
-
-private fun DrawingMode.toUiDrawingMode(): MapScreenComponent.DrawingMode = when (this) {
-    DrawingMode.LINE -> MapScreenComponent.DrawingMode.LINE
-    DrawingMode.POLYGON -> MapScreenComponent.DrawingMode.POLYGON
 }

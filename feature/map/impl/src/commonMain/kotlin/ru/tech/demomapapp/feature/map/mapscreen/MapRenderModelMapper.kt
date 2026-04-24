@@ -6,11 +6,11 @@ import ru.tech.demomapapp.feature.map.api.MapLine
 import ru.tech.demomapapp.feature.map.api.MapLocationMarker
 import ru.tech.demomapapp.feature.map.api.MapPoint
 import ru.tech.demomapapp.feature.map.api.MapPolygon
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
 import ru.tech.demomapapp.feature.map.api.MapState
 import ru.tech.demomapapp.feature.map.api.MapStyle
 import ru.tech.demomapapp.feature.map.api.MapVertex
 import ru.tech.demomapapp.feature.map.api.RulerMeasurement
+import ru.tech.demomapapp.feature.map.api.ShapeDrawingDraft
 import ru.tech.demomapapp.feature.map.drawing.DefaultShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.drawing.ShapeDrawingPreviewMapper
 import ru.tech.demomapapp.feature.map.render.MapRenderModel
@@ -26,7 +26,7 @@ import ru.tech.demomapapp.feature.map.ruler.DefaultRulerArrowGeometryCalculator
 import ru.tech.demomapapp.feature.map.ruler.RulerArrowGeometryCalculator
 
 internal fun MapState.toRenderModel(
-    shapeDrawingDraft: MapScreenComponent.ShapeDrawingDraft? = null,
+    shapeDrawingDraft: ShapeDrawingDraft? = null,
     currentSnapshot: MapCameraSnapshot? = null,
     currentLocationMarker: MapLocationMarker? = null,
     rulerMeasurement: RulerMeasurement? = null,

@@ -13,11 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import ru.tech.demomapapp.feature.map.api.MapScreenComponent
+import ru.tech.demomapapp.feature.map.api.DrawingMode
 
 @Composable
 internal fun ShapeDrawingControlsOverlay(
-    mode: MapScreenComponent.DrawingMode,
+    mode: DrawingMode,
     fixedVertexCount: Int,
     onRemoveLastClick: () -> Unit,
     onAddPositionClick: () -> Unit,
@@ -40,7 +40,7 @@ internal fun ShapeDrawingControlsOverlay(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = if (mode == MapScreenComponent.DrawingMode.LINE) {
+                text = if (mode == DrawingMode.LINE) {
                     "Рисование пути"
                 } else {
                     "Рисование области"
@@ -82,7 +82,7 @@ internal fun ShapeDrawingControlsOverlay(
     }
 }
 
-private fun minimumVertexCount(mode: MapScreenComponent.DrawingMode): Int = when (mode) {
-    MapScreenComponent.DrawingMode.LINE -> 2
-    MapScreenComponent.DrawingMode.POLYGON -> 3
+private fun minimumVertexCount(mode: DrawingMode): Int = when (mode) {
+    DrawingMode.LINE -> 2
+    DrawingMode.POLYGON -> 3
 }
