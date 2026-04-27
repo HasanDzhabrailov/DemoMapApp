@@ -7,6 +7,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import ru.tech.demomapapp.feature.map.api.MapLayerEntry
 import ru.tech.demomapapp.feature.map.api.ToolsModel
+import ru.tech.demomapapp.feature.map.api.ToolsUiContract
 
 class DefaultToolsComponentTest {
 
@@ -25,7 +26,7 @@ class DefaultToolsComponentTest {
         component.onAvailableMapConfirm()
 
         assertEquals(component.model.value.layers, output.layers.single())
-        assertTrue(component.childSlot.value.child?.instance is ToolsComponent.Child.MapsOnScreen)
+        assertTrue(component.childSlot.value.child?.instance is ToolsUiContract.Child.MapsOnScreen)
     }
 
     private class TestOutput : ToolsComponent.Output {

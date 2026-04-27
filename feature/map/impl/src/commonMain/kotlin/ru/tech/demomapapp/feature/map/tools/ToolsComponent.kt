@@ -11,7 +11,7 @@ import ru.tech.demomapapp.feature.map.api.ToolsUiContract
  */
 interface ToolsComponent : ToolsUiContract {
     override val model: Value<ToolsModel>
-    override val childSlot: Value<ChildSlot<*, Child>>
+    override val childSlot: Value<ChildSlot<*, ToolsUiContract.Child>>
 
     fun onMapToolsClick()
     override fun onMapToolsDismiss()
@@ -30,15 +30,6 @@ interface ToolsComponent : ToolsUiContract {
     override fun onLayerOpacityClick()
     override fun onLayerOpacityChange(value: Float)
     override fun onLayerOpacityDismiss()
-
-    sealed interface Child : ToolsUiContract.Child {
-        data object Menu : Child
-        data object AvailableMaps : Child
-        data object ConfirmAddMap : Child
-        data object MapsOnScreen : Child
-        data object LayerActions : Child
-        data object LayerOpacity : Child
-    }
 
     interface Output {
         fun onStateChanged()

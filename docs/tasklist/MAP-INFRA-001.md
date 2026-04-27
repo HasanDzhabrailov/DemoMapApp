@@ -28,6 +28,10 @@
 - `./gradlew.bat :map:build`
 - `./gradlew.bat :composeApp:build`
 - `./gradlew.bat :map:processDebugManifest :composeApp:processDebugMainManifest`
+- Post-fix: reordered `viewport`, `location`, and `ruler` component initialization in `DefaultMapHostComponent` to prevent startup NPE during ruler input subscription
+- `./gradlew.bat :composeApp:compileDebugKotlinAndroid`
+- Post-fix: unified tools child-slot instances to `ToolsUiContract.Child` so `ToolsOverlay` can detect active menu states and render settings dialogs
+- `./gradlew.bat :feature:map:impl:jvmTest --tests ru.tech.demomapapp.feature.map.tools.DefaultToolsComponentTest`
 
 ## Suggested Commit Message
 - `refactor: move base MapLibre infrastructure into map module`

@@ -10,6 +10,7 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import kotlinx.serialization.Serializable
 import ru.tech.demomapapp.feature.map.api.MapCatalogItemKind
+import ru.tech.demomapapp.feature.map.api.ToolsUiContract
 
 internal class DefaultToolsComponent(
     componentContext: ComponentContext,
@@ -29,7 +30,7 @@ internal class DefaultToolsComponent(
     private val states = holder.states { output.onStateChanged() }
 
     override val model: Value<ToolsModel> = holder.model
-    override val childSlot: Value<ChildSlot<*, ToolsComponent.Child>> = childSlot(
+    override val childSlot: Value<ChildSlot<*, ToolsUiContract.Child>> = childSlot(
         source = navigation,
         serializer = Config.serializer(),
         handleBackButton = false,
@@ -38,7 +39,7 @@ internal class DefaultToolsComponent(
 
     override fun onMapToolsClick() {
         holder.accept(ToolsStore.Intent.MapToolsClicked)
-        if (activeChild() is ToolsComponent.Child.Menu) {
+        if (activeChild() is ToolsUiContract.Child.Menu) {
             dismissChild()
         } else {
             activateChild(Config.Menu)
@@ -132,16 +133,16 @@ internal class DefaultToolsComponent(
     }
 
     @Suppress("UnusedParameter")
-    private fun createChild(config: Config, componentContext: ComponentContext): ToolsComponent.Child = when (config) {
-        Config.Menu -> ToolsComponent.Child.Menu
-        Config.AvailableMaps -> ToolsComponent.Child.AvailableMaps
-        Config.ConfirmAddMap -> ToolsComponent.Child.ConfirmAddMap
-        Config.MapsOnScreen -> ToolsComponent.Child.MapsOnScreen
-        Config.LayerActions -> ToolsComponent.Child.LayerActions
-        Config.LayerOpacity -> ToolsComponent.Child.LayerOpacity
+    private fun createChild(config: Config, componentContext: ComponentContext): ToolsUiContract.Child = when (config) {
+        Config.Menu -> ToolsUiContract.Child.Menu
+        Config.AvailableMaps -> ToolsUiContract.Child.AvailableMaps
+        Config.ConfirmAddMap -> ToolsUiContract.Child.ConfirmAddMap
+        Config.MapsOnScreen -> ToolsUiContract.Child.MapsOnScreen
+        Config.LayerActions -> ToolsUiContract.Child.LayerActions
+        Config.LayerOpacity -> ToolsUiContract.Child.LayerOpacity
     }
 
-    private fun activeChild(): ToolsComponent.Child? = childSlot.value.child?.instance
+    private fun activeChild(): ToolsUiContract.Child? = childSlot.value.child?.instance
 
     private fun activateChild(config: Config) {
         navigation.activate(config)

@@ -79,45 +79,6 @@ internal class DefaultMapHostComponent(
         },
     )
 
-    private val rulerComponent: RulerComponent = DefaultRulerComponent(
-        childContext("ruler"),
-        rulerStoreFactory,
-        inputSource = RulerComponent.InputSource { callback ->
-            // Subscribe to location and viewport models to provide parent state
-            var currentLocation: MapLocationMarker? = null
-            var currentSnapshot: MapCameraSnapshot? = null
-            var hasEmitted = false
-
-            val locationDisposable = locationComponent.model.subscribe { locationModel ->
-                currentLocation = locationModel.currentMarker
-                if (!hasEmitted || currentSnapshot != null) {
-                    hasEmitted = true
-                    callback(RulerComponent.ParentState(currentLocation, currentSnapshot))
-                }
-            }
-
-            val viewportDisposable = viewportComponent.model.subscribe { viewportModel ->
-                currentSnapshot = viewportModel.cameraSnapshot
-                if (!hasEmitted || currentLocation != null) {
-                    hasEmitted = true
-                    callback(RulerComponent.ParentState(currentLocation, currentSnapshot))
-                }
-            }
-
-            // Return disposable that cleans up both subscriptions
-            com.arkivanov.mvikotlin.core.rx.Disposable {
-                locationDisposable.cancel()
-                viewportDisposable.cancel()
-            }
-        },
-        output = object : RulerComponent.Output {
-            override fun onStateChanged() = Unit
-            override fun onViewportCommandRequested(cmd: MapViewportCommand) {
-                onViewportCommandRequested(MapRouterStore.ViewportCommandSource.RULER, cmd)
-            }
-        },
-    )
-
     private val viewportComponent: ViewportComponent = DefaultViewportComponent(
         childContext("viewport"),
         viewportStoreFactory,
@@ -139,6 +100,44 @@ internal class DefaultMapHostComponent(
                 onViewportCommandRequested(MapRouterStore.ViewportCommandSource.LOCATION, cmd)
             }
             override fun onLocationRequestIssued(request: MapLocationRequest) = Unit
+        },
+    )
+
+    private val rulerComponent: RulerComponent = DefaultRulerComponent(
+        childContext("ruler"),
+        rulerStoreFactory,
+        inputSource = RulerComponent.InputSource { callback ->
+            // Subscribe to location and viewport models to provide parent state.
+            var currentLocation: MapLocationMarker? = null
+            var currentSnapshot: MapCameraSnapshot? = null
+            var hasEmitted = false
+
+            val locationDisposable = locationComponent.model.subscribe { locationModel ->
+                currentLocation = locationModel.currentMarker
+                if (!hasEmitted || currentSnapshot != null) {
+                    hasEmitted = true
+                    callback(RulerComponent.ParentState(currentLocation, currentSnapshot))
+                }
+            }
+
+            val viewportDisposable = viewportComponent.model.subscribe { viewportModel ->
+                currentSnapshot = viewportModel.cameraSnapshot
+                if (!hasEmitted || currentLocation != null) {
+                    hasEmitted = true
+                    callback(RulerComponent.ParentState(currentLocation, currentSnapshot))
+                }
+            }
+
+            com.arkivanov.mvikotlin.core.rx.Disposable {
+                locationDisposable.cancel()
+                viewportDisposable.cancel()
+            }
+        },
+        output = object : RulerComponent.Output {
+            override fun onStateChanged() = Unit
+            override fun onViewportCommandRequested(cmd: MapViewportCommand) {
+                onViewportCommandRequested(MapRouterStore.ViewportCommandSource.RULER, cmd)
+            }
         },
     )
 
